@@ -1,0 +1,12 @@
+#Ignore latex render component
+*.aux
+*.fls
+*.log
+*.gz
+*.fdb_latexmk
+
+./*.aux
+./*.fls
+./*.log
+./*.gz
+./*.fdb_latexmk
