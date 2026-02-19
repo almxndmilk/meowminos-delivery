@@ -20,7 +20,8 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.4.1</version>
         <configuration>
-          <outputDirectory>${project.basedir}/javadoc</outputDirectory>
+          <reportOutputDirectory>${project.basedir}</reportOutputDirectory>
+          <destDir>javadoc</destDir>
         </configuration>
       </plugin>
       <plugin>
@@ -29,7 +30,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>ca.sfu.spring2026team15.Main</mainClass>
+              <mainClass>ca.sfu.spring2026team15.GameLauncher</mainClass>
               <addClasspath>true</addClasspath>
             </manifest>
           </archive>
@@ -47,7 +48,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>ca.sfu.spring2026team15.Main</mainClass>
+                  <mainClass>ca.sfu.spring2026team15.GameLauncher</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -59,7 +60,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.1.0</version>
         <configuration>
-          <mainClass>ca.sfu.spring2026team15.Main</mainClass>
+          <mainClass>ca.sfu.spring2026team15.GameLauncher</mainClass>
         </configuration>
       </plugin>
     </plugins>

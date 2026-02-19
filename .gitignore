@@ -11,6 +11,23 @@
 ./*.gz
 ./*.fdb_latexmk
 
-#Ignore target and javadoc folder
+# Maven
 target/
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+.flattened-pom.xml
 javadoc/
+
+# IDE Configuration
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+
+# Maven build artifacts
+dependency-reduced-pom.xml
