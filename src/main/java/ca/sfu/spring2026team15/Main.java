@@ -42,7 +42,6 @@ public class Main extends ApplicationAdapter {
         if (catBike != null) {
             spriteBatch.draw(catBike, 100, 100, 256, 256);
         }
-
         spriteBatch.end();
     }
 
