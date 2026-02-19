@@ -10,3 +10,7 @@
 ./*.log
 ./*.gz
 ./*.fdb_latexmk
+
+#Ignore target and javadoc folder
+target/
+javadoc/
