@@ -60,7 +60,13 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.1.0</version>
         <configuration>
-          <mainClass>ca.sfu.spring2026team15.GameLauncher</mainClass>
+          <executable>java</executable>
+          <arguments>
+            <argument>-XstartOnFirstThread</argument>
+            <argument>-classpath</argument>
+            <classpath />
+            <argument>ca.sfu.spring2026team15.GameLauncher</argument>
+          </arguments>
         </configuration>
       </plugin>
     </plugins>

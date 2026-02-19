@@ -2,46 +2,55 @@ package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 
-/**
- * Main game class for the 2D game.
- * Extends ApplicationAdapter and implements the game loop.
- */
 public class Main extends ApplicationAdapter {
-    private SpriteBatch batch;
+    private Texture catBike;
+    private SpriteBatch spriteBatch;
+    private FitViewport viewport;
 
-    /**
-     * Called when the game is first created.
-     * Initializes game resources.
-     */
     @Override
     public void create() {
-        batch = new SpriteBatch();
+        System.out.println("=== GAME CREATE ===");
+        try {
+            catBike = new Texture(Gdx.files.internal("catBike.png"));
+            System.out.println("✓ Texture loaded: " + catBike.getWidth() + "x" + catBike.getHeight());
+        } catch (Exception e) {
+            System.err.println("✗ FAILED TO LOAD TEXTURE: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        spriteBatch = new SpriteBatch();
+        viewport = new FitViewport(8, 5);
+        System.out.println("✓ SpriteBatch and Viewport created");
     }
 
-    /**
-     * Called every frame to render the game.
-     * Clears the screen and draws game content.
-     */
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height, true);
+    }
+
     @Override
     public void render() {
-        // Clear screen with black color
-        Gdx.gl.glClearColor(0, 0, 0, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        ScreenUtils.clear(Color.BLACK);
+        spriteBatch.begin();
 
-        batch.begin();
-        // Draw your game here
-        batch.end();
+        if (catBike != null) {
+            spriteBatch.draw(catBike, 100, 100, 256, 256);
+        }
+
+        spriteBatch.end();
     }
 
-    /**
-     * Called when the game is disposed.
-     * Cleans up resources.
-     */
     @Override
     public void dispose() {
-        batch.dispose();
+        spriteBatch.dispose();
+        if (catBike != null) {
+            catBike.dispose();
+        }
     }
 }
