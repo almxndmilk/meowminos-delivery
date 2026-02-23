@@ -5,7 +5,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.FitViewport;
+//import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.Screen;
 
 public class GameScreen implements Screen {
@@ -17,7 +18,8 @@ public class GameScreen implements Screen {
 
     private Texture mapTexture;
     private SpriteBatch batch;
-    private FitViewport viewport;
+//    private FitViewport viewport;
+    private ExtendViewport viewport;
     private GameCamera gameCamera;
     private Player player;
     private final Main game;
@@ -33,7 +35,8 @@ public class GameScreen implements Screen {
         mapTexture = new Texture(Gdx.files.internal("map/map part1.png"));
         batch      = new SpriteBatch();
         gameCamera = new GameCamera(VIEW_WIDTH, VIEW_HEIGHT, MAP_WIDTH, MAP_HEIGHT);
-        viewport   = new FitViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
+//        viewport   = new FitViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
+        viewport   = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
         player     = new Player(300f, 400f);
     }
 
@@ -50,7 +53,7 @@ public class GameScreen implements Screen {
         ScreenUtils.clear(Color.BLACK);
         batch.setProjectionMatrix(gameCamera.getCamera().combined);
         batch.begin();
-        batch.draw(mapTexture, 0, 0, MAP_WIDTH, MAP_HEIGHT);
+        batch.draw(mapTexture, -75, 0, MAP_WIDTH, MAP_HEIGHT);
         player.render(batch);
         batch.end();
     }
