@@ -7,27 +7,63 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 public class Player {
-    private static final float SIZE = 64f;
+    private static final float SIZE = 128f;
     private static final float SPEED = 300f;
 
-    private final Texture texture;
+    private final Texture left1;
+    private final Texture left2;
+    private Texture currentFrame;
+    private float animTimer = 0f;
+    private float frameDuration = 0.15f;
+    private boolean showFrame1 = true;
+    private boolean isMoving = false;
+
+
     private final Vector2 position;
 
     public Player(float startX, float startY) {
-        texture = new Texture(Gdx.files.internal("cataseprite1.png"));
+        left1 = new Texture(Gdx.files.internal("catOffBike/catOffBike1.png"));
+        left2 = new Texture(Gdx.files.internal("catOffBike/catOffBike2.png"));
+        currentFrame = left1;
         position = new Vector2(startX, startY);
     }
 
     public void update(float delta) {
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) position.y += SPEED * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) position.y -= SPEED * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) position.x += SPEED * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) position.x -= SPEED * delta;
+        isMoving = false;
+
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+            position.y += SPEED * delta;
+            isMoving = true;
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+            position.y -= SPEED * delta;
+            isMoving = true;
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+            position.x += SPEED * delta;
+            isMoving = true;
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+            position.x -= SPEED * delta;
+            isMoving = true;
+        }
+
+
+        if (isMoving) {
+            animTimer += delta;
+            if (animTimer >= frameDuration) {
+                animTimer = 0f;
+                showFrame1 = !showFrame1;
+            }
+        } else {
+            showFrame1 = true;
+            animTimer = 0f;
+        }
+        currentFrame = (isMoving && !showFrame1) ? left2 : left1;  // was just "currentFrame;"
     }
 
-    // Draws the player into an already-open SpriteBatch.
     public void render(SpriteBatch batch) {
-        batch.draw(texture, position.x - SIZE / 2f, position.y - SIZE / 2f, SIZE, SIZE);
+        batch.draw(currentFrame, position.x - SIZE / 2f, position.y - SIZE / 2f, SIZE, SIZE);
     }
 
     // Returns the player's center position, used by GameCamera to follow.
@@ -35,6 +71,8 @@ public class Player {
     public float getCenterY() { return position.y; }
 
     public void dispose() {
-        texture.dispose();
+
+        left1.dispose();
+        left2.dispose();
     }
 }
