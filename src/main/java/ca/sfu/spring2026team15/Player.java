@@ -24,6 +24,7 @@ public class Player {
 
     private enum Direction { LEFT, RIGHT, UP, DOWN }
     private Direction lastDirection = Direction.DOWN;
+    private Direction prevDirection = Direction.DOWN;
 
     private final Vector2 position;
 
@@ -49,6 +50,10 @@ public class Player {
         if (Gdx.input.isKeyPressed(Input.Keys.A)) { position.x -= SPEED * delta; isMoving = true; lastDirection = Direction.LEFT; }
 
         if (isMoving) {
+            if (lastDirection != prevDirection) {
+                currentFrameIndex = 0;
+                animTimer = 0f;
+            }
             animTimer += delta;
             if (animTimer >= FRAME_DURATION) {
                 animTimer = 0f;
@@ -59,6 +64,7 @@ public class Player {
             currentFrameIndex = 0;
             animTimer = 0f;
         }
+        prevDirection = lastDirection;
 
         switch (lastDirection) {
             case LEFT:
