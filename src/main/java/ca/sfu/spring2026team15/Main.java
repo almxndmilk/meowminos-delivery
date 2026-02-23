@@ -2,78 +2,56 @@ package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.math.Vector2;
 
 public class Main extends ApplicationAdapter {
-    private Texture catBike;
-    private SpriteBatch spriteBatch;
+    // World constants
+    static final float MAP_WIDTH  = 5446f;
+    static final float MAP_HEIGHT = 902f;
+    static final float VIEW_WIDTH  = 1280f;
+    static final float VIEW_HEIGHT = 720f;
+
+    private Texture mapTexture;
+    private SpriteBatch batch;
     private FitViewport viewport;
-    private Texture background;
-    Vector2 position;
-    float moveSpeed;
+    private GameCamera gameCamera;
+    private Player player;
 
     @Override
     public void create() {
-
-        System.out.println("=== GAME CREATE ===");
-        try {
-            catBike = new Texture(Gdx.files.internal("cataseprite1.png"));
-            System.out.println("✓ Texture loaded: " + catBike.getWidth() + "x" + catBike.getHeight());
-        } catch (Exception e) {
-            System.err.println("✗ FAILED TO LOAD TEXTURE: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        background = new Texture(Gdx.files.internal("IMG_5555.png"));
-        spriteBatch = new SpriteBatch();
-        position = new Vector2(0,0);
-        moveSpeed = 10;
-        viewport = new FitViewport(800, 500);
-        System.out.println("✓ SpriteBatch and Viewport created");
+        mapTexture = new Texture(Gdx.files.internal("map/map part1.png"));
+        batch      = new SpriteBatch();
+        gameCamera = new GameCamera(VIEW_WIDTH, VIEW_HEIGHT, MAP_WIDTH, MAP_HEIGHT);
+        viewport   = new FitViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
+        player     = new Player(300f, 400f);
     }
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, true);
+        viewport.update(width, height);
     }
 
     @Override
     public void render() {
-
-        if (Gdx.input.isKeyPressed(Input.Keys.W))
-            position.y += moveSpeed * Gdx.graphics.getDeltaTime();
-        else if(Gdx.input.isKeyPressed(Input.Keys.S))
-            position.y -= moveSpeed * Gdx.graphics.getDeltaTime();
-        if (Gdx.input.isKeyPressed(Input.Keys.D))
-            position.x += moveSpeed * Gdx.graphics.getDeltaTime();
-        else if (Gdx.input.isKeyPressed(Input.Keys.A))
-            position.x -= moveSpeed * Gdx.graphics.getDeltaTime();
+        player.update(Gdx.graphics.getDeltaTime());
+        gameCamera.update(player.getCenterX(), player.getCenterY());
 
         ScreenUtils.clear(Color.BLACK);
-        spriteBatch.begin();
-
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
-
-        spriteBatch.draw(background, 0,0, worldWidth, worldHeight);
-        spriteBatch.draw(catBike, position.x, position.y, 100, 100);
-//        if (catBike != null) {
-//
-//        }
-        spriteBatch.end();
+        batch.setProjectionMatrix(gameCamera.getCamera().combined);
+        batch.begin();
+        batch.draw(mapTexture, 0, 0, MAP_WIDTH, MAP_HEIGHT);
+        player.render(batch);
+        batch.end();
     }
 
     @Override
     public void dispose() {
-        spriteBatch.dispose();
-        if (catBike != null) {
-            catBike.dispose();
-        }
+        mapTexture.dispose();
+        batch.dispose();
+        player.dispose();
     }
 }
