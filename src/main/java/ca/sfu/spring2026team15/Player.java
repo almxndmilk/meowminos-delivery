@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 public class Player {
-    private static final float SIZE = 64f;
+    private static final float SIZE = 150f;
     private static final float SPEED = 400f;
 
     private final Texture left1, left2;
