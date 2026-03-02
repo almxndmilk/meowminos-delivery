@@ -8,6 +8,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 //import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.Screen;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameScreen implements Screen {
     // World constants
@@ -22,6 +24,8 @@ public class GameScreen implements Screen {
     private ExtendViewport viewport;
     private GameCamera gameCamera;
     private Player player;
+    private List<PoliceEnemy> police;
+
     private final Main game;
 
     // constructor
@@ -38,6 +42,9 @@ public class GameScreen implements Screen {
 //        viewport   = new FitViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
         viewport   = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
         player     = new Player(300f, 400f);
+
+        police = new ArrayList<>();
+        police.add(new PoliceEnemy(800f, 400));
     }
 
     @Override
@@ -55,6 +62,10 @@ public class GameScreen implements Screen {
         batch.begin();
         batch.draw(mapTexture, -75, 0, MAP_WIDTH, MAP_HEIGHT);
         player.render(batch);
+        for (PoliceEnemy enemy : police) {
+            enemy.update(delta, player.getCenterX(), player.getCenterY());
+            enemy.render(batch);
+        }
         batch.end();
     }
 
@@ -68,5 +79,8 @@ public class GameScreen implements Screen {
         mapTexture.dispose();
         batch.dispose();
         player.dispose();
+        for (PoliceEnemy enemy : police) {
+            enemy.dispose();
+        }
     }
 }
