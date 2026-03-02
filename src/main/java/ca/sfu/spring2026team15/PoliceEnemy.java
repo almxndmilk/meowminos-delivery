@@ -1,16 +1,15 @@
 package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import java.util.Random;
 
-import com.badlogic.gdx.math.Rectangle;
-import java.util.ArrayList;
-
 public class PoliceEnemy {
     private static final float SIZE = 150f;
+    private static final int BARRIER_X_OFFSET = 75;
     private static final float CHASE_SPEED = 250f;
     private static final float WANDER_SPEED = 80f;
     private static final float DETECTION_RANGE = 400f;
@@ -57,7 +56,15 @@ public class PoliceEnemy {
         position= new Vector2(spawnX, spawnY);
     }
 
-    public void update(float delta, float playerX, float playerY, ArrayList<Rectangle> barriers) {
+    private boolean isBarrier(Pixmap pixmap, float worldX, float worldY) {
+        int imgH = pixmap.getHeight();
+        int px = (int)(worldX + BARRIER_X_OFFSET);
+        int py = imgH - 1 - (int)worldY;
+        if (px < 0 || px >= pixmap.getWidth() || py < 0 || py >= imgH) return true;
+        return (pixmap.getPixel(px, py) & 0xFF) >= 128;
+    }
+
+    public void update(float delta, float playerX, float playerY, Pixmap barrierPixmap) {
         float dist = Vector2.dst(position.x, position.y, playerX, playerY);
         boolean inRange = dist <= DETECTION_RANGE;
 
@@ -96,18 +103,22 @@ public class PoliceEnemy {
             float newY =position.y + dir.y * CHASE_SPEED * delta;
 
 
-            // barrier movement
-            float hitW = SIZE * 0.5f;
-            float hitH = SIZE * 0.5f;
+            // barrier movement — bottom 20% of sprite only
+            float hitW = SIZE * 0.3f;
+            float hitTop = SIZE * 0.3f;
 
-            Rectangle rectX = new Rectangle(newX - hitW / 2, position.y - hitH / 2, hitW, hitH);
-            boolean blockedX = false;
-            for (Rectangle b : barriers) { if (rectX.overlaps(b)) { blockedX = true; break; } }
+            boolean blockedX =
+                isBarrier(barrierPixmap, newX - hitW, position.y - SIZE / 2f) ||
+                isBarrier(barrierPixmap, newX + hitW, position.y - SIZE / 2f) ||
+                isBarrier(barrierPixmap, newX - hitW, position.y - hitTop) ||
+                isBarrier(barrierPixmap, newX + hitW, position.y - hitTop);
             if (!blockedX) position.x = newX;
 
-            Rectangle rectY = new Rectangle(position.x - hitW / 2, newY - hitH / 2, hitW, hitH);
-            boolean blockedY = false;
-            for (Rectangle b : barriers) { if (rectY.overlaps(b)) { blockedY = true; break; } }
+            boolean blockedY =
+                isBarrier(barrierPixmap, position.x - hitW, newY - SIZE / 2f) ||
+                isBarrier(barrierPixmap, position.x + hitW, newY - SIZE / 2f) ||
+                isBarrier(barrierPixmap, position.x - hitW, newY - hitTop) ||
+                isBarrier(barrierPixmap, position.x + hitW, newY - hitTop);
             if (!blockedY) position.y = newY;
 
             // still pick dominant axis for sprite direction
@@ -137,18 +148,22 @@ public class PoliceEnemy {
                 case DOWN: newY -= WANDER_SPEED * delta; break;
             }
 
-            // wander with barrier
-            float hitW = SIZE * 0.5f;
-            float hitH = SIZE * 0.5f;
+            // wander with barrier — bottom 20% of sprite only
+            float hitW = SIZE * 0.3f;
+            float hitTop = SIZE * 0.3f;
 
-            Rectangle rectX = new Rectangle(newX - hitW / 2, position.y - hitH / 2, hitW, hitH);
-            boolean blockedX = false;
-            for (Rectangle b : barriers) { if (rectX.overlaps(b)) { blockedX = true; break; } }
+            boolean blockedX =
+                isBarrier(barrierPixmap, newX - hitW, position.y - SIZE / 2f) ||
+                isBarrier(barrierPixmap, newX + hitW, position.y - SIZE / 2f) ||
+                isBarrier(barrierPixmap, newX - hitW, position.y - hitTop) ||
+                isBarrier(barrierPixmap, newX + hitW, position.y - hitTop);
             if (!blockedX) position.x = newX;
 
-            Rectangle rectY = new Rectangle(position.x - hitW / 2, newY - hitH / 2, hitW, hitH);
-            boolean blockedY = false;
-            for (Rectangle b : barriers) { if (rectY.overlaps(b)) { blockedY = true; break; } }
+            boolean blockedY =
+                isBarrier(barrierPixmap, position.x - hitW, newY - SIZE / 2f) ||
+                isBarrier(barrierPixmap, position.x + hitW, newY - SIZE / 2f) ||
+                isBarrier(barrierPixmap, position.x - hitW, newY - hitTop) ||
+                isBarrier(barrierPixmap, position.x + hitW, newY - hitTop);
             if (!blockedY) position.y = newY;
         }
 

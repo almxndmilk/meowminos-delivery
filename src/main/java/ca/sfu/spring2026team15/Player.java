@@ -2,16 +2,15 @@ package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
-import com.badlogic.gdx.math.Rectangle;
-import java.util.ArrayList;
-
 public class Player {
     private static final float SIZE = 150f;
     private static final float SPEED = 400f;
+    private static final int BARRIER_X_OFFSET = 75;
     private float VAR_SPEED = SPEED;
 
     //for puddle speed change
@@ -49,7 +48,15 @@ public class Player {
         position = new Vector2(startX, startY);
     }
 
-    public void update(float delta, ArrayList <Rectangle> barriers) {
+    private boolean isBarrier(Pixmap pixmap, float worldX, float worldY) {
+        int imgH = pixmap.getHeight();
+        int px = (int)(worldX + BARRIER_X_OFFSET);
+        int py = imgH - 1 - (int)worldY;
+        if (px < 0 || px >= pixmap.getWidth() || py < 0 || py >= imgH) return true;
+        return (pixmap.getPixel(px, py) & 0xFF) >= 128;
+    }
+
+    public void update(float delta, Pixmap barrierPixmap) {
         isMoving = false;
 
         boolean left = Gdx.input.isKeyPressed(Input.Keys.A);
@@ -65,23 +72,23 @@ public class Player {
         if (up && !down) { newY += VAR_SPEED * delta; isMoving = true; lastDirection = Direction.UP; }
         if (down && !up) { newY -= VAR_SPEED * delta; isMoving = true; lastDirection = Direction.DOWN; }
 
-        float hitW = SIZE * 0.5f;
-        float hitH = SIZE * 0.5f;
+        float hitW = SIZE * 0.3f; // narrower than sprite for forgiveness
+        float hitTop = SIZE * 0.3f; // bottom 20%: feet up to position.y - SIZE*0.3
 
-        // Check X
-        Rectangle playerRectX = new Rectangle(newX - hitW / 2, position.y - hitH / 2, hitW, hitH);
-        boolean blockedX = false;
-        for (Rectangle barrier : barriers) {
-            if (playerRectX.overlaps(barrier)) { blockedX = true; break; }
-        }
+        // Check X — bottom 20% of sprite
+        boolean blockedX =
+            isBarrier(barrierPixmap, newX - hitW, position.y - SIZE / 2f) ||
+            isBarrier(barrierPixmap, newX + hitW, position.y - SIZE / 2f) ||
+            isBarrier(barrierPixmap, newX - hitW, position.y - hitTop) ||
+            isBarrier(barrierPixmap, newX + hitW, position.y - hitTop);
         if (!blockedX) position.x = newX;
 
-        // Check Y
-        Rectangle playerRectY = new Rectangle(position.x - hitW / 2, newY - hitH / 2, hitW, hitH);
-        boolean blockedY = false;
-        for (Rectangle barrier : barriers) {
-            if (playerRectY.overlaps(barrier)) { blockedY = true; break; }
-        }
+        // Check Y — bottom 20% of sprite
+        boolean blockedY =
+            isBarrier(barrierPixmap, position.x - hitW, newY - SIZE / 2f) ||
+            isBarrier(barrierPixmap, position.x + hitW, newY - SIZE / 2f) ||
+            isBarrier(barrierPixmap, position.x - hitW, newY - hitTop) ||
+            isBarrier(barrierPixmap, position.x + hitW, newY - hitTop);
         if (!blockedY) position.y = newY;
 
         if (isMoving) {
