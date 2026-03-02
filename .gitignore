@@ -4,6 +4,7 @@
 *.log
 *.gz
 *.fdb_latexmk
+*.md
 
 ./*.aux
 ./*.fls
