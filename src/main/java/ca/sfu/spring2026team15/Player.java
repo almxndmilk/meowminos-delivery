@@ -31,9 +31,9 @@ public class Player {
     public Player(float startX, float startY) {
         left1 = new Texture(Gdx.files.internal("catOffBike/catOffBike1.png"));
         left2 = new Texture(Gdx.files.internal("catOffBike/catOffBike2.png"));
-        up1   = new Texture(Gdx.files.internal("catBack/catBack1.png"));
-        up2   = new Texture(Gdx.files.internal("catBack/catBack2.png"));
-        up3   = new Texture(Gdx.files.internal("catBack/catBack3.png"));
+        up1 = new Texture(Gdx.files.internal("catBack/catBack1.png"));
+        up2 = new Texture(Gdx.files.internal("catBack/catBack2.png"));
+        up3 = new Texture(Gdx.files.internal("catBack/catBack3.png"));
         down1 = new Texture(Gdx.files.internal("catFront/catFront1.png"));
         down2 = new Texture(Gdx.files.internal("catFront/catFront2.png"));
         down3 = new Texture(Gdx.files.internal("catFront/catFront3.png"));
@@ -44,10 +44,16 @@ public class Player {
     public void update(float delta) {
         isMoving = false;
 
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) { position.y += SPEED * delta; isMoving = true; lastDirection = Direction.UP; }
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) { position.y -= SPEED * delta; isMoving = true; lastDirection = Direction.DOWN; }
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) { position.x += SPEED * delta; isMoving = true; lastDirection = Direction.RIGHT; }
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) { position.x -= SPEED * delta; isMoving = true; lastDirection = Direction.LEFT; }
+        boolean left = Gdx.input.isKeyPressed(Input.Keys.A);
+        boolean right = Gdx.input.isKeyPressed(Input.Keys.D);
+        boolean up = Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean down = Gdx.input.isKeyPressed(Input.Keys.S);
+
+        if (left && !right) { position.x -= SPEED * delta; isMoving = true; lastDirection = Direction.LEFT; }
+        if (right && !left) { position.x += SPEED * delta; isMoving = true; lastDirection = Direction.RIGHT; }
+        if (up && !down) { position.y += SPEED * delta; isMoving = true; lastDirection = Direction.UP; }
+        if (down && !up) { position.y -= SPEED * delta; isMoving = true; lastDirection = Direction.DOWN; }
+
 
         if (isMoving) {
             if (lastDirection != prevDirection) {
@@ -72,14 +78,26 @@ public class Player {
                 currentFrame = (currentFrameIndex == 0) ? left1 : left2;
                 break;
             case UP:
-                if (currentFrameIndex == 0)      currentFrame = up1;
-                else if (currentFrameIndex == 1) currentFrame = up2;
-                else                             currentFrame = up3;
+                if (currentFrameIndex == 0) {
+                    currentFrame = up1;
+                }
+                else if (currentFrameIndex == 1){
+                    currentFrame = up2;
+                }
+                else{
+                    currentFrame = up3;
+                }
                 break;
             case DOWN:
-                if (currentFrameIndex == 0)      currentFrame = down1;
-                else if (currentFrameIndex == 1) currentFrame = down2;
-                else                             currentFrame = down3;
+                if (currentFrameIndex == 0){
+                    currentFrame = down1;
+                }
+                else if (currentFrameIndex == 1) {
+                    currentFrame = down2;
+                }
+                else{
+                    currentFrame = down3;
+                }
                 break;
         }
     }
@@ -99,7 +117,7 @@ public class Player {
 
     public void dispose() {
         left1.dispose(); left2.dispose();
-        up1.dispose();   up2.dispose();   up3.dispose();
+        up1.dispose(); up2.dispose(); up3.dispose();
         down1.dispose(); down2.dispose(); down3.dispose();
     }
 }
