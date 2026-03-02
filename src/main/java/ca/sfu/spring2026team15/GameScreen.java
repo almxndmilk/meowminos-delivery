@@ -27,6 +27,7 @@ public class GameScreen implements Screen {
     private List<PoliceEnemy> police;
 
     private final Main game;
+    private float elapsedTime = 0f;
 
     // constructor
     public GameScreen(Main game) {
@@ -54,6 +55,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        elapsedTime += delta;
         player.update(delta);
         gameCamera.update(player.getCenterX(), player.getCenterY());
 
@@ -67,6 +69,14 @@ public class GameScreen implements Screen {
             enemy.render(batch);
         }
         batch.end();
+
+        for (PoliceEnemy enemy : police) {
+            if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
+                dispose();
+                game.setScreen(new EndScreen(game, (int) elapsedTime));
+                return;
+            }
+        }
     }
 
     // required methods for Screen interface
