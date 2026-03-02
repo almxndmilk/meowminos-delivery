@@ -1,14 +1,13 @@
 package ca.sfu.spring2026team15;
 
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
-//import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 public class StartScreen implements Screen {
 
@@ -20,6 +19,8 @@ public class StartScreen implements Screen {
     private Texture startTexture;
     private Texture buttonTexture;
     private Texture titleTexture;
+    private Texture instructionBtnTexture;
+    private Texture settingsBtnTexture;
 
     // Start Button
     float btnWidth  = 200f;
@@ -28,6 +29,10 @@ public class StartScreen implements Screen {
     // Title
     float titleWidth  = 700f;
     float titleHeight = 350f;
+
+    // Instruction / Settings icon buttons
+    private static final float ICON_W = 80f;
+    private static final float ICON_H = 80f;
 
     public StartScreen(Main game) {
         this.game = game;
@@ -50,10 +55,17 @@ public class StartScreen implements Screen {
         float titleX = (viewport.getWorldWidth()  / 2) - (titleWidth  / 2);
         float titleY = (viewport.getWorldHeight() / 1.8f) - (titleHeight / 2);
 
+        // Instruction / Settings button positions
+        float newBtnY = btnY - 100f;
+        float instrX  = (viewport.getWorldWidth() / 2f) - 50f - ICON_W;
+        float settX   = (viewport.getWorldWidth() / 2f) + 50f;
+
         batch.begin();
         batch.draw(startTexture, 0, 0, viewport.getWorldWidth(), viewport.getWorldHeight());
         batch.draw(buttonTexture, btnX, btnY, btnWidth, btnHeight);
         batch.draw(titleTexture, titleX, titleY, titleWidth, titleHeight);
+        batch.draw(instructionBtnTexture, instrX, newBtnY, ICON_W, ICON_H);
+        batch.draw(settingsBtnTexture,    settX,  newBtnY, ICON_W, ICON_H);
         batch.end();
 
         if (Gdx.input.justTouched()) {
@@ -65,6 +77,16 @@ public class StartScreen implements Screen {
                 game.setScreen(new GameScreen(game));
                 dispose();
             }
+            if (touch.x >= instrX && touch.x <= instrX + ICON_W &&
+                    touch.y >= newBtnY && touch.y <= newBtnY + ICON_H) {
+                dispose();
+                game.setScreen(new InstructionsScreen(game));
+            }
+            if (touch.x >= settX && touch.x <= settX + ICON_W &&
+                    touch.y >= newBtnY && touch.y <= newBtnY + ICON_H) {
+                dispose();
+                game.setScreen(new SettingsScreen(game));
+            }
         }
     }
 
@@ -73,9 +95,11 @@ public class StartScreen implements Screen {
         viewport.update(width, height, true);
     }
     @Override public void show() {
-        startTexture = new Texture(Gdx.files.internal("StartScreen/startScreenBackground.png"));
-        buttonTexture = new Texture(Gdx.files.internal("StartScreen/playButton.PNG"));
-        titleTexture = new Texture(Gdx.files.internal("StartScreen/newTitle.png"));
+        startTexture          = new Texture(Gdx.files.internal("StartScreen/startScreenBackground.png"));
+        buttonTexture         = new Texture(Gdx.files.internal("StartScreen/playButton.PNG"));
+        titleTexture          = new Texture(Gdx.files.internal("StartScreen/newTitle.png"));
+        instructionBtnTexture = new Texture(Gdx.files.internal("StartScreen/instructionButton.PNG"));
+        settingsBtnTexture    = new Texture(Gdx.files.internal("StartScreen/settingButton.PNG"));
     }
     @Override public void pause() {}
     @Override public void resume() {}
@@ -86,6 +110,8 @@ public class StartScreen implements Screen {
         startTexture.dispose();
         buttonTexture.dispose();
         titleTexture.dispose();
+        instructionBtnTexture.dispose();
+        settingsBtnTexture.dispose();
         batch.dispose();
     }
 }
