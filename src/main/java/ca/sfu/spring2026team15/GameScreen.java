@@ -43,7 +43,7 @@ public class GameScreen implements Screen {
     private int fishCollected = 0;
 
     private final Main game;
-    private float elapsedTime = 0f;
+    private Timer timer;
 
     private Pixmap barrierPixmap;
 
@@ -87,6 +87,8 @@ public class GameScreen implements Screen {
         pauseTexture  = new Texture(Gdx.files.internal("Pause/Pause_screen.png"));
         pauseBatch    = new SpriteBatch();
         pauseViewport = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT);
+        timer = new Timer();
+        timer.start();
     }
 
     /** Samples the barriers Pixmap to place fish only on drivable road pixels. */
@@ -128,10 +130,12 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isPaused = !isPaused;
+            if (isPaused) timer.pause();
+            else timer.resume();
         }
 
         if (!isPaused) {
-            elapsedTime += delta;
+            timer.update(delta);
             player.update(delta, barrierPixmap);
             gameCamera.update(player.getCenterX(), player.getCenterY());
             if (checkFishCollection()) return;
@@ -182,7 +186,8 @@ public class GameScreen implements Screen {
 
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
-                game.setScreen(new EndScreen(game, (int) elapsedTime));
+                timer.stop();
+                game.setScreen(new EndScreen(game, timer.getSeconds()));;
                 return true; // Signal to stop rendering
             }
         }
@@ -212,6 +217,8 @@ public class GameScreen implements Screen {
 
         hudFont.draw(hudBatch, "x " + fishCollected, iconX + iconSize + 4f, iconY + iconSize - 4f);
 
+        timer.render(hudBatch, hudFont);
+
         hudBatch.end();
     }
 
@@ -226,6 +233,7 @@ public class GameScreen implements Screen {
             Vector2 touch = pauseViewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
             if (touch.x >= RESUME_X1 && touch.x <= RESUME_X2 && touch.y >= RESUME_Y1 && touch.y <= RESUME_Y2) {
                 isPaused = false;
+                timer.resume();
             } else if (touch.x >= RESTART_X1 && touch.x <= RESTART_X2 && touch.y >= RESTART_Y1 && touch.y <= RESTART_Y2) {
                 dispose();
                 game.setScreen(new GameScreen(game));
