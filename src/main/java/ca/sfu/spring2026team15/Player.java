@@ -12,6 +12,11 @@ import java.util.ArrayList;
 public class Player {
     private static final float SIZE = 150f;
     private static final float SPEED = 400f;
+    private float VAR_SPEED = SPEED;
+
+    //for puddle speed change
+    public void setSpeed(float VAR_SPEED) { this.VAR_SPEED = VAR_SPEED; }
+    public void resetSpeed() { this.VAR_SPEED = SPEED; }
 
     private final Texture left1, left2;
     private final Texture up1, up2, up3;
@@ -55,10 +60,10 @@ public class Player {
         float newX = position.x;
         float newY = position.y;
 
-        if (left && !right) { newX -= SPEED * delta; isMoving = true; lastDirection = Direction.LEFT; }
-        if (right && !left) { newX += SPEED * delta; isMoving = true; lastDirection = Direction.RIGHT; }
-        if (up && !down) { newY += SPEED * delta; isMoving = true; lastDirection = Direction.UP; }
-        if (down && !up) { newY -= SPEED * delta; isMoving = true; lastDirection = Direction.DOWN; }
+        if (left && !right) { newX -= VAR_SPEED * delta; isMoving = true; lastDirection = Direction.LEFT; }
+        if (right && !left) { newX += VAR_SPEED * delta; isMoving = true; lastDirection = Direction.RIGHT; }
+        if (up && !down) { newY += VAR_SPEED * delta; isMoving = true; lastDirection = Direction.UP; }
+        if (down && !up) { newY -= VAR_SPEED * delta; isMoving = true; lastDirection = Direction.DOWN; }
 
         float hitW = SIZE * 0.5f;
         float hitH = SIZE * 0.5f;

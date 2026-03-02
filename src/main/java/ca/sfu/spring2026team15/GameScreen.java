@@ -78,7 +78,11 @@ public class GameScreen implements Screen {
         batch.setProjectionMatrix(gameCamera.getCamera().combined);
         batch.begin();
         batch.draw(mapTexture, -75, 0, MAP_WIDTH, MAP_HEIGHT);
+        player.resetSpeed(); // reset before checking
         for (PuddleEnemy puddle : puddles) {
+            if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
+                player.setSpeed(70f);
+            }
             puddle.render(batch);
         }
         player.render(batch);
