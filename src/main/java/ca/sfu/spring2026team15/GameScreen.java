@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.Screen;
 import java.util.ArrayList;
 import java.util.List;
+import com.badlogic.gdx.math.Rectangle;
 
 public class GameScreen implements Screen {
     // World constants
@@ -41,6 +42,10 @@ public class GameScreen implements Screen {
     private int fishCollected = 0;
 
     private final Main game;
+    private float elapsedTime = 0f;
+
+    // barriers
+    private ArrayList<Rectangle> barriers;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -99,6 +104,14 @@ public class GameScreen implements Screen {
             }
         }
         barriers.dispose();
+
+        // barriers
+        barriers = new ArrayList<>();
+        barriers.add(new Rectangle(0, 0, MAP_WIDTH, 10));                    // bottom
+        barriers.add(new Rectangle(0, MAP_HEIGHT - 450, MAP_WIDTH / 1.6f, 450));      // top left
+        barriers.add(new Rectangle(4100, MAP_HEIGHT - 450, MAP_WIDTH / 1.6f, 450));      // top right
+        barriers.add(new Rectangle(0, 0, 10, MAP_HEIGHT));                   // left
+        barriers.add(new Rectangle(MAP_WIDTH - 50, 0, 10, MAP_HEIGHT));      // right
     }
 
     @Override
@@ -108,7 +121,8 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        player.update(delta);
+        elapsedTime += delta;
+        player.update(delta, barriers);
         gameCamera.update(player.getCenterX(), player.getCenterY());
 
         checkFishCollection();
@@ -117,7 +131,11 @@ public class GameScreen implements Screen {
         batch.setProjectionMatrix(gameCamera.getCamera().combined);
         batch.begin();
         batch.draw(mapTexture, -75, 0, MAP_WIDTH, MAP_HEIGHT);
+        player.resetSpeed(); // reset before checking
         for (PuddleEnemy puddle : puddles) {
+            if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
+                player.setSpeed(70f);
+            }
             puddle.render(batch);
         }
         for (Fish fish : fishList) {
@@ -143,6 +161,14 @@ public class GameScreen implements Screen {
             if (dx * dx + dy * dy < rSquared) {
                 fish.collect();
                 fishCollected++;
+            }
+        }
+
+        for (PoliceEnemy enemy : police) {
+            if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
+                dispose();
+                game.setScreen(new EndScreen(game, (int) elapsedTime));
+                return;
             }
         }
     }

@@ -154,6 +154,11 @@ public class PoliceEnemy {
         }
     }
 
+    public boolean isCatching(float playerX, float playerY) {
+        return alertState == AlertState.CHASING
+            && Vector2.dst(position.x, position.y, playerX, playerY) < 75f;
+    }
+
     public void dispose() {
         side1.dispose();  side2.dispose();
         back1.dispose();  back2.dispose();

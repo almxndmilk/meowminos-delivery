@@ -22,6 +22,11 @@ public class PuddleEnemy {
         batch.draw(puddle, x, y, SIZE, SIZE);
     }
 
+    public boolean onPuddle(float playerX, float playerY) {
+        float puddleBottomY = position.y - SIZE / 75f;
+        return playerY > puddleBottomY && Vector2.dst(position.x, position.y + 5f, playerX, playerY) < 67f;
+    }
+
     public void dispose() {
         puddle.dispose();
     }
