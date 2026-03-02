@@ -70,6 +70,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        elapsedTime += delta;
         player.update(delta, barriers);
         gameCamera.update(player.getCenterX(), player.getCenterY());
 
