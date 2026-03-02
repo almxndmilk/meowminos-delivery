@@ -78,8 +78,8 @@ public class GameScreen implements Screen {
     /** Samples the barriers Pixmap to place fish only on drivable road pixels. */
     private void spawnFish() {
         fishList = new ArrayList<>();
-        Pixmap barriers = new Pixmap(Gdx.files.internal("map/map part1 barriers.png"));
-        int imgH = barriers.getHeight();
+        Pixmap barrierPixmap = new Pixmap(Gdx.files.internal("map/map part1 barriers.png"));
+        int imgH = barrierPixmap.getHeight();
 
         int attempts = 0;
         while (fishList.size() < TARGET_FISH_COUNT && attempts < 10000) {
@@ -91,11 +91,11 @@ public class GameScreen implements Screen {
             int pixelY = imgH - 1 - (int) worldY;
 
             // clamp to image bounds
-            if (pixelX < 0 || pixelX >= barriers.getWidth() || pixelY < 0 || pixelY >= imgH) {
+            if (pixelX < 0 || pixelX >= barrierPixmap.getWidth() || pixelY < 0 || pixelY >= imgH) {
                 continue;
             }
 
-            int pixel = barriers.getPixel(pixelX, pixelY);
+            int pixel = barrierPixmap.getPixel(pixelX, pixelY);
             int a = pixel & 0xFF;
             // Transparent pixels (a=0) = road; opaque green pixels = off-road
             boolean isRoad = a < 128;
@@ -103,7 +103,7 @@ public class GameScreen implements Screen {
                 fishList.add(new Fish(worldX, worldY));
             }
         }
-        barriers.dispose();
+        barrierPixmap.dispose();
 
         // barriers
         barriers = new ArrayList<>();
