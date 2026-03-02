@@ -148,10 +148,15 @@ public class PoliceEnemy {
 
         // draw ? or ! above head depending on state
         if (alertState == AlertState.ALERTED) {
-            batch.draw(question, position.x, position.y + SIZE / 3.5f, 30f, 30f);
+            batch.draw(question, position.x + 5, position.y + SIZE / 4f, 30f, 30f);
         } else if (alertState == AlertState.CHASING) {
-            batch.draw(exclamation, position.x, position.y + SIZE / 3.5f, 30f, 30f);
+            batch.draw(exclamation, position.x + 5, position.y + SIZE / 3.8f, 25f, 25f);
         }
+    }
+
+    public boolean isCatching(float playerX, float playerY) {
+        return alertState == AlertState.CHASING
+            && Vector2.dst(position.x, position.y, playerX, playerY) < 75f;
     }
 
     public void dispose() {

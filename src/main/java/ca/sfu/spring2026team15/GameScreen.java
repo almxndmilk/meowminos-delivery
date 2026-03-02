@@ -29,6 +29,7 @@ public class GameScreen implements Screen {
     private List<PuddleEnemy> puddles;
 
     private final Main game;
+    private float elapsedTime = 0f;
 
     // barriers
     private ArrayList<Rectangle> barriers;
@@ -85,6 +86,14 @@ public class GameScreen implements Screen {
             enemy.render(batch);
         }
         batch.end();
+
+        for (PoliceEnemy enemy : police) {
+            if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
+                dispose();
+                game.setScreen(new EndScreen(game, (int) elapsedTime));
+                return;
+            }
+        }
     }
 
     // required methods for Screen interface
