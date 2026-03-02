@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -12,6 +13,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
@@ -48,6 +50,15 @@ public class GameScreen implements Screen {
     // barriers
     private ArrayList<Rectangle> barriers;
 
+    // Pause overlay
+    private boolean isPaused = false;
+    private Texture pauseTexture;
+    private SpriteBatch pauseBatch;
+    private ExtendViewport pauseViewport;
+    private static final float RESUME_X1  = 460f, RESUME_X2  = 810f, RESUME_Y1  = 430f, RESUME_Y2  = 485f;
+    private static final float RESTART_X1 = 460f, RESTART_X2 = 800f, RESTART_Y1 = 345f, RESTART_Y2 = 405f;
+    private static final float QUIT_X1    = 500f, QUIT_X2    = 770f, QUIT_Y1    = 260f, QUIT_Y2    = 320f;
+
     public GameScreen(Main game) {
         this.game = game;
     }
@@ -74,6 +85,10 @@ public class GameScreen implements Screen {
         hudFont.getData().setScale(2f);
 
         spawnFish();
+
+        pauseTexture  = new Texture(Gdx.files.internal("Pause/Pause_screen.png"));
+        pauseBatch    = new SpriteBatch();
+        pauseViewport = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT);
     }
 
     /** Samples the barriers Pixmap to place fish only on drivable road pixels. */
@@ -118,23 +133,27 @@ public class GameScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height);
+        pauseViewport.update(width, height, true);
     }
 
     @Override
     public void render(float delta) {
-        elapsedTime += delta;
-        player.update(delta, barriers);
-        gameCamera.update(player.getCenterX(), player.getCenterY());
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            isPaused = !isPaused;
+        }
 
-        if (checkFishCollection()) {
-            return; // Exit render if switching to EndScreen
+        if (!isPaused) {
+            elapsedTime += delta;
+            player.update(delta, barriers);
+            gameCamera.update(player.getCenterX(), player.getCenterY());
+            if (checkFishCollection()) return;
         }
 
         ScreenUtils.clear(Color.BLACK);
         batch.setProjectionMatrix(gameCamera.getCamera().combined);
         batch.begin();
         batch.draw(mapTexture, -75, 0, MAP_WIDTH, MAP_HEIGHT);
-        player.resetSpeed(); // reset before checking
+        player.resetSpeed();
         for (PuddleEnemy puddle : puddles) {
             if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
                 player.setSpeed(70f);
@@ -146,12 +165,16 @@ public class GameScreen implements Screen {
         }
         player.render(batch);
         for (PoliceEnemy enemy : police) {
-            enemy.update(delta, player.getCenterX(), player.getCenterY(), barriers);
+            if (!isPaused) enemy.update(delta, player.getCenterX(), player.getCenterY(), barriers);
             enemy.render(batch);
         }
         batch.end();
 
         renderHud();
+
+        if (isPaused) {
+            renderPause();
+        }
     }
 
     private boolean checkFishCollection() {
@@ -202,6 +225,27 @@ public class GameScreen implements Screen {
         hudBatch.end();
     }
 
+    private void renderPause() {
+        pauseViewport.apply();
+        pauseBatch.setProjectionMatrix(pauseViewport.getCamera().combined);
+        pauseBatch.begin();
+        pauseBatch.draw(pauseTexture, 0, 0, pauseViewport.getWorldWidth(), pauseViewport.getWorldHeight());
+        pauseBatch.end();
+
+        if (Gdx.input.justTouched()) {
+            Vector2 touch = pauseViewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+            if (touch.x >= RESUME_X1 && touch.x <= RESUME_X2 && touch.y >= RESUME_Y1 && touch.y <= RESUME_Y2) {
+                isPaused = false;
+            } else if (touch.x >= RESTART_X1 && touch.x <= RESTART_X2 && touch.y >= RESTART_Y1 && touch.y <= RESTART_Y2) {
+                dispose();
+                game.setScreen(new GameScreen(game));
+            } else if (touch.x >= QUIT_X1 && touch.x <= QUIT_X2 && touch.y >= QUIT_Y1 && touch.y <= QUIT_Y2) {
+                dispose();
+                Gdx.app.exit();
+            }
+        }
+    }
+
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}
@@ -210,6 +254,8 @@ public class GameScreen implements Screen {
     public void dispose() {
         mapTexture.dispose();
         batch.dispose();
+        pauseTexture.dispose();
+        pauseBatch.dispose();
         player.dispose();
         hudBatch.dispose();
         hudFont.dispose();
