@@ -6,6 +6,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
+import com.badlogic.gdx.math.Rectangle;
+import java.util.ArrayList;
+
 public class Player {
     private static final float SIZE = 150f;
     private static final float SPEED = 400f;
@@ -41,7 +44,7 @@ public class Player {
         position = new Vector2(startX, startY);
     }
 
-    public void update(float delta) {
+    public void update(float delta, ArrayList <Rectangle> barriers) {
         isMoving = false;
 
         boolean left = Gdx.input.isKeyPressed(Input.Keys.A);
@@ -49,11 +52,32 @@ public class Player {
         boolean up = Gdx.input.isKeyPressed(Input.Keys.W);
         boolean down = Gdx.input.isKeyPressed(Input.Keys.S);
 
-        if (left && !right) { position.x -= SPEED * delta; isMoving = true; lastDirection = Direction.LEFT; }
-        if (right && !left) { position.x += SPEED * delta; isMoving = true; lastDirection = Direction.RIGHT; }
-        if (up && !down) { position.y += SPEED * delta; isMoving = true; lastDirection = Direction.UP; }
-        if (down && !up) { position.y -= SPEED * delta; isMoving = true; lastDirection = Direction.DOWN; }
+        float newX = position.x;
+        float newY = position.y;
 
+        if (left && !right) { newX -= SPEED * delta; isMoving = true; lastDirection = Direction.LEFT; }
+        if (right && !left) { newX += SPEED * delta; isMoving = true; lastDirection = Direction.RIGHT; }
+        if (up && !down) { newY += SPEED * delta; isMoving = true; lastDirection = Direction.UP; }
+        if (down && !up) { newY -= SPEED * delta; isMoving = true; lastDirection = Direction.DOWN; }
+
+        float hitW = SIZE * 0.5f;
+        float hitH = SIZE * 0.5f;
+
+        // Check X
+        Rectangle playerRectX = new Rectangle(newX - hitW / 2, position.y - hitH / 2, hitW, hitH);
+        boolean blockedX = false;
+        for (Rectangle barrier : barriers) {
+            if (playerRectX.overlaps(barrier)) { blockedX = true; break; }
+        }
+        if (!blockedX) position.x = newX;
+
+        // Check Y
+        Rectangle playerRectY = new Rectangle(position.x - hitW / 2, newY - hitH / 2, hitW, hitH);
+        boolean blockedY = false;
+        for (Rectangle barrier : barriers) {
+            if (playerRectY.overlaps(barrier)) { blockedY = true; break; }
+        }
+        if (!blockedY) position.y = newY;
 
         if (isMoving) {
             if (lastDirection != prevDirection) {
