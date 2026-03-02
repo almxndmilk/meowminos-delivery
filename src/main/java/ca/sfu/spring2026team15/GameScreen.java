@@ -1,8 +1,5 @@
 package ca.sfu.spring2026team15;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -12,10 +9,11 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameScreen implements Screen {
     // World constants
@@ -45,10 +43,9 @@ public class GameScreen implements Screen {
     private int fishCollected = 0;
 
     private final Main game;
-    private float elapsedTime = 0f;
+    private Timer timer;
 
-    // barriers
-    private ArrayList<Rectangle> barriers;
+    private Pixmap barrierPixmap;
 
     // Pause overlay
     private boolean isPaused = false;
@@ -69,10 +66,10 @@ public class GameScreen implements Screen {
         batch      = new SpriteBatch();
         gameCamera = new GameCamera(VIEW_WIDTH, VIEW_HEIGHT, MAP_WIDTH, MAP_HEIGHT);
         viewport   = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
-        player     = new Player(300f, 400f);
+        player     = new Player(300f, 300f);
 
         police = new ArrayList<>();
-        police.add(new PoliceEnemy(800f, 400));
+        police.add(new PoliceEnemy(800f, 300));
         puddles = new ArrayList<>();
         puddles.add(new PuddleEnemy(1500f, 100f));
 
@@ -84,17 +81,19 @@ public class GameScreen implements Screen {
         hudFont   = new BitmapFont();
         hudFont.getData().setScale(2f);
 
+        barrierPixmap = new Pixmap(Gdx.files.internal("map/map part1 barriers.png"));
         spawnFish();
 
         pauseTexture  = new Texture(Gdx.files.internal("Pause/Pause_screen.png"));
         pauseBatch    = new SpriteBatch();
         pauseViewport = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT);
+        timer = new Timer();
+        timer.start();
     }
 
     /** Samples the barriers Pixmap to place fish only on drivable road pixels. */
     private void spawnFish() {
         fishList = new ArrayList<>();
-        Pixmap barrierPixmap = new Pixmap(Gdx.files.internal("map/map part1 barriers.png"));
         int imgH = barrierPixmap.getHeight();
 
         int attempts = 0;
@@ -119,15 +118,6 @@ public class GameScreen implements Screen {
                 fishList.add(new Fish(worldX, worldY));
             }
         }
-        barrierPixmap.dispose();
-
-        // barriers
-        barriers = new ArrayList<>();
-        barriers.add(new Rectangle(0, 0, MAP_WIDTH, 10));                    // bottom
-        barriers.add(new Rectangle(0, MAP_HEIGHT - 450, MAP_WIDTH / 1.6f, 450));      // top left
-        barriers.add(new Rectangle(4100, MAP_HEIGHT - 450, MAP_WIDTH / 1.6f, 450));      // top right
-        barriers.add(new Rectangle(0, 0, 10, MAP_HEIGHT));                   // left
-        barriers.add(new Rectangle(MAP_WIDTH - 50, 0, 10, MAP_HEIGHT));      // right
     }
 
     @Override
@@ -140,14 +130,18 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isPaused = !isPaused;
+            if (isPaused) timer.pause();
+            else timer.resume();
         }
 
         if (!isPaused) {
-            elapsedTime += delta;
-            player.update(delta, barriers);
+            timer.update(delta);
+            player.update(delta, barrierPixmap);
             gameCamera.update(player.getCenterX(), player.getCenterY());
             if (checkFishCollection()) return;
         }
+
+        checkFishCollection();
 
         ScreenUtils.clear(Color.BLACK);
         batch.setProjectionMatrix(gameCamera.getCamera().combined);
@@ -165,7 +159,7 @@ public class GameScreen implements Screen {
         }
         player.render(batch);
         for (PoliceEnemy enemy : police) {
-            if (!isPaused) enemy.update(delta, player.getCenterX(), player.getCenterY(), barriers);
+            if (!isPaused) enemy.update(delta, player.getCenterX(), player.getCenterY(), barrierPixmap);
             enemy.render(batch);
         }
         batch.end();
@@ -192,7 +186,8 @@ public class GameScreen implements Screen {
 
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
-                game.setScreen(new EndScreen(game, (int) elapsedTime));
+                timer.stop();
+                game.setScreen(new EndScreen(game, timer.getSeconds()));;
                 return true; // Signal to stop rendering
             }
         }
@@ -222,6 +217,8 @@ public class GameScreen implements Screen {
 
         hudFont.draw(hudBatch, "x " + fishCollected, iconX + iconSize + 4f, iconY + iconSize - 4f);
 
+        timer.render(hudBatch, hudFont);
+
         hudBatch.end();
     }
 
@@ -236,6 +233,7 @@ public class GameScreen implements Screen {
             Vector2 touch = pauseViewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
             if (touch.x >= RESUME_X1 && touch.x <= RESUME_X2 && touch.y >= RESUME_Y1 && touch.y <= RESUME_Y2) {
                 isPaused = false;
+                timer.resume();
             } else if (touch.x >= RESTART_X1 && touch.x <= RESTART_X2 && touch.y >= RESTART_Y1 && touch.y <= RESTART_Y2) {
                 dispose();
                 game.setScreen(new GameScreen(game));
@@ -253,6 +251,7 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         mapTexture.dispose();
+        barrierPixmap.dispose();
         batch.dispose();
         pauseTexture.dispose();
         pauseBatch.dispose();
