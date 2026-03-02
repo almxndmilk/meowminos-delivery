@@ -25,6 +25,7 @@ public class GameScreen implements Screen {
     private GameCamera gameCamera;
     private Player player;
     private List<PoliceEnemy> police;
+    private List<PuddleEnemy> puddles;
 
     private final Main game;
 
@@ -45,6 +46,8 @@ public class GameScreen implements Screen {
 
         police = new ArrayList<>();
         police.add(new PoliceEnemy(800f, 400));
+        puddles = new ArrayList<>();
+        puddles.add(new PuddleEnemy(1500f, 100f));
     }
 
     @Override
@@ -61,6 +64,9 @@ public class GameScreen implements Screen {
         batch.setProjectionMatrix(gameCamera.getCamera().combined);
         batch.begin();
         batch.draw(mapTexture, -75, 0, MAP_WIDTH, MAP_HEIGHT);
+        for (PuddleEnemy puddle : puddles) {
+            puddle.render(batch);
+        }
         player.render(batch);
         for (PoliceEnemy enemy : police) {
             enemy.update(delta, player.getCenterX(), player.getCenterY());
@@ -81,6 +87,9 @@ public class GameScreen implements Screen {
         player.dispose();
         for (PoliceEnemy enemy : police) {
             enemy.dispose();
+        }
+        for (PuddleEnemy puddle : puddles) {
+            puddle.dispose();
         }
     }
 }
