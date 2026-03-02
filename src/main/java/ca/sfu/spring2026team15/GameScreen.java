@@ -1,19 +1,18 @@
 package ca.sfu.spring2026team15;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.Screen;
+import java.util.ArrayList;
+import java.util.List;
+import com.badlogic.gdx.math.Rectangle;
 
 public class GameScreen implements Screen {
     // World constants
@@ -126,10 +125,7 @@ public class GameScreen implements Screen {
         player.update(delta, barriers);
         gameCamera.update(player.getCenterX(), player.getCenterY());
 
-        // Check collisions before rendering - if game ends, return immediately
-        if (checkFishCollection()) {
-            return;
-        }
+        checkFishCollection();
 
         ScreenUtils.clear(Color.BLACK);
         batch.setProjectionMatrix(gameCamera.getCamera().combined);
@@ -155,7 +151,7 @@ public class GameScreen implements Screen {
         renderHud();
     }
 
-    private boolean checkFishCollection() {
+    private void checkFishCollection() {
         float collectRadius = 60f;
         float rSquared = collectRadius * collectRadius;
         for (Fish fish : fishList) {
@@ -172,10 +168,9 @@ public class GameScreen implements Screen {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
                 dispose();
                 game.setScreen(new EndScreen(game, (int) elapsedTime));
-                return true; // Game over
+                return;
             }
         }
-        return false; // Game continues
     }
 
     private void renderHud() {
