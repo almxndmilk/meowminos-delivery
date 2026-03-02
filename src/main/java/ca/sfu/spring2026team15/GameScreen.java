@@ -143,7 +143,7 @@ public class GameScreen implements Screen {
         }
         player.render(batch);
         for (PoliceEnemy enemy : police) {
-            enemy.update(delta, player.getCenterX(), player.getCenterY());
+            enemy.update(delta, player.getCenterX(), player.getCenterY(), barriers);
             enemy.render(batch);
         }
         batch.end();

@@ -6,6 +6,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import java.util.Random;
 
+import com.badlogic.gdx.math.Rectangle;
+import java.util.ArrayList;
+
 public class PoliceEnemy {
     private static final float SIZE = 150f;
     private static final float CHASE_SPEED = 250f;
@@ -54,7 +57,7 @@ public class PoliceEnemy {
         position= new Vector2(spawnX, spawnY);
     }
 
-    public void update(float delta, float playerX, float playerY) {
+    public void update(float delta, float playerX, float playerY, ArrayList<Rectangle> barriers) {
         float dist = Vector2.dst(position.x, position.y, playerX, playerY);
         boolean inRange = dist <= DETECTION_RANGE;
 
@@ -89,8 +92,23 @@ public class PoliceEnemy {
         // movement
         if (alertState == AlertState.CHASING) {
             Vector2 dir = new Vector2(playerX - position.x, playerY - position.y).nor();
-            position.x += dir.x * CHASE_SPEED * delta;
-            position.y += dir.y * CHASE_SPEED * delta;
+            float newX = position.x + dir.x * CHASE_SPEED * delta;
+            float newY =position.y + dir.y * CHASE_SPEED * delta;
+
+
+            // barrier movement
+            float hitW = SIZE * 0.5f;
+            float hitH = SIZE * 0.5f;
+
+            Rectangle rectX = new Rectangle(newX - hitW / 2, position.y - hitH / 2, hitW, hitH);
+            boolean blockedX = false;
+            for (Rectangle b : barriers) { if (rectX.overlaps(b)) { blockedX = true; break; } }
+            if (!blockedX) position.x = newX;
+
+            Rectangle rectY = new Rectangle(position.x - hitW / 2, newY - hitH / 2, hitW, hitH);
+            boolean blockedY = false;
+            for (Rectangle b : barriers) { if (rectY.overlaps(b)) { blockedY = true; break; } }
+            if (!blockedY) position.y = newY;
 
             // still pick dominant axis for sprite direction
             float dx = playerX - position.x;
@@ -108,13 +126,32 @@ public class PoliceEnemy {
                 wanderTimer = WANDER_CHANGE_TIME;
                 lastDirection = Direction.values()[random.nextInt(4)];
             }
+
+            float newX = position.x;
+            float newY = position.y;
+
             switch (lastDirection) {
-                case LEFT: position.x -= WANDER_SPEED * delta; break;
-                case RIGHT: position.x += WANDER_SPEED * delta; break;
-                case UP: position.y += WANDER_SPEED * delta; break;
-                case DOWN: position.y -= WANDER_SPEED * delta; break;
+                case LEFT: newX -= WANDER_SPEED * delta; break;
+                case RIGHT: newX += WANDER_SPEED * delta; break;
+                case UP: newY += WANDER_SPEED * delta; break;
+                case DOWN: newY -= WANDER_SPEED * delta; break;
             }
+
+            // wander with barrier
+            float hitW = SIZE * 0.5f;
+            float hitH = SIZE * 0.5f;
+
+            Rectangle rectX = new Rectangle(newX - hitW / 2, position.y - hitH / 2, hitW, hitH);
+            boolean blockedX = false;
+            for (Rectangle b : barriers) { if (rectX.overlaps(b)) { blockedX = true; break; } }
+            if (!blockedX) position.x = newX;
+
+            Rectangle rectY = new Rectangle(position.x - hitW / 2, newY - hitH / 2, hitW, hitH);
+            boolean blockedY = false;
+            for (Rectangle b : barriers) { if (rectY.overlaps(b)) { blockedY = true; break; } }
+            if (!blockedY) position.y = newY;
         }
+
 
         //animation
         animTimer += delta;
