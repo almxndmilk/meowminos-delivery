@@ -9,9 +9,9 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.Screen;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -132,13 +132,10 @@ public class GameScreen implements Screen {
 
         if (!isPaused) {
             elapsedTime += delta;
-            player.update(delta, barriers);
+            player.update(delta, barrierPixmap);
             gameCamera.update(player.getCenterX(), player.getCenterY());
             if (checkFishCollection()) return;
         }
-        elapsedTime += delta;
-        player.update(delta, barrierPixmap);
-        gameCamera.update(player.getCenterX(), player.getCenterY());
 
         checkFishCollection();
 
@@ -158,8 +155,7 @@ public class GameScreen implements Screen {
         }
         player.render(batch);
         for (PoliceEnemy enemy : police) {
-            enemy.update(delta, player.getCenterX(), player.getCenterY(), barrierPixmap);
-            if (!isPaused) enemy.update(delta, player.getCenterX(), player.getCenterY(), barriers);
+            if (!isPaused) enemy.update(delta, player.getCenterX(), player.getCenterY(), barrierPixmap);
             enemy.render(batch);
         }
         batch.end();
