@@ -2,7 +2,6 @@ package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import ca.sfu.spring2026team15.Main;
 
 public class GameLauncher {
     public static void main(String[] args) {
