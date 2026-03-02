@@ -88,17 +88,20 @@ public class PoliceEnemy {
 
         // movement
         if (alertState == AlertState.CHASING) {
+            Vector2 dir = new Vector2(playerX - position.x, playerY - position.y).nor();
+            position.x += dir.x * CHASE_SPEED * delta;
+            position.y += dir.y * CHASE_SPEED * delta;
+
+            // still pick dominant axis for sprite direction
             float dx = playerX - position.x;
             float dy = playerY - position.y;
-
             if (Math.abs(dx) > Math.abs(dy)) {
                 lastDirection = (dx > 0) ? Direction.RIGHT : Direction.LEFT;
-                position.x += (dx > 0 ? 1 : -1) * CHASE_SPEED * delta;
             } else {
                 lastDirection = (dy > 0) ? Direction.UP : Direction.DOWN;
-                position.y += (dy > 0 ? 1 : -1) * CHASE_SPEED * delta;
             }
-        } else {
+        }
+        else {
             //wander
             wanderTimer -= delta;
             if (wanderTimer <= 0f) {
@@ -106,10 +109,10 @@ public class PoliceEnemy {
                 lastDirection = Direction.values()[random.nextInt(4)];
             }
             switch (lastDirection) {
-                case LEFT:  position.x -= WANDER_SPEED * delta; break;
+                case LEFT: position.x -= WANDER_SPEED * delta; break;
                 case RIGHT: position.x += WANDER_SPEED * delta; break;
-                case UP:    position.y += WANDER_SPEED * delta; break;
-                case DOWN:  position.y -= WANDER_SPEED * delta; break;
+                case UP: position.y += WANDER_SPEED * delta; break;
+                case DOWN: position.y -= WANDER_SPEED * delta; break;
             }
         }
 
