@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Game" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="ca.sfu.spring2026team15.GameLauncher" />
-    <module name="java-game" />
-    <method v="2">
-      <option name="Make" enabled="true" />
-    </method>
-  </configuration>
-</component>
