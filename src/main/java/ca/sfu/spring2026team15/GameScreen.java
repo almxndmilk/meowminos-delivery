@@ -56,6 +56,11 @@ public class GameScreen implements Screen {
     private static final float RESTART_X1 = 460f, RESTART_X2 = 800f, RESTART_Y1 = 345f, RESTART_Y2 = 405f;
     private static final float QUIT_X1    = 500f, QUIT_X2    = 770f, QUIT_Y1    = 260f, QUIT_Y2    = 320f;
 
+    // orders
+    private List<House> houses;
+    private Texture orderIndicatorTexture;
+    private boolean showDeliverPrompt = false;
+
     public GameScreen(Main game) {
         this.game = game;
     }
@@ -89,6 +94,14 @@ public class GameScreen implements Screen {
         pauseViewport = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT);
         timer = new Timer();
         timer.start();
+
+        // orders:
+        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse.png"));
+        houses = new ArrayList<>();
+// Add house positions matching your map image
+        houses.add(new House(1700f,  275f, orderIndicatorTexture));  // yellow house
+        houses.add(new House(2630f,  275f, orderIndicatorTexture));  // blue house
+        houses.add(new House(4755f, 275f, orderIndicatorTexture));  // pink house
     }
 
     /** Samples the barriers Pixmap to place fish only on drivable road pixels. */
@@ -143,10 +156,29 @@ public class GameScreen implements Screen {
 
         checkFishCollection();
 
+        // orders
+        showDeliverPrompt = false;
+        for (House house : houses) {
+            house.update(delta);
+            if (house.hasOrder() && house.isPlayerInRange(player.getCenterX(), player.getCenterY())) {
+                showDeliverPrompt = true;
+                if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                    if (house.tryDeliver(player.getCenterX(), player.getCenterY())) {
+                        fishCollected += 10; // reward fish points
+                    }
+                }
+            }
+        }
+
         ScreenUtils.clear(Color.BLACK);
         batch.setProjectionMatrix(gameCamera.getCamera().combined);
         batch.begin();
         batch.draw(mapTexture, -75, 0, MAP_WIDTH, MAP_HEIGHT);
+
+        for (House house : houses) {
+            house.render(batch);
+        }
+
         player.resetSpeed();
         for (PuddleEnemy puddle : puddles) {
             if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
@@ -219,6 +251,11 @@ public class GameScreen implements Screen {
 
         timer.render(hudBatch, hudFont);
 
+        //orders
+        if (showDeliverPrompt) {
+            hudFont.draw(hudBatch, "Press E to deliver!", VIEW_WIDTH / 2 - 100f, 80f);
+        }
+
         hudBatch.end();
     }
 
@@ -268,5 +305,6 @@ public class GameScreen implements Screen {
         for (Fish fish : fishList) {
             fish.dispose();
         }
+        orderIndicatorTexture.dispose();
     }
 }
