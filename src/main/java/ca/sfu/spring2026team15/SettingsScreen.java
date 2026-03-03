@@ -23,7 +23,7 @@ public class SettingsScreen implements Screen {
 
     // "Toggle Sound" text hit zone (world coords, Y from bottom)
     private static final float TOGGLE_X1 = 400f, TOGGLE_X2 = 900f;
-    private static final float TOGGLE_Y1 = 520f, TOGGLE_Y2 = 580f;
+    private static final float TOGGLE_Y1 = 470f, TOGGLE_Y2 = 530f;
 
     public SettingsScreen(Main game) {
         this.game = game;

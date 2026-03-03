@@ -18,7 +18,7 @@ public class InstructionsScreen implements Screen {
     private Texture background;
 
     // X (close) button baked into top-left of instructions.png
-    private static final float CLOSE_X1 = 0f,  CLOSE_X2 = 70f;
+    private static final float CLOSE_X1 = 0f,  CLOSE_X2 = 200f;
     private static final float CLOSE_Y1 = 660f, CLOSE_Y2 = 720f;
 
     public InstructionsScreen(Main game) {

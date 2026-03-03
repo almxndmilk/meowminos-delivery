@@ -13,7 +13,6 @@ public class StartScreen implements Screen {
 
     private final Main game;
     private SpriteBatch batch;
-//    private FitViewport viewport;
     private ExtendViewport viewport;
 
     private Texture startTexture;
