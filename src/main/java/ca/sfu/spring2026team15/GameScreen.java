@@ -149,6 +149,11 @@ public class GameScreen implements Screen {
 
         if (!isPaused) {
             timer.update(delta);
+            if (timer.getSeconds()>= 300){
+                timer.stop();
+                game.setScreen(new EndScreen(game, timer.getSeconds()));
+                return;
+            }
             player.update(delta, barrierPixmap);
             gameCamera.update(player.getCenterX(), player.getCenterY());
             if (checkFishCollection()) return;
@@ -220,7 +225,6 @@ public class GameScreen implements Screen {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
                 timer.stop();
                 game.setScreen(new EndScreen(game, timer.getSeconds()));;
-                return true; // Signal to stop rendering
             }
         }
         return false;
