@@ -92,6 +92,7 @@ public class GameScreen implements Screen {
         pauseTexture  = new Texture(Gdx.files.internal("Pause/Pause_screen.png"));
         pauseBatch    = new SpriteBatch();
         pauseViewport = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT);
+
         timer = new Timer();
         timer.start();
 
@@ -149,9 +150,8 @@ public class GameScreen implements Screen {
 
         if (!isPaused) {
             timer.update(delta);
-            if (timer.getSeconds()>= 300){
-                timer.stop();
-                game.setScreen(new EndScreen(game, timer.getSeconds()));
+            if (timer.isFinished()) {
+                game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
                 return;
             }
             player.update(delta, barrierPixmap);
@@ -188,6 +188,9 @@ public class GameScreen implements Screen {
         for (PuddleEnemy puddle : puddles) {
             if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
                 player.setSpeed(70f);
+                if (fishCollected > 0){
+                    fishCollected -= 1;
+                }
             }
             puddle.render(batch);
         }
@@ -224,7 +227,7 @@ public class GameScreen implements Screen {
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
                 timer.stop();
-                game.setScreen(new EndScreen(game, timer.getSeconds()));;
+                game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + 1));
             }
         }
         return false;
