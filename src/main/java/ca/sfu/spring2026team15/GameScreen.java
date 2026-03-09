@@ -28,6 +28,8 @@ public class GameScreen implements Screen {
     // Barrier image x-offset: map is drawn at worldX = -75, so pixelX = worldX + 75
     private static final int BARRIER_X_OFFSET = 75;
 
+    private boolean wasOnPuddle = false;
+
     private Texture mapTexture;
     private SpriteBatch batch;
     private ExtendViewport viewport;
@@ -201,15 +203,19 @@ public class GameScreen implements Screen {
         }
 
         player.resetSpeed();
+        boolean isOnPuddle = false;
         for (PuddleEnemy puddle : puddles) {
             if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
+                isOnPuddle = true;
                 player.setSpeed(70f);
-                if (fishCollected > 0){
+                if (!wasOnPuddle && fishCollected > 0) {
                     fishCollected -= 1;
                 }
             }
             puddle.render(batch);
         }
+        wasOnPuddle = isOnPuddle;
+
         for (Fish fish : fishList) {
             fish.render(batch);
         }
