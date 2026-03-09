@@ -12,7 +12,9 @@ public class PoliceEnemy {
     private static final float SIZE = 150f;
     private static final int BARRIER_X_OFFSET = 75;
     private static final float CHASE_SPEED = 250f;
+    private float VAR_CHASE_SPEED = CHASE_SPEED;
     private static final float WANDER_SPEED = 80f;
+    private float VAR_WANDER_SPEED = WANDER_SPEED;
     private static final float DETECTION_RANGE = 400f;
     private static final float FRAME_DURATION = 0.15f;
     private static final float WANDER_CHANGE_TIME = 2f;
@@ -63,6 +65,27 @@ public class PoliceEnemy {
         position= new Vector2(spawnX, spawnY);
     }
 
+    public void setChaseSpeed(float speed) {
+        this.VAR_CHASE_SPEED = speed;
+    }
+
+    public void setWanderSpeed(float speed) {
+        this.VAR_WANDER_SPEED = speed;
+    }
+
+    public void resetSpeed() {
+        this.VAR_CHASE_SPEED = CHASE_SPEED;
+        this.VAR_WANDER_SPEED = WANDER_SPEED;
+    }
+
+    public float getCenterX() {
+        return position.x;
+    }
+
+    public float getCenterY() {
+        return position.y;
+    }
+
     private boolean isBarrier(Pixmap pixmap, float worldX, float worldY) {
         int imgH = pixmap.getHeight();
         int px = (int)(worldX + BARRIER_X_OFFSET);
@@ -107,8 +130,8 @@ public class PoliceEnemy {
         // movement
         if (alertState == AlertState.CHASING) {
             Vector2 dir = new Vector2(playerX - position.x, playerY - position.y).nor();
-            float newX = position.x + dir.x * CHASE_SPEED * delta;
-            float newY =position.y + dir.y * CHASE_SPEED * delta;
+            float newX = position.x + dir.x * VAR_CHASE_SPEED * delta;
+            float newY =position.y + dir.y * VAR_CHASE_SPEED * delta;
 
 
             // barrier movement — bottom 20% of sprite only
@@ -150,10 +173,10 @@ public class PoliceEnemy {
             float newY = position.y;
 
             switch (lastDirection) {
-                case LEFT: newX -= WANDER_SPEED * delta; break;
-                case RIGHT: newX += WANDER_SPEED * delta; break;
-                case UP: newY += WANDER_SPEED * delta; break;
-                case DOWN: newY -= WANDER_SPEED * delta; break;
+                case LEFT: newX -= VAR_WANDER_SPEED * delta; break;
+                case RIGHT: newX += VAR_WANDER_SPEED * delta; break;
+                case UP: newY += VAR_WANDER_SPEED * delta; break;
+                case DOWN: newY -= VAR_WANDER_SPEED * delta; break;
             }
 
             // wander with barrier — bottom 20% of sprite only

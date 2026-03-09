@@ -219,7 +219,7 @@ public class GameScreen implements Screen {
             if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
                 isOnPuddle = true;
                 player.setSpeed(70f);
-                if (!wasOnPuddle && fishCollected > 0) {
+                if (!wasOnPuddle) {
                     fishCollected -= 1;
                 }
             }
@@ -231,10 +231,20 @@ public class GameScreen implements Screen {
             fish.render(batch);
         }
         player.render(batch);
+
         for (PoliceEnemy enemy : police) {
+            enemy.resetSpeed();
+            for (PuddleEnemy puddle : puddles) {
+                if (puddle.onPuddle(enemy.getCenterX(), enemy.getCenterY())) {
+                    enemy.setChaseSpeed(120f);
+                    enemy.setWanderSpeed(50f);
+                    break;
+                }
+            }
             if (!isPaused) enemy.update(delta, player.getCenterX(), player.getCenterY(), barrierPixmap);
             enemy.render(batch);
         }
+
         batch.end();
 
         renderHud();
@@ -254,6 +264,16 @@ public class GameScreen implements Screen {
             if (dx * dx + dy * dy < rSquared) {
                 fish.collect();
                 fishCollected++;
+            }
+            if (fishCollected < 0) {
+                timer.stop();
+                if (backgroundMusic != null) {
+                    backgroundMusic.stop();
+                    backgroundMusic.dispose();
+                    backgroundMusic = null;
+                }
+                game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
+                return true;
             }
         }
 
