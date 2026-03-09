@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 
 public class StartScreen implements Screen {
 
@@ -32,6 +34,9 @@ public class StartScreen implements Screen {
     // Instruction / Settings icon buttons
     private static final float ICON_W = 80f;
     private static final float ICON_H = 80f;
+
+    private Music backgroundMusic;
+    private Sound startButtonSound;
 
     public StartScreen(Main game) {
         this.game = game;
@@ -68,6 +73,7 @@ public class StartScreen implements Screen {
         batch.end();
 
         if (Gdx.input.justTouched()) {
+            startButtonSound.play(1.0f);
             // convert screen coordinates to world coordinates
             Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
 
@@ -99,6 +105,15 @@ public class StartScreen implements Screen {
         titleTexture          = new Texture(Gdx.files.internal("StartScreen/newTitle.png"));
         instructionBtnTexture = new Texture(Gdx.files.internal("StartScreen/instructionButton.PNG"));
         settingsBtnTexture    = new Texture(Gdx.files.internal("StartScreen/settingButton.PNG"));
+
+        // Load and play background music
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/titleMusic.mp3"));
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(0.5f);
+        backgroundMusic.play();
+
+        // audio
+        startButtonSound = Gdx.audio.newSound(Gdx.files.internal("audio/startButton.mp3"));
     }
     @Override public void pause() {}
     @Override public void resume() {}
@@ -112,5 +127,7 @@ public class StartScreen implements Screen {
         instructionBtnTexture.dispose();
         settingsBtnTexture.dispose();
         batch.dispose();
+        backgroundMusic.dispose();
+        startButtonSound.dispose();
     }
 }
