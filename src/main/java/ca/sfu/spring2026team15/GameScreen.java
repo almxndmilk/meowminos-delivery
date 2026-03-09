@@ -7,6 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -16,7 +17,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.audio.Sound;
 
 public class GameScreen implements Screen {
     // World constants
@@ -174,6 +174,11 @@ public class GameScreen implements Screen {
         if (!isPaused) {
             timer.update(delta);
             if (timer.isFinished()) {
+                if (backgroundMusic != null) {
+                    backgroundMusic.stop();
+                    backgroundMusic.dispose();
+                    backgroundMusic = null;
+                }
                 game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
                 return;
             }
@@ -255,6 +260,11 @@ public class GameScreen implements Screen {
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
                 timer.stop();
+                if (backgroundMusic != null) {
+                    backgroundMusic.stop();
+                    backgroundMusic.dispose();
+                    backgroundMusic = null;
+                }
                 game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + 1));
             }
         }
@@ -306,6 +316,7 @@ public class GameScreen implements Screen {
             if (touch.x >= RESUME_X1 && touch.x <= RESUME_X2 && touch.y >= RESUME_Y1 && touch.y <= RESUME_Y2) {
                 isPaused = false;
                 timer.resume();
+                backgroundMusic.play();
             } else if (touch.x >= RESTART_X1 && touch.x <= RESTART_X2 && touch.y >= RESTART_Y1 && touch.y <= RESTART_Y2) {
                 dispose();
                 game.setScreen(new GameScreen(game));
