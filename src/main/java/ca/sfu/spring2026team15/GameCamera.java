@@ -26,7 +26,7 @@ public class GameCamera {
         this.maxX = newMaxX;
     }
 
-    /** Update the Y clamp — call when entering a map with different vertical bounds. */
+    /** Update the Y clamp with raw map edges (halfViewH offset applied internally). */
     public void setYBounds(float minY, float maxY) {
         this.minY = minY;
         this.maxY = maxY;
@@ -35,7 +35,7 @@ public class GameCamera {
     // Centers the camera on (playerX, playerY), then clamps to current map bounds.
     public void update(float playerX, float playerY) {
         camera.position.x = MathUtils.clamp(playerX, halfViewW, maxX - halfViewW);
-        camera.position.y = MathUtils.clamp(playerY, minY, maxY);
+        camera.position.y = MathUtils.clamp(playerY, minY + halfViewH, maxY - halfViewH);
         camera.update();
     }
 

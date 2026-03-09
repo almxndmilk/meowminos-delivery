@@ -48,9 +48,11 @@ public class GameScreen implements Screen {
     // Fish quota required to advance from map 1 → map 2
     private static final int FISH_QUOTA = 50;
 
-    // Part 2 spawn point (world coords)
+    // Spawn points for each map transition (world coords)
     private static final float PART2_SPAWN_X = 5600f;
     private static final float PART2_SPAWN_Y = MAP_HEIGHT_PER_PART + 100f; // = 1002
+    private static final float PART3_SPAWN_X = 350f;
+    private static final float PART3_SPAWN_Y = MAP_HEIGHT_PER_PART * 2 + 100f; // = 1904
 
     // Iris rendering resources
     private ShapeRenderer shapeRenderer;
@@ -58,6 +60,8 @@ public class GameScreen implements Screen {
 
     // Tracks the highest map part the player has unlocked (0 = only map 1 rendered)
     private int currentMapIndex = 0;
+    // Which map we're transitioning into; set before starting FADE_OUT
+    private int pendingMapIndex = 1;
 
     private final Texture[] mapTextures    = new Texture[3];
     private final float[]   mapWidths      = new float[3];
@@ -148,11 +152,12 @@ public class GameScreen implements Screen {
         blackTexture = new Texture(blackPm);
         blackPm.dispose();
 
-        // Camera bounds scoped to map 1; updated on each map transition
+        // Camera bounds scoped to map 1; updated on each map transition (raw map edges, halfViewH applied internally).
+        // X uses mapWidth - BARRIER_X_OFFSET because the map is drawn at worldX = -75, so the right world-edge is mapWidth - 75.
         gameCamera = new GameCamera(VIEW_WIDTH, VIEW_HEIGHT,
             mapWidths[0] - BARRIER_X_OFFSET,
-            VIEW_HEIGHT / 2f,
-            mapHeights[0] - VIEW_HEIGHT / 2f);
+            0f,
+            mapHeights[0]);
         viewport   = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
         player     = new Player(300f, 300f);
 
@@ -213,16 +218,17 @@ public class GameScreen implements Screen {
     }
 
     private void spawnFishForMap(int mapIndex) {
-        float yOffset = mapIndex * MAP_HEIGHT_PER_PART;
+        float yOffset = mapYOffsets[mapIndex]; // use actual stacked Y, not assumed-uniform height
         Pixmap pm = barrierPixmaps[mapIndex];
         int imgH = pm.getHeight();
+        float mapW = mapWidths[mapIndex]; // use actual map width, not hardcoded 5300
 
         int attempts = 0;
         int spawned  = 0;
         while (spawned < TARGET_FISH_COUNT && attempts < 10000) {
             attempts++;
-            float worldX = 50f + (float) Math.random() * (5300f - 50f);
-            float localY = 50f + (float) Math.random() * (850f - 50f);
+            float worldX = 50f + (float) Math.random() * (mapW - 100f);
+            float localY = 50f + (float) Math.random() * (imgH - 100f);
 
             int pixelX = (int)(worldX + BARRIER_X_OFFSET);
             int pixelY = imgH - 1 - (int)localY;
@@ -267,8 +273,6 @@ public class GameScreen implements Screen {
             if (checkFishCollection()) return;
             gateMessageTimer -= delta;
         }
-
-        checkFishCollection();
 
         // Delivery prompt + interaction
         showDeliverPrompt = false;
@@ -344,7 +348,8 @@ public class GameScreen implements Screen {
                 player.setPosition(px, PROTRUDE_TRIGGER_Y - 20f);
                 setGateMessage("Collect " + fishNeeded + " more fish to advance!");
             } else {
-                transitionState = TransitionState.FADE_OUT;
+                pendingMapIndex  = 1;
+                transitionState  = TransitionState.FADE_OUT;
                 transitionTimer  = 0f;
             }
         }
@@ -360,6 +365,10 @@ public class GameScreen implements Screen {
             if (needed > 0) {
                 player.setPosition(px, mapYOffsets[2] - 80f);
                 setGateMessage("Deliver to " + needed + " more house(s) to advance!");
+            } else {
+                pendingMapIndex  = 2;
+                transitionState  = TransitionState.FADE_OUT;
+                transitionTimer  = 0f;
             }
         }
     }
@@ -368,17 +377,22 @@ public class GameScreen implements Screen {
         if (transitionState == TransitionState.NONE) return;
         transitionTimer += delta;
         if (transitionState == TransitionState.FADE_OUT && transitionTimer >= TRANSITION_DURATION) {
-            player.setPosition(PART2_SPAWN_X, PART2_SPAWN_Y);
-            currentMapIndex = Math.max(currentMapIndex, 1); // unlock map 2 rendering
-            gameCamera.setMaxX(mapWidths[1] - BARRIER_X_OFFSET);
-            gameCamera.setYBounds(mapYOffsets[1] + VIEW_HEIGHT / 2f,
-                                  mapYOffsets[1] + mapHeights[1] - VIEW_HEIGHT / 2f);
+            activateMap(pendingMapIndex);
             transitionTimer = 0f;
             transitionState = TransitionState.FADE_IN;
         } else if (transitionState == TransitionState.FADE_IN && transitionTimer >= TRANSITION_DURATION) {
             transitionTimer = 0f;
             transitionState = TransitionState.NONE;
         }
+    }
+
+    private void activateMap(int index) {
+        float[] spawnX = { 0f, PART2_SPAWN_X, PART3_SPAWN_X };
+        float[] spawnY = { 0f, PART2_SPAWN_Y, PART3_SPAWN_Y };
+        player.setPosition(spawnX[index], spawnY[index]);
+        currentMapIndex = Math.max(currentMapIndex, index);
+        gameCamera.setMaxX(mapWidths[index] - BARRIER_X_OFFSET);
+        gameCamera.setYBounds(mapYOffsets[index], mapYOffsets[index] + mapHeights[index]);
     }
 
     private void renderIris(float irisRadius) {
