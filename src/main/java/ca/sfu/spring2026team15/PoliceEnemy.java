@@ -1,7 +1,6 @@
 package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -10,7 +9,6 @@ import com.badlogic.gdx.audio.Sound;
 
 public class PoliceEnemy {
     private static final float SIZE = 150f;
-    private static final int BARRIER_X_OFFSET = 75;
     private static final float CHASE_SPEED = 250f;
     private float VAR_CHASE_SPEED = CHASE_SPEED;
     private static final float WANDER_SPEED = 80f;
@@ -65,36 +63,13 @@ public class PoliceEnemy {
         position= new Vector2(spawnX, spawnY);
     }
 
-    public void setChaseSpeed(float speed) {
-        this.VAR_CHASE_SPEED = speed;
-    }
+    public void setChaseSpeed(float speed) { this.VAR_CHASE_SPEED = speed; }
+    public void setWanderSpeed(float speed) { this.VAR_WANDER_SPEED = speed; }
+    public void resetSpeed() { this.VAR_CHASE_SPEED = CHASE_SPEED; this.VAR_WANDER_SPEED = WANDER_SPEED; }
+    public float getCenterX() { return position.x; }
+    public float getCenterY() { return position.y; }
 
-    public void setWanderSpeed(float speed) {
-        this.VAR_WANDER_SPEED = speed;
-    }
-
-    public void resetSpeed() {
-        this.VAR_CHASE_SPEED = CHASE_SPEED;
-        this.VAR_WANDER_SPEED = WANDER_SPEED;
-    }
-
-    public float getCenterX() {
-        return position.x;
-    }
-
-    public float getCenterY() {
-        return position.y;
-    }
-
-    private boolean isBarrier(Pixmap pixmap, float worldX, float worldY) {
-        int imgH = pixmap.getHeight();
-        int px = (int)(worldX + BARRIER_X_OFFSET);
-        int py = imgH - 1 - (int)worldY;
-        if (px < 0 || px >= pixmap.getWidth() || py < 0 || py >= imgH) return true;
-        return (pixmap.getPixel(px, py) & 0xFF) >= 128;
-    }
-
-    public void update(float delta, float playerX, float playerY, Pixmap barrierPixmap) {
+    public void update(float delta, float playerX, float playerY, BarrierLookup lookup) {
         float dist = Vector2.dst(position.x, position.y, playerX, playerY);
         boolean inRange = dist <= DETECTION_RANGE;
 
@@ -139,17 +114,17 @@ public class PoliceEnemy {
             float hitTop = SIZE * 0.3f;
 
             boolean blockedX =
-                isBarrier(barrierPixmap, newX - hitW, position.y - SIZE / 2f) ||
-                isBarrier(barrierPixmap, newX + hitW, position.y - SIZE / 2f) ||
-                isBarrier(barrierPixmap, newX - hitW, position.y - hitTop) ||
-                isBarrier(barrierPixmap, newX + hitW, position.y - hitTop);
+                lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
+                lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
+                lookup.isBarrier(newX - hitW, position.y - hitTop) ||
+                lookup.isBarrier(newX + hitW, position.y - hitTop);
             if (!blockedX) position.x = newX;
 
             boolean blockedY =
-                isBarrier(barrierPixmap, position.x - hitW, newY - SIZE / 2f) ||
-                isBarrier(barrierPixmap, position.x + hitW, newY - SIZE / 2f) ||
-                isBarrier(barrierPixmap, position.x - hitW, newY - hitTop) ||
-                isBarrier(barrierPixmap, position.x + hitW, newY - hitTop);
+                lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
+                lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
+                lookup.isBarrier(position.x - hitW, newY - hitTop) ||
+                lookup.isBarrier(position.x + hitW, newY - hitTop);
             if (!blockedY) position.y = newY;
 
             // still pick dominant axis for sprite direction
@@ -184,17 +159,17 @@ public class PoliceEnemy {
             float hitTop = SIZE * 0.3f;
 
             boolean blockedX =
-                isBarrier(barrierPixmap, newX - hitW, position.y - SIZE / 2f) ||
-                isBarrier(barrierPixmap, newX + hitW, position.y - SIZE / 2f) ||
-                isBarrier(barrierPixmap, newX - hitW, position.y - hitTop) ||
-                isBarrier(barrierPixmap, newX + hitW, position.y - hitTop);
+                lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
+                lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
+                lookup.isBarrier(newX - hitW, position.y - hitTop) ||
+                lookup.isBarrier(newX + hitW, position.y - hitTop);
             if (!blockedX) position.x = newX;
 
             boolean blockedY =
-                isBarrier(barrierPixmap, position.x - hitW, newY - SIZE / 2f) ||
-                isBarrier(barrierPixmap, position.x + hitW, newY - SIZE / 2f) ||
-                isBarrier(barrierPixmap, position.x - hitW, newY - hitTop) ||
-                isBarrier(barrierPixmap, position.x + hitW, newY - hitTop);
+                lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
+                lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
+                lookup.isBarrier(position.x - hitW, newY - hitTop) ||
+                lookup.isBarrier(position.x + hitW, newY - hitTop);
             if (!blockedY) position.y = newY;
         }
 

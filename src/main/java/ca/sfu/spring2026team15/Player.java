@@ -2,7 +2,6 @@ package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -10,12 +9,11 @@ import com.badlogic.gdx.math.Vector2;
 public class Player {
     private static final float SIZE = 150f;
     private static final float SPEED = 400f;
-    private static final int BARRIER_X_OFFSET = 75;
-    private float VAR_SPEED = SPEED;
+    private float currentSpeed = SPEED;
 
     //for puddle speed change
-    public void setSpeed(float VAR_SPEED) { this.VAR_SPEED = VAR_SPEED; }
-    public void resetSpeed() { this.VAR_SPEED = SPEED; }
+    public void setSpeed(float speed) { this.currentSpeed = speed; }
+    public void resetSpeed() { this.currentSpeed = SPEED; }
 
     private final Texture left1, left2;
     private final Texture up1, up2, up3;
@@ -48,15 +46,7 @@ public class Player {
         position = new Vector2(startX, startY);
     }
 
-    private boolean isBarrier(Pixmap pixmap, float worldX, float worldY) {
-        int imgH = pixmap.getHeight();
-        int px = (int)(worldX + BARRIER_X_OFFSET);
-        int py = imgH - 1 - (int)worldY;
-        if (px < 0 || px >= pixmap.getWidth() || py < 0 || py >= imgH) return true;
-        return (pixmap.getPixel(px, py) & 0xFF) >= 128;
-    }
-
-    public void update(float delta, Pixmap barrierPixmap) {
+    public void update(float delta, BarrierLookup lookup) {
         isMoving = false;
 
         boolean left = Gdx.input.isKeyPressed(Input.Keys.A);
@@ -67,28 +57,28 @@ public class Player {
         float newX = position.x;
         float newY = position.y;
 
-        if (left && !right) { newX -= VAR_SPEED * delta; isMoving = true; lastDirection = Direction.LEFT; }
-        if (right && !left) { newX += VAR_SPEED * delta; isMoving = true; lastDirection = Direction.RIGHT; }
-        if (up && !down) { newY += VAR_SPEED * delta; isMoving = true; lastDirection = Direction.UP; }
-        if (down && !up) { newY -= VAR_SPEED * delta; isMoving = true; lastDirection = Direction.DOWN; }
+        if (left && !right) { newX -= currentSpeed * delta; isMoving = true; lastDirection = Direction.LEFT; }
+        if (right && !left) { newX += currentSpeed * delta; isMoving = true; lastDirection = Direction.RIGHT; }
+        if (up && !down) { newY += currentSpeed * delta; isMoving = true; lastDirection = Direction.UP; }
+        if (down && !up) { newY -= currentSpeed * delta; isMoving = true; lastDirection = Direction.DOWN; }
 
         float hitW = SIZE * 0.3f; // narrower than sprite for forgiveness
         float hitTop = SIZE * 0.3f; // bottom 20%: feet up to position.y - SIZE*0.3
 
         // Check X — bottom 20% of sprite
         boolean blockedX =
-            isBarrier(barrierPixmap, newX - hitW, position.y - SIZE / 2f) ||
-            isBarrier(barrierPixmap, newX + hitW, position.y - SIZE / 2f) ||
-            isBarrier(barrierPixmap, newX - hitW, position.y - hitTop) ||
-            isBarrier(barrierPixmap, newX + hitW, position.y - hitTop);
+            lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
+            lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
+            lookup.isBarrier(newX - hitW, position.y - hitTop) ||
+            lookup.isBarrier(newX + hitW, position.y - hitTop);
         if (!blockedX) position.x = newX;
 
         // Check Y — bottom 20% of sprite
         boolean blockedY =
-            isBarrier(barrierPixmap, position.x - hitW, newY - SIZE / 2f) ||
-            isBarrier(barrierPixmap, position.x + hitW, newY - SIZE / 2f) ||
-            isBarrier(barrierPixmap, position.x - hitW, newY - hitTop) ||
-            isBarrier(barrierPixmap, position.x + hitW, newY - hitTop);
+            lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
+            lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
+            lookup.isBarrier(position.x - hitW, newY - hitTop) ||
+            lookup.isBarrier(position.x + hitW, newY - hitTop);
         if (!blockedY) position.y = newY;
 
         if (isMoving) {
@@ -150,6 +140,8 @@ public class Player {
 
     public float getCenterX() { return position.x; }
     public float getCenterY() { return position.y; }
+    public float getX() { return position.x; }
+    public void setPosition(float x, float y) { position.x = x; position.y = y; }
 
     public void dispose() {
         left1.dispose(); left2.dispose();
