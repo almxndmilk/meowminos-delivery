@@ -1,8 +1,12 @@
 package ca.sfu.spring2026team15;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -12,8 +16,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import java.util.ArrayList;
-import java.util.List;
 
 public class GameScreen implements Screen {
     // World constants
@@ -61,6 +63,9 @@ public class GameScreen implements Screen {
     private Texture orderIndicatorTexture;
     private boolean showDeliverPrompt = false;
 
+    // Background music
+    private Music backgroundMusic;
+
     public GameScreen(Main game) {
         this.game = game;
     }
@@ -103,6 +108,12 @@ public class GameScreen implements Screen {
         houses.add(new House(1700f,  275f, orderIndicatorTexture));  // yellow house
         houses.add(new House(2630f,  275f, orderIndicatorTexture));  // blue house
         houses.add(new House(4755f, 275f, orderIndicatorTexture));  // pink house
+
+        // Load and play background music
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(0.5f);
+        backgroundMusic.play();
     }
 
     /** Samples the barriers Pixmap to place fish only on drivable road pixels. */
@@ -144,8 +155,13 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isPaused = !isPaused;
-            if (isPaused) timer.pause();
-            else timer.resume();
+            if (isPaused) {
+                timer.pause();
+                backgroundMusic.pause();
+            } else {
+                timer.resume();
+                backgroundMusic.play();
+            }
         }
 
         if (!isPaused) {
@@ -313,5 +329,9 @@ public class GameScreen implements Screen {
             fish.dispose();
         }
         orderIndicatorTexture.dispose();
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+            backgroundMusic.dispose();
+        }
     }
 }
