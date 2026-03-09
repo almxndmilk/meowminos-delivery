@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.audio.Sound;
 
 public class GameScreen implements Screen {
     // World constants
@@ -67,6 +68,7 @@ public class GameScreen implements Screen {
 
     // Background music
     private Music backgroundMusic;
+    private Sound deliveredSound;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -116,6 +118,9 @@ public class GameScreen implements Screen {
         backgroundMusic.setLooping(true);
         backgroundMusic.setVolume(0.5f);
         backgroundMusic.play();
+
+        // audio
+        deliveredSound = Gdx.audio.newSound(Gdx.files.internal("audio/deliveredOrder.mp3"));
     }
 
     /** Samples the barriers Pixmap to place fish only on drivable road pixels. */
@@ -186,6 +191,7 @@ public class GameScreen implements Screen {
             if (house.hasOrder() && house.isPlayerInRange(player.getCenterX(), player.getCenterY())) {
                 showDeliverPrompt = true;
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                    deliveredSound.play(1.0f);
                     if (house.tryDeliver(player.getCenterX(), player.getCenterY())) {
                         fishCollected += 10; // reward fish points
                     }
@@ -338,6 +344,7 @@ public class GameScreen implements Screen {
         if (backgroundMusic != null) {
             backgroundMusic.stop();
             backgroundMusic.dispose();
+            deliveredSound.dispose();
         }
     }
 }
