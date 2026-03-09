@@ -73,12 +73,12 @@ public class StartScreen implements Screen {
         batch.end();
 
         if (Gdx.input.justTouched()) {
-            startButtonSound.play(1.0f);
             // convert screen coordinates to world coordinates
             Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
 
             if (touch.x >= btnX && touch.x <= btnX + btnWidth &&
                     touch.y >= btnY && touch.y <= btnY + btnHeight) {
+                startButtonSound.play(1.0f);
                 game.setScreen(new GameScreen(game));
                 dispose();
             }
