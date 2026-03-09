@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import java.util.Random;
+import com.badlogic.gdx.audio.Sound;
 
 public class PoliceEnemy {
     private static final float SIZE = 150f;
@@ -43,6 +44,9 @@ public class PoliceEnemy {
     private float wanderTimer = 0f;
     private final Random random = new Random();
 
+    //sound
+    private final Sound heySound;
+
     public PoliceEnemy(float spawnX, float spawnY) {
         side1 = new Texture(Gdx.files.internal("policeSide/policeSide1.png"));
         side2 = new Texture(Gdx.files.internal("policeSide/policeSide2.png"));
@@ -52,6 +56,9 @@ public class PoliceEnemy {
         front2 = new Texture(Gdx.files.internal("policeWalk/policeWalk2.png"));
         exclamation = new Texture(Gdx.files.internal("policeSupplementary/exclamationMark.png"));
         question= new Texture(Gdx.files.internal("policeSupplementary/questionMark.png"));
+
+        heySound = Gdx.audio.newSound(Gdx.files.internal("audio/HEY.mp3"));
+
         currentFrame = front1;
         position= new Vector2(spawnX, spawnY);
     }
@@ -85,6 +92,7 @@ public class PoliceEnemy {
                     alertTimer += delta;
                     if (alertTimer >= ALERT_DELAY) {
                         alertState = AlertState.CHASING;
+                        heySound.play(1.0f);
                     }
                 }
                 break;
@@ -217,5 +225,6 @@ public class PoliceEnemy {
         front1.dispose(); front2.dispose();
         exclamation.dispose();
         question.dispose();
+        heySound.dispose();
     }
 }
