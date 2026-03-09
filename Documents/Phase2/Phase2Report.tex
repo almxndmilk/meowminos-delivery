@@ -1,0 +1,150 @@
+
+% ================================
+% SFU CMPT 276 / Project Reports Template
+% ================================
+
+\documentclass[12pt]{article}
+
+% ---------------- Packages ----------------
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{hyperref}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% ---------------- Code formatting ----------------
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{mauve}{rgb}{0.58, 0.0, 0.82}
+\lstset{
+    language=Java, % The programming language
+    basicstyle=\footnotesize\ttfamily, % Font style and size
+    numbers=left, % Line numbers on the left
+    frame=single, % Adds a frame around the code block
+    keywordstyle=\color{blue}, % Keyword color
+    commentstyle=\color{dkgreen}, % Comment color
+    stringstyle=\color{mauve}, % String literal color
+    breaklines=true, % Automatic line breaking
+    tabsize=4 % Tab size
+}
+
+% ---------------- Page Style ----------------
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{CMPT 276 -- Project Phase \#X}
+\rhead{Group \#X}
+\cfoot{Page \thepage\ of \pageref{LastPage}}
+
+
+% ---------------- Metadata ----------------
+\title{\textbf{Project Phase \#X}\\[0.5em]
+CMPT 276: Introduction to Software Engineering\\
+Simon Fraser University}
+
+\author{
+\textbf{Group \#X}\\[0.75em]
+\begin{tabular}{l r}
+First Member      & Student \#123456789 \\
+Second Member  & Student \#987654321 \\
+Third Member   & Student \#112233445 \\
+Forth Member   & Student \#998877665 \\
+Fifth Member   & Student \#111222333 \\
+\end{tabular}
+}
+
+\date{\today}
+
+% ================================
+\begin{document}
+% ================================
+
+% -------- Cover Page --------
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+% -------- Table of Contents --------
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+% Reset page numbering after TOC
+\setcounter{page}{1}
+
+% -------- Report Content --------
+\section{Section title}
+\subsection{First Subsection}
+Any content needed by your first section
+
+\subsection{Second Subsection}
+Provide a clear and well-structured solution.
+
+\section{Formatting Examples}
+\subsection{Bullet list}
+\begin{itemize}
+  \item First item
+  \item Second item
+  \item Third item
+\end{itemize}
+
+\subsection{Numbered list}
+\begin{enumerate}
+  \item Step one
+  \item Step two
+  \item Step three
+\end{enumerate}
+
+\subsection{Table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|r|}
+\hline
+\textbf{Name} & \textbf{Score} & \textbf{Grade} \\
+\hline
+Alice   & 85 & B \\
+Bob     & 92 & A \\
+Charlie & 78 & C \\
+\hline
+\end{tabular}
+\caption{Example student scores}
+\end{table}
+
+\subsection{Text Decorations}
+This sentence contains \textbf{bold text}, \textit{italic text}, 
+\underline{underlined text}, \texttt{monospaced text}, 
+\textcolor{blue}{colored text}, and \textbf{\textcolor{red}{bold red text}}. Followed by a line break. \\
+Links can be included in any part of the text such as this link to the \href{https://www.sfu.ca}{Simon Fraser University} website.
+
+\subsection{Code}
+\begin{lstlisting}
+/* factorial function */
+public int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+\end{lstlisting}
+
+\subsection{Images}
+Here is an image of a squirrel:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{squirrel}
+\caption{This is a squirrel}
+\label{fig:squirrel}
+\end{figure}
+
+
+% -------- Optional: Code or Proof Section --------
+\section{Appendix (Optional)}
+Include any additional material here.
+
+% ================================
+\end{document}
+% ================================
+```
