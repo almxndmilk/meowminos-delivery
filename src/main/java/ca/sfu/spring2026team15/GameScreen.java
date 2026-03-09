@@ -150,7 +150,7 @@ public class GameScreen implements Screen {
 
         // Camera bounds scoped to map 1; updated on each map transition
         gameCamera = new GameCamera(VIEW_WIDTH, VIEW_HEIGHT,
-            mapWidths[0],
+            mapWidths[0] - BARRIER_X_OFFSET,
             VIEW_HEIGHT / 2f,
             mapHeights[0] - VIEW_HEIGHT / 2f);
         viewport   = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
@@ -338,7 +338,7 @@ public class GameScreen implements Screen {
         float py = player.getCenterY();
 
         // Gate 1: protrude corridor trigger band (X 3500–4200, Y ≥ 660)
-        if (px >= PROTRUDE_X_MIN && px <= PROTRUDE_X_MAX && py >= PROTRUDE_TRIGGER_Y) {
+        if (currentMapIndex == 0 && px >= PROTRUDE_X_MIN && px <= PROTRUDE_X_MAX && py >= PROTRUDE_TRIGGER_Y) {
             int fishNeeded = FISH_QUOTA - fishCollected;
             if (fishNeeded > 0) {
                 player.setPosition(px, PROTRUDE_TRIGGER_Y - 20f);
@@ -370,7 +370,7 @@ public class GameScreen implements Screen {
         if (transitionState == TransitionState.FADE_OUT && transitionTimer >= TRANSITION_DURATION) {
             player.setPosition(PART2_SPAWN_X, PART2_SPAWN_Y);
             currentMapIndex = Math.max(currentMapIndex, 1); // unlock map 2 rendering
-            gameCamera.setMaxX(mapWidths[1]);
+            gameCamera.setMaxX(mapWidths[1] - BARRIER_X_OFFSET);
             gameCamera.setYBounds(mapYOffsets[1] + VIEW_HEIGHT / 2f,
                                   mapYOffsets[1] + mapHeights[1] - VIEW_HEIGHT / 2f);
             transitionTimer = 0f;
