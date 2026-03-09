@@ -5,14 +5,15 @@ import com.badlogic.gdx.math.MathUtils;
 
 public class GameCamera {
     private final OrthographicCamera camera;
-    private final float mapWidth;
-    private final float mapHeight;
+    private float maxX;
+    private float minY, maxY;
     private final float halfViewW;
     private final float halfViewH;
 
-    public GameCamera(float viewportWidth, float viewportHeight, float mapWidth, float mapHeight) {
-        this.mapWidth = mapWidth;
-        this.mapHeight = mapHeight;
+    public GameCamera(float viewportWidth, float viewportHeight, float maxX, float minY, float maxY) {
+        this.maxX = maxX;
+        this.minY = minY;
+        this.maxY = maxY;
         this.halfViewW = viewportWidth / 2f;
         this.halfViewH = viewportHeight / 2f;
 
@@ -20,10 +21,21 @@ public class GameCamera {
         camera.setToOrtho(false, viewportWidth, viewportHeight);
     }
 
-    // Centers the camera on (playerX, playerY), then clamps to map bounds.
+    /** Expand the right-edge X clamp — call when entering a wider map. */
+    public void setMaxX(float newMaxX) {
+        this.maxX = newMaxX;
+    }
+
+    /** Update the Y clamp — call when entering a map with different vertical bounds. */
+    public void setYBounds(float minY, float maxY) {
+        this.minY = minY;
+        this.maxY = maxY;
+    }
+
+    // Centers the camera on (playerX, playerY), then clamps to current map bounds.
     public void update(float playerX, float playerY) {
-        camera.position.x = MathUtils.clamp(playerX, halfViewW, mapWidth - halfViewW);
-        camera.position.y = MathUtils.clamp(playerY, halfViewH, mapHeight - halfViewH);
+        camera.position.x = MathUtils.clamp(playerX, halfViewW, maxX - halfViewW);
+        camera.position.y = MathUtils.clamp(playerY, minY, maxY);
         camera.update();
     }
 

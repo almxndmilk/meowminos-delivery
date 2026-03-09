@@ -21,6 +21,8 @@ public class GameLauncher {
         config.setWindowIcon("catOnBike/catOnBike_Up.png");
 //        config.setForegroundFPS(60);
         config.useVsync(true);
+        // r, g, b, a=8 each; depth=16; stencil=8 (needed for iris wipe); samples=0
+        config.setBackBufferConfig(8, 8, 8, 8, 16, 8, 0);
         return config;
     }
 }

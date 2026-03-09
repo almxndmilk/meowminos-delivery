@@ -11,6 +11,7 @@ public class House {
 
     private final float x, y;
     private boolean hasOrder = false;
+    private boolean everDelivered = false;
     private float orderTimer = 0f;
     private float spawnTimer = 0f;
     private float nextSpawnTime;
@@ -52,6 +53,7 @@ public class House {
         if (inRange) {
             hasOrder = false;
             spawnTimer = 0f;
+            everDelivered = true;
             return true; // delivery successful
         }
         return false;
@@ -70,6 +72,7 @@ public class House {
     }
 
     public boolean hasOrder() { return hasOrder; }
+    public boolean wasDelivered() { return everDelivered; }
     public float getX() { return x; }
     public float getY() { return y; }
 }
