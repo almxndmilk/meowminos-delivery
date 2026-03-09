@@ -5,11 +5,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import java.util.Random;
+import com.badlogic.gdx.audio.Sound;
 
 public class PoliceEnemy {
     private static final float SIZE = 150f;
     private static final float CHASE_SPEED = 250f;
+    private float VAR_CHASE_SPEED = CHASE_SPEED;
     private static final float WANDER_SPEED = 80f;
+    private float VAR_WANDER_SPEED = WANDER_SPEED;
     private static final float DETECTION_RANGE = 400f;
     private static final float FRAME_DURATION = 0.15f;
     private static final float WANDER_CHANGE_TIME = 2f;
@@ -41,6 +44,9 @@ public class PoliceEnemy {
     private float wanderTimer = 0f;
     private final Random random = new Random();
 
+    //sound
+    private final Sound heySound;
+
     public PoliceEnemy(float spawnX, float spawnY) {
         side1 = new Texture(Gdx.files.internal("policeSide/policeSide1.png"));
         side2 = new Texture(Gdx.files.internal("policeSide/policeSide2.png"));
@@ -50,9 +56,18 @@ public class PoliceEnemy {
         front2 = new Texture(Gdx.files.internal("policeWalk/policeWalk2.png"));
         exclamation = new Texture(Gdx.files.internal("policeSupplementary/exclamationMark.png"));
         question= new Texture(Gdx.files.internal("policeSupplementary/questionMark.png"));
+
+        heySound = Gdx.audio.newSound(Gdx.files.internal("audio/HEY.mp3"));
+
         currentFrame = front1;
         position= new Vector2(spawnX, spawnY);
     }
+
+    public void setChaseSpeed(float speed) { this.VAR_CHASE_SPEED = speed; }
+    public void setWanderSpeed(float speed) { this.VAR_WANDER_SPEED = speed; }
+    public void resetSpeed() { this.VAR_CHASE_SPEED = CHASE_SPEED; this.VAR_WANDER_SPEED = WANDER_SPEED; }
+    public float getCenterX() { return position.x; }
+    public float getCenterY() { return position.y; }
 
     public void update(float delta, float playerX, float playerY, BarrierLookup lookup) {
         float dist = Vector2.dst(position.x, position.y, playerX, playerY);
@@ -75,6 +90,7 @@ public class PoliceEnemy {
                     alertTimer += delta;
                     if (alertTimer >= ALERT_DELAY) {
                         alertState = AlertState.CHASING;
+                        heySound.play(1.0f);
                     }
                 }
                 break;
@@ -89,8 +105,8 @@ public class PoliceEnemy {
         // movement
         if (alertState == AlertState.CHASING) {
             Vector2 dir = new Vector2(playerX - position.x, playerY - position.y).nor();
-            float newX = position.x + dir.x * CHASE_SPEED * delta;
-            float newY =position.y + dir.y * CHASE_SPEED * delta;
+            float newX = position.x + dir.x * VAR_CHASE_SPEED * delta;
+            float newY =position.y + dir.y * VAR_CHASE_SPEED * delta;
 
 
             // barrier movement — bottom 20% of sprite only
@@ -132,10 +148,10 @@ public class PoliceEnemy {
             float newY = position.y;
 
             switch (lastDirection) {
-                case LEFT: newX -= WANDER_SPEED * delta; break;
-                case RIGHT: newX += WANDER_SPEED * delta; break;
-                case UP: newY += WANDER_SPEED * delta; break;
-                case DOWN: newY -= WANDER_SPEED * delta; break;
+                case LEFT: newX -= VAR_WANDER_SPEED * delta; break;
+                case RIGHT: newX += VAR_WANDER_SPEED * delta; break;
+                case UP: newY += VAR_WANDER_SPEED * delta; break;
+                case DOWN: newY -= VAR_WANDER_SPEED * delta; break;
             }
 
             // wander with barrier — bottom 20% of sprite only
@@ -207,5 +223,6 @@ public class PoliceEnemy {
         front1.dispose(); front2.dispose();
         exclamation.dispose();
         question.dispose();
+        heySound.dispose();
     }
 }

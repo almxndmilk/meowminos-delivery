@@ -1,8 +1,13 @@
 package ca.sfu.spring2026team15;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -15,8 +20,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import java.util.ArrayList;
-import java.util.List;
 
 public class GameScreen implements Screen {
     // World constants
@@ -69,6 +72,13 @@ public class GameScreen implements Screen {
     private final float[]   mapYOffsets    = new float[3]; // world Y of each map's bottom edge
     private final Pixmap[]  barrierPixmaps = new Pixmap[3];
     private BarrierLookup barrierLookup;
+
+    // Puddle entry tracking — lose 1 fish on entry (not per frame); can go negative → death
+    private boolean wasOnPuddle = false;
+
+    // Audio
+    private Music backgroundMusic;
+    private Sound deliveredSound;
 
     private SpriteBatch batch;
     private ExtendViewport viewport;
@@ -207,6 +217,14 @@ public class GameScreen implements Screen {
         for (List<House> perMap : housesByMap) houses.addAll(perMap);
 
         spawnFish();
+
+        // Load and play background music
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(0.5f);
+        backgroundMusic.play();
+
+        deliveredSound = Gdx.audio.newSound(Gdx.files.internal("audio/deliveredOrder.mp3"));
     }
 
     /** Spawns fish on drivable road tiles across all three maps. */
@@ -254,13 +272,23 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             isPaused = !isPaused;
-            if (isPaused) timer.pause();
-            else timer.resume();
+            if (isPaused) {
+                timer.pause();
+                backgroundMusic.pause();
+            } else {
+                timer.resume();
+                backgroundMusic.play();
+            }
         }
 
         if (!isPaused) {
             timer.update(delta);
             if (timer.isFinished()) {
+                if (backgroundMusic != null) {
+                    backgroundMusic.stop();
+                    backgroundMusic.dispose();
+                    backgroundMusic = null;
+                }
                 game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
                 return;
             }
@@ -281,6 +309,7 @@ public class GameScreen implements Screen {
             if (house.hasOrder() && house.isPlayerInRange(player.getCenterX(), player.getCenterY())) {
                 showDeliverPrompt = true;
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                    deliveredSound.play(1.0f);
                     if (house.tryDeliver(player.getCenterX(), player.getCenterY())) {
                         fishCollected += 10;
                     }
@@ -301,21 +330,37 @@ public class GameScreen implements Screen {
         }
 
         player.resetSpeed();
+        boolean isOnPuddle = false;
         for (PuddleEnemy puddle : puddles) {
             if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
+                isOnPuddle = true;
                 player.setSpeed(70f);
-                if (fishCollected > 0) fishCollected -= 1;
+                if (!wasOnPuddle) {
+                    fishCollected -= 1;
+                }
             }
             puddle.render(batch);
         }
+        wasOnPuddle = isOnPuddle;
+
         for (Fish fish : fishList) {
             fish.render(batch);
         }
         player.render(batch);
+
         for (PoliceEnemy enemy : police) {
+            enemy.resetSpeed();
+            for (PuddleEnemy puddle : puddles) {
+                if (puddle.onPuddle(enemy.getCenterX(), enemy.getCenterY())) {
+                    enemy.setChaseSpeed(120f);
+                    enemy.setWanderSpeed(50f);
+                    break;
+                }
+            }
             if (!isPaused) enemy.update(delta, player.getCenterX(), player.getCenterY(), barrierLookup);
             enemy.render(batch);
         }
+
         batch.end();
 
         renderHud();
@@ -451,9 +496,25 @@ public class GameScreen implements Screen {
             }
         }
 
+        if (fishCollected < 0) {
+            timer.stop();
+            if (backgroundMusic != null) {
+                backgroundMusic.stop();
+                backgroundMusic.dispose();
+                backgroundMusic = null;
+            }
+            game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
+            return true;
+        }
+
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
                 timer.stop();
+                if (backgroundMusic != null) {
+                    backgroundMusic.stop();
+                    backgroundMusic.dispose();
+                    backgroundMusic = null;
+                }
                 game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + 1));
             }
         }
@@ -507,6 +568,7 @@ public class GameScreen implements Screen {
             if (touch.x >= RESUME_X1 && touch.x <= RESUME_X2 && touch.y >= RESUME_Y1 && touch.y <= RESUME_Y2) {
                 isPaused = false;
                 timer.resume();
+                backgroundMusic.play();
             } else if (touch.x >= RESTART_X1 && touch.x <= RESTART_X2 && touch.y >= RESTART_Y1 && touch.y <= RESTART_Y2) {
                 dispose();
                 game.setScreen(new GameScreen(game));
@@ -538,5 +600,10 @@ public class GameScreen implements Screen {
         orderIndicatorTexture.dispose();
         shapeRenderer.dispose();
         blackTexture.dispose();
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+            backgroundMusic.dispose();
+        }
+        if (deliveredSound != null) deliveredSound.dispose();
     }
 }

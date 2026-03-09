@@ -2,6 +2,7 @@ package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -44,6 +45,9 @@ public class EndScreen implements Screen {
     private static final float EXIT_X1     = 230f, EXIT_X2     = 365f;
     private static final float EXIT_Y1     = 158f, EXIT_Y2     = 198f;
 
+    //music
+    private Music backgroundMusic;
+
     public EndScreen(Main game, int score) {
         this.game  = game;
         this.score = score;
@@ -58,6 +62,12 @@ public class EndScreen implements Screen {
         for (int i = 0; i < 10; i++) {
             digits[i] = new Texture(Gdx.files.internal("End/" + i + ".png"));
         }
+
+        // Load and play background music
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(0.5f);
+        backgroundMusic.play();
     }
 
     @Override
@@ -119,13 +129,20 @@ public class EndScreen implements Screen {
 
     @Override public void pause() {}
     @Override public void resume() {}
-    @Override public void hide() {}
+    @Override public void hide() {
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+        }
+    }
 
     @Override
     public void dispose() {
         background.dispose();
         for (Texture t : digits) {
             t.dispose();
+        }
+        if (backgroundMusic != null) {
+            backgroundMusic.dispose();
         }
         batch.dispose();
     }
