@@ -16,6 +16,7 @@
 \usepackage{enumitem}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{float}
 
 % ---------------- Code formatting ----------------
 
@@ -36,18 +37,18 @@
 % ---------------- Page Style ----------------
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{CMPT 276 -- Project Phase \2}
+\lhead{CMPT 276 -- Project Phase 2}
 \rhead{Group \#15}
 \cfoot{Page \thepage\ of \pageref{LastPage}}
 
 
 % ---------------- Metadata ----------------
-\title{\textbf{Project Phase \#X}\\[0.5em]
+\title{\textbf{Project Phase 2}\\[0.5em]
 CMPT 276: Introduction to Software Engineering\\
 Simon Fraser University}
 
 \author{
-\textbf{Group \#X}\\[0.75em]
+\textbf{Group \#15}\\[0.75em]
 \begin{tabular}{l r}
 Megan Chau      & Student \#301614135 \\
 Samantha Gan  & Student \#301614044 \\
@@ -57,7 +58,7 @@ Lucas Nguyen & Student \#301629229 \\
 \end{tabular}
 }
 
-\date{\today}
+\date{March 10, 2026}
 
 % ================================
 \begin{document}
@@ -78,96 +79,173 @@ Lucas Nguyen & Student \#301629229 \\
 
 % -------- Report Content --------
 \section{Milestones}
-\subsection{Midway Milestone}
-\begin{itemize}
-  \item Implementation
-  	\begin{itemize}
-  		\item Maven set up
-		\item libGDX package setup
-		\item WASD controls the character
-		\item Camera tracking
-		\item Start screen skeleton
-		\item First area of the map
-		\item Police Enemy
-		\item Puddle Enemy
-  	\end{itemize}
-  \item Design
-  	\begin{itemize}
-  		\item Points Counter
-		\item Main character design and frames on and off the bike
-		\item Enemy design (police and puddles) and animations
-		\item Instructions Screen
-		\item Settings Screen
-  	\end{itemize}
-  \item Areas not Met
-  	\begin{itemize}
-  		\item Entire map was not completed as planned
-  		\item Design of assets were not completed
-  		\item Chose music and sound effects but were not implemented
-  	\end{itemize}
+\subsection{Midway Milestone Goals}
+\hspace{0.52cm}
+\begin{minipage}[t]{0.48\textwidth}
+\textbf{Implementation}
+\begin{itemize}[itemsep=-1pt, topsep=5pt]
+    \item Maven set up
+    \item libGDX package setup
+    \item WASD controls the character
+    \item Camera tracking
+    \item Start screen skeleton
+    \item First area of the map
+    \item Police Enemy
+    \item Puddle Enemy
 \end{itemize}
-\subsection{Final Milestone}
-Provide a clear and well-structured solution.
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\textbf{Design}
+\begin{itemize}[itemsep=-1pt, topsep=5pt]
+    \item Points Counter
+    \item Main character design and frames on and off the bike
+    \item Enemy design (police and puddles) and animations
+    \item Instructions Screen
+    \item Settings Screen
+\end{itemize}
+\end{minipage}
 
-\section{Phase 2 Report}
-\subsection{Bullet list}
+\bigskip
+\begin{minipage}[t]{1\textwidth}
+\textbf{Areas not Met}
+\begin{itemize}[itemsep=-1pt, topsep=5pt]
+    \item Entire map was not completed as planned
+    \item Design of assets was not completed
+    \item Chose music and sound effects but were not implemented
+\end{itemize}
+\end{minipage}
+
+\par\bigskip
+
+
+\subsection{Final Milestone Goals}
+\bigskip
+\noindent
+\hspace{0.52cm}
+\begin{minipage}[t]{0.48\textwidth}
+\textbf{Implementation}
+\begin{itemize}[itemsep=-1pt, topsep=5pt]
+    \item Add the entire connecting map 
+    \item Points System
+    \item Collision
+    \item Sound effects and Music
+    \item Delivery System
+    \item Menus, Settings, and Pause
+    \item Game Timer
+\end{itemize}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\textbf{Design}
+\begin{itemize}[itemsep=-1pt, topsep=5pt]
+    \item Map 2 \& 3
+    \item Fish
+    \item Orders
+    \item Pause Screen
+    \item End Screen
+\end{itemize}
+\end{minipage}
+
+\bigskip
+\begin{minipage}[t]{0.8\textwidth}
+\textbf{Areas not Met}
+\begin{itemize}[itemsep=-1pt, topsep=5pt]
+    \item End screen not finalized – still using mockup version
+    \item Cat mounting and dismounting bike
+    \item Enemy positioning
+    \item Optimize camera movement
+\end{itemize}
+\end{minipage}
+
+\bigskip
+
+
+
+
+
+\section{Report}
+\subsection{Approach}
+	\begin{itemize} [itemsep=0pt]
+	\item We used agile-style development with short iterations to allow incremental building and adjustment as problems arose.
+	\item implemented libGDX as our backbone library.
+	\item Features were developed in small modules (player movement, enemies, scoring, deliveries) and then integrated into the main game.
+	\item Team roles were split into Design, Front End, and Back End.
+	\item We maintained meetings at least once per week where we coordinated, tested, and collaborated. This approach worked well with our short iteration-style development.
+	\end{itemize}
+\subsection{Modifications from Phase 1}
+	\begin{itemize}[itemsep=0pt]
+    \item We originally planned for a dog police, but we ended up changing it to a human.
+    \item Unlock the next part of the map with fish instead of deliveries.
+    \item All point actions (Fishes, Deliveries, Enemy collision deductions) all translate to a single displayed ‘Fish’ score, instead of all being separate counters.
+    \item Because we decided to use the libGDX framework after our initial planning  stage, the structure of our code is completely different:
+    \begin{itemize}[topsep=2pt]
+    \item libGDX helped us cut down the number of classes/code needed. For example:
+    	\begin{itemize}
+    	\item The import, "import com.badlogic.gdx.graphics.OrthographicCamera" is libGDX’s built-in camera class, making it easier for us to use the code for the camera movement
+		\item Built in render(), show(), dispose(), etc. methods
+    	\end{itemize}
+    
+	\item We have separate classes for separate game screens, which we did not anticipate that we needed
+    \end{itemize}
+
+	\end{itemize}
+	\renewcommand{\arraystretch}{1.5}
+	\setlength{\tabcolsep}{12pt}
+	\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{0.42\textwidth}|p{0.42\textwidth}|}
+	\hline
+	\textbf{Initial Classes (without libGDX)} & \textbf{Finalized Classes (with libGDX)} \\
+	\hline
+Title, Instructions, Gameplay, GameState, GameWorld, GameController, InputHandler, Direction, Town, CollectibleManager, CollisionManager, Sprite, Barrier, CatFood, Tilemap, MainCharacter, Enemy, NonMovingEnemy, MovingEnemy, Score, Delivery, DeliveryManager, DeliveryPoint, DeliveryStatus, TransportMode, Position
+&
+EndScreen, Fish, GameCamera, GameLauncher, GameScreen, House, Instructions Screen, Main, Player, PoliceEnemy, PuddleEnemy, SettingScreen, StartScreen, Timer
+	\\
+	\hline
+	\end{tabular}
+	\end{table}
+
+
+\subsection{Team Management}
+
+	\begin{itemize}
+    \item Assigned clear roles (front end, back end, design) that changed throughout the project based on circumstance and completion
+    \item Divided tasks in each role based on the order of requirements so work could support other group members
+    \item Ensured everyone always had something to work on
+    \item Held weekly meetings to check progress
+	\end{itemize}
+	
+	\renewcommand{\arraystretch}{1.5}
+	\setlength{\tabcolsep}{12pt}
+
+	\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Front End} & Megan, Krish, Samantha, Lucas \\ \hline
+	\textbf{Back End} & Lucas, Tanveer, Krish, Samantha \\ \hline
+	\textbf{Design} & Megan, Tanveer \\ \hline
+	\end{tabular}
+	\end{table}
+
+\subsection{External Libraries}
+For this project we used the external library: \textbf{libGDX}
 \begin{itemize}
-  \item First item
-  \item Second item
-  \item Third item
+\item It is used in many well-known games.
+\item It is a widely used library with strong community support and documentation.
+\item It is versatile and relatively easy to implement and use.
+\item It provides the tools needed to handle our game’s graphics, input, and overall functionality.
 \end{itemize}
 
-\subsection{Numbered list}
+
+\subsection{Challenges}
+\renewcommand{\labelenumi}{\textbf{\arabic{enumi}.}}
 \begin{enumerate}
-  \item Step one
-  \item Step two
-  \item Step three
+\item Balancing midterms and coursework from other classes. We managed our time carefully, ensured everyone participated in weekly meetings, and communicated to find meeting times that worked for all group members.
+
+\item Many of our initial commits were made using personal email addresses, which did not appear on the commit log and have skewed the commit history by hundreds of lines of code. After identifying this issue, we corrected it, and all subsequent commits were made using our SFU email addresses.
 \end{enumerate}
-
-\subsection{Table}
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|r|}
-\hline
-\textbf{Name} & \textbf{Score} & \textbf{Grade} \\
-\hline
-Alice   & 85 & B \\
-Bob     & 92 & A \\
-Charlie & 78 & C \\
-\hline
-\end{tabular}
-\caption{Example student scores}
-\end{table}
-
-\subsection{Text Decorations}
-This sentence contains \textbf{bold text}, \textit{italic text}, 
-\underline{underlined text}, \texttt{monospaced text}, 
-\textcolor{blue}{colored text}, and \textbf{\textcolor{red}{bold red text}}. Followed by a line break. \\
-Links can be included in any part of the text such as this link to the \href{https://www.sfu.ca}{Simon Fraser University} website.
-
-\subsection{Code}
-\begin{lstlisting}
-/* factorial function */
-public int factorial(int n) {
-    if (n <= 1) return 1;
-    return n * factorial(n - 1);
-}
-\end{lstlisting}
-
-\subsection{Images}
-Here is an image of a squirrel:
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.6\textwidth]{squirrel}
-\caption{This is a squirrel}
-\label{fig:squirrel}
-\end{figure}
-
-
-% -------- Optional: Code or Proof Section --------
-\section{Appendix (Optional)}
-Include any additional material here.
 
 % ================================
 \end{document}
