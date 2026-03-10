@@ -69,6 +69,14 @@ public class PoliceEnemy {
     public float getCenterX() { return position.x; }
     public float getCenterY() { return position.y; }
 
+    /** Teleport the enemy to a new position and reset its AI state. */
+    public void setPosition(float x, float y) {
+        position.set(x, y);
+        alertState = AlertState.NONE;
+        alertTimer = 0f;
+        wanderTimer = 0f;
+    }
+
     public void update(float delta, float playerX, float playerY, BarrierLookup lookup) {
         float dist = Vector2.dst(position.x, position.y, playerX, playerY);
         boolean inRange = dist <= DETECTION_RANGE;

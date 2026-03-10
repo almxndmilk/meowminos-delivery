@@ -49,13 +49,9 @@ public class GameScreen implements Screen {
     private static final float PROTRUDE_TRIGGER_Y =  660f;
 
     // Fish quota required to advance from map 1 → map 2
-    private static final int FISH_QUOTA = 50;
-
-    // Spawn points for each map transition (world coords)
-    private static final float PART2_SPAWN_X = 5600f;
-    private static final float PART2_SPAWN_Y = MAP_HEIGHT_PER_PART + 100f; // = 1002
-    private static final float PART3_SPAWN_X = 350f;
-    private static final float PART3_SPAWN_Y = MAP_HEIGHT_PER_PART * 2 + 100f; // = 1904
+    private static final int FISH_QUOTA = 10;
+    // Fish quota required to advance from map 2 → map 3
+    private static final int FISH_QUOTA_GATE2 = 20;
 
     // Iris rendering resources
     private ShapeRenderer shapeRenderer;
@@ -174,7 +170,9 @@ public class GameScreen implements Screen {
         police = new ArrayList<>();
         police.add(new PoliceEnemy(800f, 300f));
         puddles = new ArrayList<>();
-        puddles.add(new PuddleEnemy(1500f, 100f));
+        puddles.add(new PuddleEnemy(1500f, 100f));                                         // map 1
+        puddles.add(new PuddleEnemy(2200f, MAP_HEIGHT_PER_PART + 250f));                   // map 2
+        puddles.add(new PuddleEnemy(1900f, MAP_HEIGHT_PER_PART * 2 + 200f));               // map 3
 
         fishHudTexture = new Texture(Gdx.files.internal("small assets/fish.png"));
         hudBatch  = new SpriteBatch();
@@ -405,11 +403,11 @@ public class GameScreen implements Screen {
         }
 
         // Gate 2: map 2 → map 3 via left-side corridor
-        if (py > mapYOffsets[2] && px > GATE2_X_MIN && px < GATE2_X_MAX) {
-            int needed = deliveriesNeeded(1);
-            if (needed > 0) {
+        if (currentMapIndex == 1 && py > mapYOffsets[2] && px > GATE2_X_MIN && px < GATE2_X_MAX) {
+            int fishNeeded = FISH_QUOTA_GATE2 - fishCollected;
+            if (fishNeeded > 0) {
                 player.setPosition(px, mapYOffsets[2] - 80f);
-                setGateMessage("Deliver to " + needed + " more house(s) to advance!");
+                setGateMessage("Collect " + fishNeeded + " more fish to advance!");
             } else {
                 pendingMapIndex  = 2;
                 transitionState  = TransitionState.FADE_OUT;
@@ -432,12 +430,20 @@ public class GameScreen implements Screen {
     }
 
     private void activateMap(int index) {
-        float[] spawnX = { 0f, PART2_SPAWN_X, PART3_SPAWN_X };
-        float[] spawnY = { 0f, PART2_SPAWN_Y, PART3_SPAWN_Y };
+        // Calculate spawn positions dynamically based on actual map offsets
+        float[] spawnX = { 300f, 5600f, 1250f };
+        float[] spawnY = { 300f, mapYOffsets[1] + 100f, mapYOffsets[2] + 100f };
+        // Police spawns offset from player spawn
+        float[] policeX = { 800f, 4600f, 1850f };
+        float[] policeY = { 300f, mapYOffsets[1] + 100f, mapYOffsets[2] + 100f };
+        
         player.setPosition(spawnX[index], spawnY[index]);
         currentMapIndex = Math.max(currentMapIndex, index);
         gameCamera.setMaxX(mapWidths[index] - BARRIER_X_OFFSET);
         gameCamera.setYBounds(mapYOffsets[index], mapYOffsets[index] + mapHeights[index]);
+        for (PoliceEnemy enemy : police) {
+            enemy.setPosition(policeX[index], policeY[index]);
+        }
     }
 
     private void renderIris(float irisRadius) {
