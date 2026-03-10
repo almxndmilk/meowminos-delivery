@@ -78,51 +78,85 @@ Lucas Nguyen & Student \#301629229 \\
 
 % -------- Report Content --------
 \section{Milestones}
-\subsection{Midway Milestone}
+\subsection{Midway Milestone Goals}
+\hspace{0.52cm}
+\begin{minipage}[t]{0.48\textwidth}
+\textbf{Implementation}
 \begin{itemize}
-  \item Implementation
-  	\begin{itemize}
-  		\item Maven set up
-		\item libGDX package setup
-		\item WASD controls the character
-		\item Camera tracking
-		\item Start screen skeleton
-		\item First area of the map
-		\item Police Enemy
-		\item Puddle Enemy
-  	\end{itemize}
-  \item Design
-  	\begin{itemize}
-  		\item Points Counter
-		\item Main character design and frames on and off the bike
-		\item Enemy design (police and puddles) and animations
-		\item Instructions Screen
-		\item Settings Screen
-  	\end{itemize}
-  \item Areas not Met
-  	\begin{itemize}
-  		\item Entire map was not completed as planned
-  		\item Design of assets were not completed
-  		\item Chose music and sound effects but were not implemented
-  	\end{itemize}
+    \item Maven set up
+    \item libGDX package setup
+    \item WASD controls the character
+    \item Camera tracking
+    \item Start screen skeleton
+    \item First area of the map
+    \item Police Enemy
+    \item Puddle Enemy
 \end{itemize}
-\subsection{Final Milestone}
-Provide a clear and well-structured solution.
-
-\section{Phase 2 Report}
-\subsection{Bullet list}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\textbf{Design}
 \begin{itemize}
-  \item First item
-  \item Second item
-  \item Third item
+    \item Points Counter
+    \item Main character design and frames on and off the bike
+    \item Enemy design (police and puddles) and animations
+    \item Instructions Screen
+    \item Settings Screen
 \end{itemize}
+\end{minipage}
 
-\subsection{Numbered list}
-\begin{enumerate}
-  \item Step one
-  \item Step two
-  \item Step three
-\end{enumerate}
+\bigskip
+\begin{minipage}[t]{1\textwidth}
+\textbf{Areas not Met}
+\begin{itemize}
+    \item Entire map was not completed as planned
+    \item Design of assets was not completed
+    \item Chose music and sound effects but were not implemented
+\end{itemize}
+\end{minipage}
+
+
+
+\subsection{Final Milestone Goals}
+\bigskip
+\noindent
+\hspace{0.52cm}
+\begin{minipage}[t]{0.48\textwidth}
+\textbf{Implementation}
+\begin{itemize}
+    \item Add the entire connecting map (maps 2 \& 3)
+    \item Points System
+    \item Collision
+    \item Sound effects and Music
+    \item Delivery System
+    \item Menus, Settings, and Pause
+    \item Game Timer
+\end{itemize}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\textbf{Design}
+\begin{itemize}
+    \item Map 2 \& 3
+    \item Fish
+    \item Orders
+    \item Pause Screen
+    \item End Screen
+\end{itemize}
+\end{minipage}
+
+\bigskip
+\begin{minipage}[t]{0.8\textwidth}
+\textbf{Areas not Met}
+\begin{itemize}
+    \item End screen not finalized – still using mockup version
+    \item Cat mounting and dismounting bike
+    \item Enemy positioning
+    \item Optimize camera movement
+\end{itemize}
+\end{minipage}
+
+
 
 \subsection{Table}
 
@@ -163,6 +197,34 @@ Here is an image of a squirrel:
 \caption{This is a squirrel}
 \label{fig:squirrel}
 \end{figure}
+
+
+\section{Report}
+\subsection{Approach}
+\subsection{Modifications from Phase 1}
+\begin{itemize}
+    \item We originally planned for a dog police, but we ended up changing it to a human.
+    \item Unlock the next part of the map with fish instead of deliveries.
+    \item All point actions (Fishes, Deliveries, Enemy collision deductions) all translate to a single displayed ‘Fish’ score, instead of all being separate counters.
+\end{itemize}
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{0.45\textwidth}|p{0.45\textwidth}|}
+\hline
+\textbf{Initial Classes (without libGDX)} & \textbf{Finalized Classes (with libGDX)} \\
+\hline
+Title, Instructions, Gameplay, GameState, GameWorld, GameController, InputHandler, Direction, Town, CollectibleManager, CollisionManager, Sprite, Barrier, CatFood, Tilemap, MainCharacter, Enemy, NonMovingEnemy, MovingEnemy, Score, Delivery, DeliveryManager, DeliveryPoint, DeliveryStatus, TransportMode, Position
+&
+EndScreen, Fish, GameCamera, GameLauncher, GameScreen, House, Instructions Screen, Main, Player, PoliceEnemy, PuddleEnemy, SettingScreen, StartScreen, Timer
+\\
+\hline
+\end{tabular}
+\end{table}
+\subsection{Team Management}
+\subsection{External Libraries}
+\subsection{Challenges}
 
 
 % -------- Optional: Code or Proof Section --------
