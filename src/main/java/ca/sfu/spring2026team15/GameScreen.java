@@ -169,13 +169,12 @@ public class GameScreen implements Screen {
         player     = new Player(300f, 300f);
 
         police = new ArrayList<>();
-        police.add(new PoliceEnemy(800f, 300f));
+        police.add(new PoliceEnemy(3600f, 300f));
 
-        // Map 3 puddle shows up on map 2. idk where map 2 puddle is lol
         puddles = new ArrayList<>();
-        puddles.add(new PuddleEnemy(1500f, 100f));                                         // map 1
-        puddles.add(new PuddleEnemy(2200f, MAP_HEIGHT_PER_PART + 100f));                   // map 2
-        puddles.add(new PuddleEnemy(1900f, MAP_HEIGHT_PER_PART * 2 + 50f));               // map 3
+        puddles.add(new PuddleEnemy(2200f, 100f));
+        puddles.add(new PuddleEnemy(3950f, 650f));
+
 
         fishHudTexture = new Texture(Gdx.files.internal("small assets/fish.png"));
         hudBatch  = new SpriteBatch();
@@ -438,11 +437,11 @@ public class GameScreen implements Screen {
 
     private void activateMap(int index) {
         // Calculate spawn positions dynamically based on actual map offsets
-        float[] spawnX = { 300f, 5600f, 1250f };
-        float[] spawnY = { 300f, mapYOffsets[1] + 100f, mapYOffsets[2] + 100f };
+        float[] spawnX = {300f, 5600f, 1250f};
+        float[] spawnY = {300f, mapYOffsets[1] + 100f, mapYOffsets[2] + 100f};
         // Police spawns offset from player spawn
-        float[] policeX = { 800f, 4600f, 1850f };
-        float[] policeY = { 300f, mapYOffsets[1] + 100f, mapYOffsets[2] + 100f };
+        float[] policeX = {800f, 4600f, 1850f};
+        float[] policeY = {300f, mapYOffsets[1] + 100f, mapYOffsets[2] + 100f};
 
         player.setPosition(spawnX[index], spawnY[index]);
         currentMapIndex = Math.max(currentMapIndex, index);
@@ -452,15 +451,46 @@ public class GameScreen implements Screen {
             enemy.setPosition(policeX[index], policeY[index]);
         }
 
+        if (index >= 1) {
+            police.clear();
+            puddles.clear();
+        }
+
         if (index == 1 && police.size() < 3) {
             police.add(new PoliceEnemy(2000f, mapYOffsets[1] + 1000f));
             police.add(new PoliceEnemy(3500f, mapYOffsets[1] + 1000f));
+            puddles.add(new PuddleEnemy(2100f, mapYOffsets[1] + 950f));
+            puddles.add(new PuddleEnemy(3000f, mapYOffsets[1] + 780f));
         }
-        if (index == 2 && police.size() < 8) {
-            police.add(new PoliceEnemy(3000f, mapYOffsets[2] + 4000f));
-            police.add(new PoliceEnemy(3000f, mapYOffsets[2] + 4800f));
-            police.add(new PoliceEnemy(4000f, mapYOffsets[2] + 4000f));
-            police.add(new PoliceEnemy(5000f, mapYOffsets[2] + 4800f));
+
+        if (index == 2 && police.size() < 16) {
+            police.add(new PoliceEnemy(500f, mapYOffsets[2] + 850f));
+            police.add(new PoliceEnemy(1500f, mapYOffsets[2] + 1000f));
+            police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1200f));
+            police.add(new PoliceEnemy(800f, mapYOffsets[2] + 1450f));
+            police.add(new PoliceEnemy(2000f, mapYOffsets[2] + 1600f));
+            police.add(new PoliceEnemy(1380f, mapYOffsets[2] + 500f));
+            police.add(new PoliceEnemy(2700f, mapYOffsets[2] + 1900f));
+            police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2000f));
+            police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2100f));
+            police.add(new PoliceEnemy(2300f, mapYOffsets[2] + 2150f));
+            police.add(new PoliceEnemy(900f, mapYOffsets[2] + 2250f));
+            police.add(new PoliceEnemy(600f, mapYOffsets[2] + 2480f));
+            police.add(new PoliceEnemy(80000f, mapYOffsets[2] + 2580f));
+
+            puddles.add(new PuddleEnemy(500f, mapYOffsets[2] + 850f));
+            puddles.add(new PuddleEnemy(1500f, mapYOffsets[2] + 1000f));
+            puddles.add(new PuddleEnemy(2500f, mapYOffsets[2] + 1200f));
+            puddles.add(new PuddleEnemy(800f, mapYOffsets[2] + 1450f));
+            puddles.add(new PuddleEnemy(2000f, mapYOffsets[2] + 1600f));
+            puddles.add(new PuddleEnemy(1200f, mapYOffsets[2] + 1750f));
+            puddles.add(new PuddleEnemy(2700f, mapYOffsets[2] + 1900f));
+            puddles.add(new PuddleEnemy(400f, mapYOffsets[2] + 2000f));
+            puddles.add(new PuddleEnemy(1600f, mapYOffsets[2] + 2100f));
+            puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2150f));
+            puddles.add(new PuddleEnemy(900f, mapYOffsets[2] + 2200f));
+            puddles.add(new PuddleEnemy(600f, mapYOffsets[2] + 2480f));
+            puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2480f));
         }
     }
 
