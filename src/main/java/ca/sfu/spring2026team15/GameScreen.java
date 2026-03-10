@@ -106,7 +106,8 @@ public class GameScreen implements Screen {
     // Orders — per-map house lists for gate checking, flat list for update/render
     private final List<List<House>> housesByMap = new ArrayList<>();
     private List<House> houses; // flat view used in update/render loops
-    private Texture orderIndicatorTexture;
+    private Texture orderIndicatorTexture; // small house
+    private Texture orderIndicatorTextureBIG;
     private boolean showDeliverPrompt = false;
 
     // Gate message
@@ -169,10 +170,12 @@ public class GameScreen implements Screen {
 
         police = new ArrayList<>();
         police.add(new PoliceEnemy(800f, 300f));
+
+        // Map 3 puddle shows up on map 2. idk where map 2 puddle is lol
         puddles = new ArrayList<>();
         puddles.add(new PuddleEnemy(1500f, 100f));                                         // map 1
-        puddles.add(new PuddleEnemy(2200f, MAP_HEIGHT_PER_PART + 250f));                   // map 2
-        puddles.add(new PuddleEnemy(1900f, MAP_HEIGHT_PER_PART * 2 + 200f));               // map 3
+        puddles.add(new PuddleEnemy(2200f, MAP_HEIGHT_PER_PART + 100f));                   // map 2
+        puddles.add(new PuddleEnemy(1900f, MAP_HEIGHT_PER_PART * 2 + 50f));               // map 3
 
         fishHudTexture = new Texture(Gdx.files.internal("small assets/fish.png"));
         hudBatch  = new SpriteBatch();
@@ -188,7 +191,8 @@ public class GameScreen implements Screen {
         timer = new Timer();
         timer.start();
 
-        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse.png"));
+        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket smallHouse.png"));
+        orderIndicatorTextureBIG = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse.png"));
 
         // Map 1 houses (world Y 0–902)
         List<House> map1Houses = new ArrayList<>();
@@ -197,17 +201,20 @@ public class GameScreen implements Screen {
         map1Houses.add(new House(4755f, 275f, orderIndicatorTexture));
         housesByMap.add(map1Houses);
 
-        // Map 2 houses (world Y 902–1804) — positions are placeholders, tune against map art
-        List<House> map2Houses = new ArrayList<>();
-        map2Houses.add(new House(1500f, MAP_HEIGHT_PER_PART + 300f, orderIndicatorTexture));
-        map2Houses.add(new House(3000f, MAP_HEIGHT_PER_PART + 250f, orderIndicatorTexture));
-        map2Houses.add(new House(4500f, MAP_HEIGHT_PER_PART + 350f, orderIndicatorTexture));
-        housesByMap.add(map2Houses);
+        // Map 2 houses - yall there isnt a map 2 LOL
+//        List<House> map2Houses = new ArrayList<>();
+//        map2Houses.add(new House(2700f, 700f, orderIndicatorTextureBIG));
+//        map2Houses.add(new House(3000f, 700f, orderIndicatorTextureBIG));
+//        map2Houses.add(new House(3250f, 700f, orderIndicatorTextureBIG));
+//        map2Houses.add(new House(3500f, 700f, orderIndicatorTextureBIG));
+//        housesByMap.add(map2Houses);
 
         // Map 3 houses (world Y 1804–2706) — positions are placeholders, tune against map art
         List<House> map3Houses = new ArrayList<>();
-        map3Houses.add(new House(1000f, MAP_HEIGHT_PER_PART * 2 + 300f, orderIndicatorTexture));
-        map3Houses.add(new House(2800f, MAP_HEIGHT_PER_PART * 2 + 300f, orderIndicatorTexture));
+        map3Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        map3Houses.add(new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        map3Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        map3Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
         housesByMap.add(map3Houses);
 
         // Flat list for update/render loops
@@ -254,7 +261,7 @@ public class GameScreen implements Screen {
             int pixel = pm.getPixel(pixelX, pixelY);
             boolean isRoad = (pixel & 0xFF) < 128;
             if (isRoad) {
-                fishList.add(new Fish(worldX, localY + yOffset));
+                fishList.add(new Fish(worldX, localY+ yOffset + 10f));
                 spawned++;
             }
         }
@@ -300,7 +307,7 @@ public class GameScreen implements Screen {
             gateMessageTimer -= delta;
         }
 
-        // Delivery prompt + interaction
+        // Delivery prompt + interactio
         showDeliverPrompt = false;
         for (House house : houses) {
             house.update(delta);
@@ -436,13 +443,24 @@ public class GameScreen implements Screen {
         // Police spawns offset from player spawn
         float[] policeX = { 800f, 4600f, 1850f };
         float[] policeY = { 300f, mapYOffsets[1] + 100f, mapYOffsets[2] + 100f };
-        
+
         player.setPosition(spawnX[index], spawnY[index]);
         currentMapIndex = Math.max(currentMapIndex, index);
         gameCamera.setMaxX(mapWidths[index] - BARRIER_X_OFFSET);
         gameCamera.setYBounds(mapYOffsets[index], mapYOffsets[index] + mapHeights[index]);
         for (PoliceEnemy enemy : police) {
             enemy.setPosition(policeX[index], policeY[index]);
+        }
+
+        if (index == 1 && police.size() < 3) {
+            police.add(new PoliceEnemy(2000f, mapYOffsets[1] + 1000f));
+            police.add(new PoliceEnemy(3500f, mapYOffsets[1] + 1000f));
+        }
+        if (index == 2 && police.size() < 8) {
+            police.add(new PoliceEnemy(3000f, mapYOffsets[2] + 4000f));
+            police.add(new PoliceEnemy(3000f, mapYOffsets[2] + 4800f));
+            police.add(new PoliceEnemy(4000f, mapYOffsets[2] + 4000f));
+            police.add(new PoliceEnemy(5000f, mapYOffsets[2] + 4800f));
         }
     }
 
