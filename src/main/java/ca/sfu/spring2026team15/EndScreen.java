@@ -64,10 +64,17 @@ public class EndScreen implements Screen {
         }
 
         // Load and play background music
-        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
-        backgroundMusic.setLooping(true);
-        backgroundMusic.setVolume(0.5f);
-        backgroundMusic.play();
+        if (SettingsScreen.soundOn) {
+            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
+            backgroundMusic.setLooping(true);
+            backgroundMusic.setVolume(0.5f);
+            backgroundMusic.play();
+        }
+        else{
+            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
+            backgroundMusic.setLooping(true);
+            backgroundMusic.setVolume(0.5f);
+        }
     }
 
     @Override
