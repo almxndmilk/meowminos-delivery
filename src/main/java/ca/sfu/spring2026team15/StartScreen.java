@@ -78,7 +78,9 @@ public class StartScreen implements Screen {
 
             if (touch.x >= btnX && touch.x <= btnX + btnWidth &&
                     touch.y >= btnY && touch.y <= btnY + btnHeight) {
-                startButtonSound.play(1.0f);
+                if (SettingsScreen.soundOn) {
+                    startButtonSound.play(1.0f);
+                }
                 game.setScreen(new GameScreen(game));
                 dispose();
             }
@@ -107,10 +109,16 @@ public class StartScreen implements Screen {
         settingsBtnTexture    = new Texture(Gdx.files.internal("StartScreen/settingButton.PNG"));
 
         // Load and play background music
-        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/titleMusic.mp3"));
-        backgroundMusic.setLooping(true);
-        backgroundMusic.setVolume(0.5f);
-        backgroundMusic.play();
+        if (SettingsScreen.soundOn) {
+            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
+            backgroundMusic.setLooping(true);
+            backgroundMusic.setVolume(0.5f);
+            backgroundMusic.play();
+        } else {
+            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
+            backgroundMusic.setLooping(true);
+            backgroundMusic.setVolume(0.5f);
+        }
 
         // audio
         startButtonSound = Gdx.audio.newSound(Gdx.files.internal("audio/startButton.mp3"));

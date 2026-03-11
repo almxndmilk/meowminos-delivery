@@ -169,7 +169,7 @@ public class GameScreen implements Screen {
         player     = new Player(300f, 300f);
 
         police = new ArrayList<>();
-        police.add(new PoliceEnemy(3600f, 300f));
+        police.add(new PoliceEnemy(3000f, 300f));
 
         puddles = new ArrayList<>();
         puddles.add(new PuddleEnemy(2200f, 100f));
@@ -222,11 +222,16 @@ public class GameScreen implements Screen {
 
         spawnFish();
 
-        // Load and play background music
-        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
-        backgroundMusic.setLooping(true);
-        backgroundMusic.setVolume(0.5f);
-        backgroundMusic.play();
+        if (SettingsScreen.soundOn) {
+            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
+            backgroundMusic.setLooping(true);
+            backgroundMusic.setVolume(0.5f);
+            backgroundMusic.play();
+        } else {
+            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
+            backgroundMusic.setLooping(true);
+            backgroundMusic.setVolume(0.5f);
+        }
 
         deliveredSound = Gdx.audio.newSound(Gdx.files.internal("audio/deliveredOrder.mp3"));
     }
@@ -313,7 +318,9 @@ public class GameScreen implements Screen {
             if (house.hasOrder() && house.isPlayerInRange(player.getCenterX(), player.getCenterY())) {
                 showDeliverPrompt = true;
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                    deliveredSound.play(1.0f);
+                    if (SettingsScreen.soundOn) {  // ADD THIS CHECK
+                        deliveredSound.play(1.0f);
+                    }
                     if (house.tryDeliver(player.getCenterX(), player.getCenterY())) {
                         fishCollected += 10;
                     }

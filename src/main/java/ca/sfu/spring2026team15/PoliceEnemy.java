@@ -98,7 +98,9 @@ public class PoliceEnemy {
                     alertTimer += delta;
                     if (alertTimer >= ALERT_DELAY) {
                         alertState = AlertState.CHASING;
-                        heySound.play(1.0f);
+                        if (SettingsScreen.soundOn) {
+                            heySound.play(1.0f);
+                        }
                     }
                 }
                 break;
