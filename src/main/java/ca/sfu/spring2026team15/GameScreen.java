@@ -60,6 +60,13 @@ public class GameScreen implements Screen {
     private boolean gate1ObstacleActive = true;     // false once the fade clears it
     private boolean gate1Cleared        = false;    // true after obstacle is fully gone; top edge becomes the trigger
 
+    // Gate 2 obstacle — blocks top of map 2 until player has enough fish
+    private Texture gate2ObstacleTexture;
+    private float   gate2ObstacleX, gate2ObstacleY; // computed in show()
+    private float   gate2DrawWidth, gate2DrawHeight; // rendered size (500px wide, proportional height)
+    private boolean gate2ObstacleActive = true;     // false once the fade clears it
+    private boolean gate2Cleared        = false;    // true after obstacle is fully gone; top edge becomes the trigger
+
     // Fish quotas
     private static final int FISH_QUOTA_GATE1 = 30; // map 1 → map 2
     private static final int FISH_QUOTA_GATE2 = 20; // map 2 → map 3
@@ -69,6 +76,12 @@ public class GameScreen implements Screen {
     private Gate1FadeState gate1FadeState = Gate1FadeState.NONE;
     private float gate1FadeTimer = 0f;
     private static final float GATE1_FADE_DURATION = 1.0f;
+
+    // Gate 2 obstacle clear: fade screen to black, then back, removing the obstacle
+    private enum Gate2FadeState { NONE, FADE_OUT, FADE_IN }
+    private Gate2FadeState gate2FadeState = Gate2FadeState.NONE;
+    private float gate2FadeTimer = 0f;
+    private static final float GATE2_FADE_DURATION = 1.0f;
 
     // Iris rendering resources
     private ShapeRenderer shapeRenderer;
@@ -199,6 +212,13 @@ public class GameScreen implements Screen {
         gate1DrawHeight = gate1DrawWidth / gate1ObstacleTexture.getWidth() * gate1ObstacleTexture.getHeight();
         gate1ObstacleX = 3750f - gate1DrawWidth / 2f;
         gate1ObstacleY = MAP_HEIGHT_PER_PART - gate1DrawHeight;
+
+        gate2ObstacleTexture = new Texture(Gdx.files.internal("small assets/obstacle 70 fish.png"));
+        // 500px wide, proportional height; centred at X=550, top flush with map 2 top
+        gate2DrawWidth  = 500f;
+        gate2DrawHeight = gate2DrawWidth / gate2ObstacleTexture.getWidth() * gate2ObstacleTexture.getHeight();
+        gate2ObstacleX = 500f - gate2DrawWidth / 2f;
+        gate2ObstacleY = mapYOffsets[2] - gate2DrawHeight; // top of map 2 = mapYOffsets[2]
 
         fishHudTexture = new Texture(Gdx.files.internal("small assets/fish.png"));
         hudBatch  = new SpriteBatch();
@@ -333,6 +353,7 @@ public class GameScreen implements Screen {
             }
             updateTransition(delta);
             updateGate1Fade(delta);
+            updateGate2Fade(delta);
             updateCinematic(delta);
             // During cinematic the camera is driven by updateCinematic; hand back to normal tracking otherwise.
             if (cinematicState == CinematicState.NONE) {
@@ -373,6 +394,9 @@ public class GameScreen implements Screen {
 
         if (currentMapIndex == 0 && gate1ObstacleActive) {
             batch.draw(gate1ObstacleTexture, gate1ObstacleX, gate1ObstacleY, gate1DrawWidth, gate1DrawHeight);
+        }
+        if (currentMapIndex == 1 && gate2ObstacleActive) {
+            batch.draw(gate2ObstacleTexture, gate2ObstacleX, gate2ObstacleY, gate2DrawWidth, gate2DrawHeight);
         }
 
         for (House house : houses) {
@@ -415,6 +439,7 @@ public class GameScreen implements Screen {
 
         renderHud();
         renderGate1Fade();
+        renderGate2Fade();
 
         if (transitionState != TransitionState.NONE) {
             float halfDiag = (float) Math.sqrt(
@@ -466,17 +491,33 @@ public class GameScreen implements Screen {
             player.setPosition(px, MAP_HEIGHT_PER_PART - 80f);
         }
 
-        // Gate 2: map 2 → map 3 via left-side corridor
-        if (currentMapIndex == 1 && py > mapYOffsets[2] && px > GATE2_X_MIN && px < GATE2_X_MAX) {
-            int fishNeeded = FISH_QUOTA_GATE2 - fishCollected;
-            if (fishNeeded > 0) {
-                player.setPosition(px, mapYOffsets[2] - 80f);
-                setGateMessage("Collect " + fishNeeded + " more fish to advance!");
-            } else {
-                pendingMapIndex  = 2;
-                transitionState  = TransitionState.FADE_OUT;
-                transitionTimer  = 0f;
+        // Gate 2: obstacle at top of map 2 — blocks until player has 20 fish
+        if (currentMapIndex == 1 && gate2ObstacleActive) {
+            float obBottom = gate2ObstacleY;
+            float obRight  = gate2ObstacleX + gate2DrawWidth;
+            if (py >= obBottom && px >= gate2ObstacleX && px <= obRight) {
+                int fishNeeded = FISH_QUOTA_GATE2 - fishCollected;
+                if (fishNeeded > 0) {
+                    player.setPosition(px, obBottom - 20f);
+                    setGateMessage("Collect " + fishNeeded + " more fish to advance!");
+                } else {
+                    // Enough fish — start fade-clear sequence
+                    gate2FadeState = Gate2FadeState.FADE_OUT;
+                    gate2FadeTimer = 0f;
+                }
             }
+        }
+
+        // Gate 2b: once obstacle is cleared, touching the top edge triggers map 3
+        if (currentMapIndex == 1 && gate2Cleared && py >= mapYOffsets[2] - 10f) {
+            pendingMapIndex = 2;
+            transitionState = TransitionState.FADE_OUT;
+            transitionTimer = 0f;
+        }
+
+        // Hard boundary: keep player inside map 2 until cleared
+        if (currentMapIndex == 1 && py > mapYOffsets[2] && !gate2Cleared) {
+            player.setPosition(px, mapYOffsets[2] - 80f);
         }
     }
 
@@ -517,6 +558,34 @@ public class GameScreen implements Screen {
         float alpha = (gate1FadeState == Gate1FadeState.FADE_OUT)
             ? gate1FadeTimer / GATE1_FADE_DURATION          // 0 → 1
             : 1f - gate1FadeTimer / GATE1_FADE_DURATION;   // 1 → 0
+        hudBatch.setProjectionMatrix(hudCamera.combined);
+        hudBatch.begin();
+        hudBatch.setColor(0f, 0f, 0f, alpha);
+        hudBatch.draw(blackTexture, 0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+        hudBatch.setColor(Color.WHITE);
+        hudBatch.end();
+    }
+
+    private void updateGate2Fade(float delta) {
+        if (gate2FadeState == Gate2FadeState.NONE) return;
+        gate2FadeTimer += delta;
+        if (gate2FadeState == Gate2FadeState.FADE_OUT && gate2FadeTimer >= GATE2_FADE_DURATION) {
+            gate2ObstacleActive = false;
+            gate2FadeTimer      = 0f;
+            gate2FadeState      = Gate2FadeState.FADE_IN;
+        } else if (gate2FadeState == Gate2FadeState.FADE_IN && gate2FadeTimer >= GATE2_FADE_DURATION) {
+            gate2FadeTimer = 0f;
+            gate2FadeState = Gate2FadeState.NONE;
+            gate2Cleared   = true;
+        }
+    }
+
+    /** Full-screen black overlay that drives the gate 2 obstacle-clear animation. */
+    private void renderGate2Fade() {
+        if (gate2FadeState == Gate2FadeState.NONE) return;
+        float alpha = (gate2FadeState == Gate2FadeState.FADE_OUT)
+            ? gate2FadeTimer / GATE2_FADE_DURATION
+            : 1f - gate2FadeTimer / GATE2_FADE_DURATION;
         hudBatch.setProjectionMatrix(hudCamera.combined);
         hudBatch.begin();
         hudBatch.setColor(0f, 0f, 0f, alpha);
@@ -851,6 +920,7 @@ public class GameScreen implements Screen {
         for (Fish fish : fishList) fish.dispose();
         orderIndicatorTexture.dispose();
         if (gate1ObstacleTexture != null) gate1ObstacleTexture.dispose();
+        if (gate2ObstacleTexture != null) gate2ObstacleTexture.dispose();
         shapeRenderer.dispose();
         blackTexture.dispose();
         if (backgroundMusic != null) {
