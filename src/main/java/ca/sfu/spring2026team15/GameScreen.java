@@ -114,6 +114,9 @@ public class GameScreen implements Screen {
     private String gateMessage = null;
     private float gateMessageTimer = 0f;
 
+    // Obama cutscene trigger — fires once when all map 3 houses are delivered
+    private boolean obamaTriggered = false;
+
     public GameScreen(Main game) {
         this.game = game;
     }
@@ -323,6 +326,11 @@ public class GameScreen implements Screen {
                     }
                     if (house.tryDeliver(player.getCenterX(), player.getCenterY())) {
                         fishCollected += 10;
+                        if (!obamaTriggered && currentMapIndex == 2 && deliveriesNeeded(1) == 0) {
+                            obamaTriggered = true;
+                            triggerObamaScene();
+                            return;
+                        }
                     }
                 }
             }
@@ -544,6 +552,18 @@ public class GameScreen implements Screen {
             if (!h.wasDelivered()) count++;
         }
         return count;
+    }
+
+    private void triggerObamaScene() {
+        timer.stop();
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+            backgroundMusic.dispose();
+            backgroundMusic = null;
+        }
+        int elapsed = timer.getElapsedSeconds();
+        dispose();
+        game.setScreen(new ObamaScreen(game, elapsed));
     }
 
     private void setGateMessage(String msg) {
