@@ -476,14 +476,21 @@ public class GameScreen implements Screen {
             police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1200f));
             police.add(new PoliceEnemy(800f, mapYOffsets[2] + 1450f));
             police.add(new PoliceEnemy(2000f, mapYOffsets[2] + 1600f));
-            police.add(new PoliceEnemy(1380f, mapYOffsets[2] + 500f));
+            police.add(new PoliceEnemy(1380f, mapYOffsets[2] + 800f));
             police.add(new PoliceEnemy(2700f, mapYOffsets[2] + 1900f));
             police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2000f));
             police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2100f));
             police.add(new PoliceEnemy(2300f, mapYOffsets[2] + 2150f));
             police.add(new PoliceEnemy(900f, mapYOffsets[2] + 2250f));
             police.add(new PoliceEnemy(600f, mapYOffsets[2] + 2480f));
-            police.add(new PoliceEnemy(80000f, mapYOffsets[2] + 2580f));
+            police.add(new PoliceEnemy(1500f, mapYOffsets[2] + 1000f));
+            police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1200f));
+            police.add(new PoliceEnemy(800f, mapYOffsets[2] + 1450f));
+            police.add(new PoliceEnemy(2000f, mapYOffsets[2] + 1600f));
+            police.add(new PoliceEnemy(2700f, mapYOffsets[2] + 1900f));
+            police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2000f));
+            police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2100f));
+            police.add(new PoliceEnemy(900f, mapYOffsets[2] + 2250f));
 
             puddles.add(new PuddleEnemy(500f, mapYOffsets[2] + 850f));
             puddles.add(new PuddleEnemy(1500f, mapYOffsets[2] + 1000f));
