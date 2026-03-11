@@ -210,7 +210,7 @@ public class GameScreen implements Screen {
         // Render at fixed 500px wide, height scaled proportionally; centred at X=3832, top flush with map 1 top
         gate1DrawWidth  = 500f;
         gate1DrawHeight = gate1DrawWidth / gate1ObstacleTexture.getWidth() * gate1ObstacleTexture.getHeight();
-        gate1ObstacleX = 3750f - gate1DrawWidth / 2f;
+        gate1ObstacleX = 3766f - gate1DrawWidth / 2f;
         gate1ObstacleY = MAP_HEIGHT_PER_PART - gate1DrawHeight;
 
         gate2ObstacleTexture = new Texture(Gdx.files.internal("small assets/obstacle 70 fish.png"));
@@ -492,7 +492,7 @@ public class GameScreen implements Screen {
         }
 
         // Gate 2: obstacle at top of map 2 — blocks until player has 20 fish
-        if (currentMapIndex == 1 && gate2ObstacleActive) {
+        if (currentMapIndex == 1 && gate2ObstacleActive && gate2FadeState == Gate2FadeState.NONE) {
             float obBottom = gate2ObstacleY;
             float obRight  = gate2ObstacleX + gate2DrawWidth;
             if (py >= obBottom && px >= gate2ObstacleX && px <= obRight) {
