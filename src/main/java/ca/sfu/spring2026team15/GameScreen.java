@@ -144,8 +144,9 @@ public class GameScreen implements Screen {
     private String gateMessage = null;
     private float gateMessageTimer = 0f;
 
-    // Obama cutscene trigger — fires once when all map 3 houses are delivered
+    // Obama cutscene trigger — fires once when player has 90 fish and reaches the whitehouse
     private boolean obamaTriggered = false;
+    private House whitehouse = null; // Reference to the whitehouse on map 3
 
     public GameScreen(Main game) {
         this.game = game;
@@ -258,7 +259,8 @@ public class GameScreen implements Screen {
         // Map 3 houses (world Y 1804–2706) — positions are placeholders, tune against map art
         List<House> map3Houses = new ArrayList<>();
         map3Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
-        map3Houses.add(new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG); // The whitehouse
+        map3Houses.add(whitehouse);
         map3Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
         map3Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
         housesByMap.add(map3Houses);
@@ -365,6 +367,12 @@ public class GameScreen implements Screen {
             if (cinematicState == CinematicState.NONE
                     && gate1FadeState == Gate1FadeState.NONE
                     && checkFishCollection()) return;
+            // Check Obama trigger: 90 fish + proximity to whitehouse
+            if (!obamaTriggered && fishCollected >= 10 && isPlayerNearWhitehouse()) {
+                obamaTriggered = true;
+                triggerObamaScene();
+                return;
+            }
             gateMessageTimer -= delta;
         }
 
@@ -382,11 +390,6 @@ public class GameScreen implements Screen {
                     }
                     if (house.tryDeliver(player.getCenterX(), player.getCenterY())) {
                         fishCollected += 10;
-                        if (!obamaTriggered && currentMapIndex == 2 && deliveriesNeeded(1) == 0) {
-                            obamaTriggered = true;
-                            triggerObamaScene();
-                            return;
-                        }
                     }
                 }
             }
@@ -798,6 +801,17 @@ public class GameScreen implements Screen {
         return count;
     }
 
+    private boolean isPlayerNearWhitehouse() {
+        // Trigger rectangle in map3.png image coords: (1155,940)→(1850,860)
+        // Conversion: worldX = imgX - 75,  worldY = mapYOffsets[2] + (mapHeights[2] - imgY)
+        float px = player.getCenterX();
+        float py = player.getCenterY();
+        return currentMapIndex == 2
+            && px >= 1080f && px <= 1775f
+            && py >= mapYOffsets[2] + mapHeights[2] - 940f
+            && py <= mapYOffsets[2] + mapHeights[2] - 860f;
+    }
+
     private void triggerObamaScene() {
         timer.stop();
         if (backgroundMusic != null) {
@@ -806,8 +820,10 @@ public class GameScreen implements Screen {
             backgroundMusic = null;
         }
         int elapsed = timer.getElapsedSeconds();
+        float yOffset = mapYOffsets[2];
+        float height  = mapHeights[2];
         dispose();
-        game.setScreen(new ObamaScreen(game, elapsed));
+        game.setScreen(new ObamaScreen(game, elapsed, yOffset, height));
     }
 
     private void setGateMessage(String msg) {

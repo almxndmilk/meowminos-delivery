@@ -10,43 +10,71 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 public class ObamaScreen implements Screen {
-    private static final float CUTSCENE_DURATION   = 8f;
-    private static final float FRAME_DURATION      = 0.3f;
-    private static final float MAP_HEIGHT_PER_PART = 902f;
-    private static final float MAP3_Y_OFFSET       = MAP_HEIGHT_PER_PART * 2; // 1804
-    private static final float MAP_DRAW_X          = -75f;
-    private static final float CAM_X               = 2700f;
-    private static final float CAM_Y               = MAP3_Y_OFFSET + MAP_HEIGHT_PER_PART / 2f; // 2255
-    private static final float OBAMA_W             = 200f;
-    private static final float OBAMA_H             = 300f;
-    private static final float OBAMA_START_X       = 2150f;
-    private static final float OBAMA_START_Y       = MAP3_Y_OFFSET + 150f; // 1954
-    private static final float OBAMA_WALK_SPEED    = 60f;
+
+    private static final float CUTSCENE_DURATION = 8f;
+    private static final float FRAME_DURATION    = 0.3f;
+    private static final float MAP_DRAW_X        = -75f;
+
+    // Obama sprite size — door is 35×65 image px; Obama slightly wider/taller for visibility
+    private static final float OBAMA_W           = 50f;
+    private static final float OBAMA_H           = 100f;
+    private static final float OBAMA_WALK_SPEED  = 30f; // walks downward (−Y) toward the player
 
     private final Main game;
-    private final int elapsedSeconds;
+    private final int  elapsedSeconds;
 
-    private SpriteBatch batch;
-    private ExtendViewport viewport;
+    // Camera and Obama positions computed from live map dimensions passed in from GameScreen
+    private final float camX, camY;
+    private final float map3YOffset, map3Height;
+
+    private SpriteBatch     batch;
+    private ExtendViewport  viewport;
     private OrthographicCamera camera;
 
     private Texture mapTexture;
     private Texture obamaWalk1;
     private Texture obamaWalk2;
 
-    private float cutsceneTimer = 0f;
-    private float animTimer     = 0f;
-    private boolean showFrame1  = true;
-    private float obamaX = OBAMA_START_X;
-    private float obamaY = OBAMA_START_Y;
+    private float   cutsceneTimer = 0f;
+    private float   animTimer     = 0f;
+    private boolean showFrame1    = true;
 
-    public ObamaScreen(Main game, int elapsedSeconds) {
+    // Obama world position — updated each frame
+    private float obamaX;
+    private float obamaY;
+
+    /**
+     * @param map3YOffset  mapYOffsets[2] from GameScreen — world Y of map 3's bottom edge
+     * @param map3Height   mapHeights[2]  from GameScreen — actual pixel height of map part3.png
+     *
+     * Coordinate conversion used throughout (image pixel → world):
+     *   worldX = imgX - 75
+     *   worldY = map3YOffset + (map3Height - imgY)
+     *
+     * Door image coords:    (1465,745)→(1500,810)  → worldX center 1408, worldY bottom = map3YOffset+map3Height-810
+     * Trigger image coords: (1155,940)→(1850,860)  → worldX 1080–1775
+     * Camera imgY centre:   (745+940)/2 = 842.5    → worldY = map3YOffset+map3Height-843
+     * Camera imgX centre:   (1155+1850)/2−75 = 1428
+     */
+    public ObamaScreen(Main game, int elapsedSeconds, float map3YOffset, float map3Height) {
         this.game           = game;
         this.elapsedSeconds = elapsedSeconds;
-        camera = new OrthographicCamera();
+        this.map3YOffset    = map3YOffset;
+        this.map3Height     = map3Height;
+
+        // Camera centred to frame both the door and the trigger zone below it
+        this.camX = 1428f;
+        this.camY = map3YOffset + map3Height - 843f;
+
+        // Obama starts at the door, centred horizontally, at the door's bottom edge
+        this.obamaX = 1408f - OBAMA_W / 2f;              // door worldX centre − half sprite
+        this.obamaY = map3YOffset + map3Height - 810f;    // door bottom in world Y
+
+        camera   = new OrthographicCamera();
         camera.setToOrtho(false, 1280f, 720f);
-        camera.position.set(CAM_X, CAM_Y, 0);
+        camera.position.set(camX, camY, 0);
         camera.update();
+
         viewport = new ExtendViewport(1280f, 720f, camera);
         batch    = new SpriteBatch();
     }
@@ -60,6 +88,7 @@ public class ObamaScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        // Skip on any input
         if (Gdx.input.justTouched() || anyKeyJustPressed()) {
             transitionToEnd();
             return;
@@ -71,20 +100,22 @@ public class ObamaScreen implements Screen {
             return;
         }
 
+        // Toggle animation frames
         animTimer += delta;
         if (animTimer >= FRAME_DURATION) {
-            animTimer -= FRAME_DURATION;
-            showFrame1 = !showFrame1;
+            animTimer  -= FRAME_DURATION;
+            showFrame1  = !showFrame1;
         }
 
-        obamaX += OBAMA_WALK_SPEED * delta;
+        // Obama walks downward (−Y = toward the player who triggered the scene)
+        obamaY -= OBAMA_WALK_SPEED * delta;
 
+        // Render
         ScreenUtils.clear(Color.BLACK);
         viewport.apply();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(mapTexture, MAP_DRAW_X, MAP3_Y_OFFSET,
-                   mapTexture.getWidth(), mapTexture.getHeight());
+        batch.draw(mapTexture, MAP_DRAW_X, map3YOffset, mapTexture.getWidth(), mapTexture.getHeight());
         Texture frame = showFrame1 ? obamaWalk1 : obamaWalk2;
         batch.draw(frame, obamaX, obamaY, OBAMA_W, OBAMA_H);
         batch.end();
@@ -105,7 +136,8 @@ public class ObamaScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
-        camera.position.set(CAM_X, CAM_Y, 0);
+        // Re-lock the camera after the viewport resets it
+        camera.position.set(camX, camY, 0);
         camera.update();
     }
 
