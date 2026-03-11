@@ -53,15 +53,22 @@ public class GameScreen implements Screen {
     private static final float CINEMATIC_HOLD_DURATION = 3.5f;
     // Target zoom computed at runtime: (mapWidth - offset) / VIEW_WIDTH to show full map width
 
-    // Protrude corridor trigger (world coords) — horizontal band across the corridor
-    private static final float PROTRUDE_X_MIN     = 3500f;
-    private static final float PROTRUDE_X_MAX     = 4200f;
-    private static final float PROTRUDE_TRIGGER_Y =  660f;
+    // Gate 1 obstacle — blocks top of map 1 until player has enough fish
+    private Texture gate1ObstacleTexture;
+    private float   gate1ObstacleX, gate1ObstacleY; // computed in show()
+    private float   gate1DrawWidth, gate1DrawHeight; // rendered size (500px wide, proportional height)
+    private boolean gate1ObstacleActive = true;     // false once the fade clears it
+    private boolean gate1Cleared        = false;    // true after obstacle is fully gone; top edge becomes the trigger
 
-    // Fish quota required to advance from map 1 → map 2
-    private static final int FISH_QUOTA = 10;
-    // Fish quota required to advance from map 2 → map 3
-    private static final int FISH_QUOTA_GATE2 = 20;
+    // Fish quotas
+    private static final int FISH_QUOTA_GATE1 = 30; // map 1 → map 2
+    private static final int FISH_QUOTA_GATE2 = 20; // map 2 → map 3
+
+    // Gate 1 obstacle clear: fade screen to black, then back, removing the obstacle
+    private enum Gate1FadeState { NONE, FADE_OUT, FADE_IN }
+    private Gate1FadeState gate1FadeState = Gate1FadeState.NONE;
+    private float gate1FadeTimer = 0f;
+    private static final float GATE1_FADE_DURATION = 1.0f;
 
     // Iris rendering resources
     private ShapeRenderer shapeRenderer;
@@ -185,6 +192,13 @@ public class GameScreen implements Screen {
         puddles.add(new PuddleEnemy(2200f, 100f));
         puddles.add(new PuddleEnemy(3950f, 650f));
 
+
+        gate1ObstacleTexture = new Texture(Gdx.files.internal("small assets/obstacle 30 fish.png"));
+        // Render at fixed 500px wide, height scaled proportionally; centred at X=3832, top flush with map 1 top
+        gate1DrawWidth  = 500f;
+        gate1DrawHeight = gate1DrawWidth / gate1ObstacleTexture.getWidth() * gate1ObstacleTexture.getHeight();
+        gate1ObstacleX = 3750f - gate1DrawWidth / 2f;
+        gate1ObstacleY = MAP_HEIGHT_PER_PART - gate1DrawHeight;
 
         fishHudTexture = new Texture(Gdx.files.internal("small assets/fish.png"));
         hudBatch  = new SpriteBatch();
@@ -311,17 +325,22 @@ public class GameScreen implements Screen {
                 game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
                 return;
             }
-            if (transitionState == TransitionState.NONE && cinematicState == CinematicState.NONE) {
+            if (transitionState == TransitionState.NONE
+                    && cinematicState == CinematicState.NONE
+                    && gate1FadeState == Gate1FadeState.NONE) {
                 player.update(delta, barrierLookup);
                 checkGates();
             }
             updateTransition(delta);
+            updateGate1Fade(delta);
             updateCinematic(delta);
             // During cinematic the camera is driven by updateCinematic; hand back to normal tracking otherwise.
             if (cinematicState == CinematicState.NONE) {
                 gameCamera.update(player.getCenterX(), player.getCenterY());
             }
-            if (cinematicState == CinematicState.NONE && checkFishCollection()) return;
+            if (cinematicState == CinematicState.NONE
+                    && gate1FadeState == Gate1FadeState.NONE
+                    && checkFishCollection()) return;
             gateMessageTimer -= delta;
         }
 
@@ -351,6 +370,10 @@ public class GameScreen implements Screen {
         // Only draw the current map at its actual pixel dimensions
         batch.draw(mapTextures[currentMapIndex], -75, mapYOffsets[currentMapIndex],
             mapWidths[currentMapIndex], mapHeights[currentMapIndex]);
+
+        if (currentMapIndex == 0 && gate1ObstacleActive) {
+            batch.draw(gate1ObstacleTexture, gate1ObstacleX, gate1ObstacleY, gate1DrawWidth, gate1DrawHeight);
+        }
 
         for (House house : houses) {
             house.render(batch);
@@ -391,6 +414,7 @@ public class GameScreen implements Screen {
         batch.end();
 
         renderHud();
+        renderGate1Fade();
 
         if (transitionState != TransitionState.NONE) {
             float halfDiag = (float) Math.sqrt(
@@ -413,21 +437,32 @@ public class GameScreen implements Screen {
         float px = player.getCenterX();
         float py = player.getCenterY();
 
-        // Gate 1: protrude corridor trigger band (X 3500–4200, Y ≥ 660)
-        if (currentMapIndex == 0 && px >= PROTRUDE_X_MIN && px <= PROTRUDE_X_MAX && py >= PROTRUDE_TRIGGER_Y) {
-            int fishNeeded = FISH_QUOTA - fishCollected;
-            if (fishNeeded > 0) {
-                player.setPosition(px, PROTRUDE_TRIGGER_Y - 20f);
-                setGateMessage("Collect " + fishNeeded + " more fish to advance!");
-            } else {
-                pendingMapIndex  = 1;
-                transitionState  = TransitionState.FADE_OUT;
-                transitionTimer  = 0f;
+        // Gate 1: obstacle at top of map 1 — blocks until player has 30 fish
+        if (currentMapIndex == 0 && gate1ObstacleActive) {
+            float obBottom = gate1ObstacleY;
+            float obRight  = gate1ObstacleX + gate1DrawWidth;
+            if (py >= obBottom && px >= gate1ObstacleX && px <= obRight) {
+                int fishNeeded = FISH_QUOTA_GATE1 - fishCollected;
+                if (fishNeeded > 0) {
+                    player.setPosition(px, obBottom - 20f);
+                    setGateMessage("Collect " + fishNeeded + " more fish to advance!");
+                } else {
+                    // Enough fish — start fade-clear sequence
+                    gate1FadeState = Gate1FadeState.FADE_OUT;
+                    gate1FadeTimer = 0f;
+                }
             }
         }
 
-        // Hard boundary: prevent entering map 2 at any X without the iris transition
-        if (py > MAP_HEIGHT_PER_PART && currentMapIndex < 1) {
+        // Gate 1b: once obstacle is cleared, touching the top edge triggers map 2
+        if (currentMapIndex == 0 && gate1Cleared && py >= MAP_HEIGHT_PER_PART - 10f) {
+            pendingMapIndex = 1;
+            transitionState = TransitionState.FADE_OUT;
+            transitionTimer = 0f;
+        }
+
+        // Hard boundary: keep player inside map 1 until cleared (and until the transition fires)
+        if (py > MAP_HEIGHT_PER_PART && currentMapIndex < 1 && !gate1Cleared) {
             player.setPosition(px, MAP_HEIGHT_PER_PART - 80f);
         }
 
@@ -459,6 +494,35 @@ public class GameScreen implements Screen {
                 startMap3Cinematic();
             }
         }
+    }
+
+    private void updateGate1Fade(float delta) {
+        if (gate1FadeState == Gate1FadeState.NONE) return;
+        gate1FadeTimer += delta;
+        if (gate1FadeState == Gate1FadeState.FADE_OUT && gate1FadeTimer >= GATE1_FADE_DURATION) {
+            // Screen is fully black — remove the obstacle, start fading back in
+            gate1ObstacleActive = false;
+            gate1FadeTimer      = 0f;
+            gate1FadeState      = Gate1FadeState.FADE_IN;
+        } else if (gate1FadeState == Gate1FadeState.FADE_IN && gate1FadeTimer >= GATE1_FADE_DURATION) {
+            gate1FadeTimer = 0f;
+            gate1FadeState = Gate1FadeState.NONE;
+            gate1Cleared   = true;
+        }
+    }
+
+    /** Full-screen black overlay that drives the gate 1 obstacle-clear animation. */
+    private void renderGate1Fade() {
+        if (gate1FadeState == Gate1FadeState.NONE) return;
+        float alpha = (gate1FadeState == Gate1FadeState.FADE_OUT)
+            ? gate1FadeTimer / GATE1_FADE_DURATION          // 0 → 1
+            : 1f - gate1FadeTimer / GATE1_FADE_DURATION;   // 1 → 0
+        hudBatch.setProjectionMatrix(hudCamera.combined);
+        hudBatch.begin();
+        hudBatch.setColor(0f, 0f, 0f, alpha);
+        hudBatch.draw(blackTexture, 0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+        hudBatch.setColor(Color.WHITE);
+        hudBatch.end();
     }
 
     private void startMap3Cinematic() {
@@ -786,6 +850,7 @@ public class GameScreen implements Screen {
         for (PuddleEnemy puddle : puddles) puddle.dispose();
         for (Fish fish : fishList) fish.dispose();
         orderIndicatorTexture.dispose();
+        if (gate1ObstacleTexture != null) gate1ObstacleTexture.dispose();
         shapeRenderer.dispose();
         blackTexture.dispose();
         if (backgroundMusic != null) {
