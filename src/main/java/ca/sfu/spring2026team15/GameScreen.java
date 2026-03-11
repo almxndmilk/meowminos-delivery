@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -42,6 +43,15 @@ public class GameScreen implements Screen {
     private TransitionState transitionState = TransitionState.NONE;
     private float transitionTimer = 0f;
     private static final float TRANSITION_DURATION = 1.2f;
+
+    // Map 3 intro cinematic
+    private enum CinematicState { NONE, PAN_TO_HOUSES, HOLD, PAN_BACK }
+    private CinematicState cinematicState = CinematicState.NONE;
+    private float cinematicTimer = 0f;
+    private float panStartX, panStartY, panStartZoom;
+    private static final float CINEMATIC_PAN_DURATION  = 2.5f;
+    private static final float CINEMATIC_HOLD_DURATION = 3.5f;
+    // Target zoom computed at runtime: (mapWidth - offset) / VIEW_WIDTH to show full map width
 
     // Protrude corridor trigger (world coords) — horizontal band across the corridor
     private static final float PROTRUDE_X_MIN     = 3500f;
@@ -279,7 +289,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && cinematicState == CinematicState.NONE) {
             isPaused = !isPaused;
             if (isPaused) {
                 timer.pause();
@@ -301,24 +311,30 @@ public class GameScreen implements Screen {
                 game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
                 return;
             }
-            if (transitionState == TransitionState.NONE) {
+            if (transitionState == TransitionState.NONE && cinematicState == CinematicState.NONE) {
                 player.update(delta, barrierLookup);
                 checkGates();
             }
             updateTransition(delta);
-            gameCamera.update(player.getCenterX(), player.getCenterY());
-            if (checkFishCollection()) return;
+            updateCinematic(delta);
+            // During cinematic the camera is driven by updateCinematic; hand back to normal tracking otherwise.
+            if (cinematicState == CinematicState.NONE) {
+                gameCamera.update(player.getCenterX(), player.getCenterY());
+            }
+            if (cinematicState == CinematicState.NONE && checkFishCollection()) return;
             gateMessageTimer -= delta;
         }
 
-        // Delivery prompt + interactio
+        // Delivery prompt + interaction — house timers tick always, but interaction blocked during cinematic
         showDeliverPrompt = false;
         for (House house : houses) {
             house.update(delta);
-            if (house.hasOrder() && house.isPlayerInRange(player.getCenterX(), player.getCenterY())) {
+            if (cinematicState == CinematicState.NONE
+                    && house.hasOrder()
+                    && house.isPlayerInRange(player.getCenterX(), player.getCenterY())) {
                 showDeliverPrompt = true;
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                    if (SettingsScreen.soundOn) {  // ADD THIS CHECK
+                    if (SettingsScreen.soundOn) {
                         deliveredSound.play(1.0f);
                     }
                     if (house.tryDeliver(player.getCenterX(), player.getCenterY())) {
@@ -439,7 +455,102 @@ public class GameScreen implements Screen {
         } else if (transitionState == TransitionState.FADE_IN && transitionTimer >= TRANSITION_DURATION) {
             transitionTimer = 0f;
             transitionState = TransitionState.NONE;
+            if (pendingMapIndex == 2) {
+                startMap3Cinematic();
+            }
         }
+    }
+
+    private void startMap3Cinematic() {
+        OrthographicCamera cam = gameCamera.getCamera();
+        panStartX    = cam.position.x;
+        panStartY    = cam.position.y;
+        panStartZoom = cam.zoom;
+        cinematicTimer = 0f;
+        cinematicState = CinematicState.PAN_TO_HOUSES;
+    }
+
+    private void updateCinematic(float delta) {
+        if (cinematicState == CinematicState.NONE) return;
+        cinematicTimer += delta;
+
+        OrthographicCamera cam = gameCamera.getCamera();
+        float mapMaxX = mapWidths[2] - BARRIER_X_OFFSET;
+        float mapMinY = mapYOffsets[2];
+        float mapMaxY = mapYOffsets[2] + mapHeights[2];
+
+        // Pan target: horizontal center of map 3, vertical center
+        float targetX = mapMaxX / 2f;
+        float targetY = (mapMinY + mapMaxY) / 2f;
+        // Zoom exactly enough to fit the full map width inside the viewport
+        float targetZoom = mapMaxX / VIEW_WIDTH;
+
+        if (cinematicState == CinematicState.PAN_TO_HOUSES) {
+            float t = smoothStep(MathUtils.clamp(cinematicTimer / CINEMATIC_PAN_DURATION, 0f, 1f));
+            cam.zoom = MathUtils.lerp(panStartZoom, targetZoom, t);
+            float rawX = MathUtils.lerp(panStartX, targetX, t);
+            float rawY = MathUtils.lerp(panStartY, targetY, t);
+            clampAndApply(cam, rawX, rawY, mapMinY, mapMaxY, mapMaxX);
+
+            if (cinematicTimer >= CINEMATIC_PAN_DURATION) {
+                cinematicState = CinematicState.HOLD;
+                cinematicTimer = 0f;
+            }
+
+        } else if (cinematicState == CinematicState.HOLD) {
+            cam.zoom = targetZoom;
+            clampAndApply(cam, targetX, targetY, mapMinY, mapMaxY, mapMaxX);
+
+            if (cinematicTimer >= CINEMATIC_HOLD_DURATION) {
+                // Capture exact hold position as new pan start
+                panStartX    = cam.position.x;
+                panStartY    = cam.position.y;
+                panStartZoom = cam.zoom;
+                cinematicState = CinematicState.PAN_BACK;
+                cinematicTimer = 0f;
+            }
+
+        } else if (cinematicState == CinematicState.PAN_BACK) {
+            float t = smoothStep(MathUtils.clamp(cinematicTimer / CINEMATIC_PAN_DURATION, 0f, 1f));
+            cam.zoom = MathUtils.lerp(panStartZoom, 1f, t);
+
+            // Final resting position: where normal camera tracking would place us at zoom=1
+            float finalHalfW = VIEW_WIDTH  / 2f;
+            float finalHalfH = VIEW_HEIGHT / 2f;
+            float finalTargetX = MathUtils.clamp(player.getCenterX(), finalHalfW, mapMaxX - finalHalfW);
+            float finalTargetY = MathUtils.clamp(player.getCenterY(), mapMinY + finalHalfH, mapMaxY - finalHalfH);
+
+            float rawX = MathUtils.lerp(panStartX, finalTargetX, t);
+            float rawY = MathUtils.lerp(panStartY, finalTargetY, t);
+            clampAndApply(cam, rawX, rawY, mapMinY, mapMaxY, mapMaxX);
+
+            if (cinematicTimer >= CINEMATIC_PAN_DURATION) {
+                cam.zoom = 1f;
+                cinematicState = CinematicState.NONE;
+                // gameCamera.update() takes over next frame
+            }
+        }
+    }
+
+    /** Clamps camera to map bounds at current zoom, then calls cam.update().
+     *  If the zoomed view exceeds a map dimension, the camera is centered on that axis. */
+    private void clampAndApply(OrthographicCamera cam, float rawX, float rawY,
+                                float mapMinY, float mapMaxY, float mapMaxX) {
+        float halfW = VIEW_WIDTH  * cam.zoom / 2f;
+        float halfH = VIEW_HEIGHT * cam.zoom / 2f;
+        // When view wider/taller than the map, center; otherwise clamp to keep within bounds.
+        cam.position.x = (halfW * 2f >= mapMaxX)
+            ? mapMaxX / 2f
+            : MathUtils.clamp(rawX, halfW, mapMaxX - halfW);
+        cam.position.y = (halfH * 2f >= mapMaxY - mapMinY)
+            ? (mapMinY + mapMaxY) / 2f
+            : MathUtils.clamp(rawY, mapMinY + halfH, mapMaxY - halfH);
+        cam.update();
+    }
+
+    /** Smoothstep easing: starts and ends slow, fast in the middle. */
+    private float smoothStep(float t) {
+        return t * t * (3f - 2f * t);
     }
 
     private void activateMap(int index) {
@@ -619,6 +730,15 @@ public class GameScreen implements Screen {
 
         if (gateMessageTimer > 0) {
             hudFont.draw(hudBatch, gateMessage, VIEW_WIDTH / 2 - 200f, VIEW_HEIGHT / 2f);
+        }
+
+        if (cinematicState == CinematicState.HOLD) {
+            // Semi-transparent dark banner at the bottom of the screen
+            hudBatch.setColor(0f, 0f, 0f, 0.65f);
+            hudBatch.draw(blackTexture, 0, 0, VIEW_WIDTH, VIEW_HEIGHT * 0.18f);
+            hudBatch.setColor(Color.WHITE);
+            String msg = "Your final task: deliver the pizza to the president!";
+            hudFont.draw(hudBatch, msg, VIEW_WIDTH / 2f - 380f, VIEW_HEIGHT * 0.13f);
         }
 
         hudBatch.end();
