@@ -53,6 +53,10 @@ public class GameScreen implements Screen {
     private static final float CINEMATIC_HOLD_DURATION = 3.5f;
     // Target zoom computed at runtime: (mapWidth - offset) / VIEW_WIDTH to show full map width
 
+    // Respawn Penalties
+    private static final int RESPAWN_FISH_PENALTY = 10;
+    private static final float RESPAWN_TIME_PENALTY = 30f;
+
     // Gate 1 obstacle — blocks top of map 1 until player has enough fish
     private Texture gate1ObstacleTexture;
     private float   gate1ObstacleX, gate1ObstacleY; // computed in show()
@@ -442,7 +446,9 @@ public class GameScreen implements Screen {
                     break;
                 }
             }
-            if (!isPaused) enemy.update(delta, player.getCenterX(), player.getCenterY(), barrierLookup);
+            if (!isPaused && transitionState == TransitionState.NONE && cinematicState == CinematicState.NONE) {
+                enemy.update(delta, player.getCenterX(), player.getCenterY(), barrierLookup);
+            }
             enemy.render(batch);
         }
 
@@ -473,19 +479,28 @@ public class GameScreen implements Screen {
         float px = player.getCenterX();
         float py = player.getCenterY();
 
-        // Gate 1: obstacle at top of map 1 — blocks until player has 30 fish
+        //Gate 1
         if (currentMapIndex == 0 && gate1ObstacleActive) {
             float obBottom = gate1ObstacleY;
             float obRight  = gate1ObstacleX + gate1DrawWidth;
-            if (py >= obBottom && px >= gate1ObstacleX && px <= obRight) {
+
+            if (py >= obBottom - 50f && py <= obBottom + 50f &&
+                    px >= gate1ObstacleX && px <= obRight) {
+
                 int fishNeeded = FISH_QUOTA_GATE1 - fishCollected;
+
                 if (fishNeeded > 0) {
-                    player.setPosition(px, obBottom - 20f);
-                    setGateMessage("Collect " + fishNeeded + " more fish to advance!");
+                    setGateMessage("Need " + fishNeeded + " more fish!");
                 } else {
-                    // Enough fish — start fade-clear sequence
-                    gate1FadeState = Gate1FadeState.FADE_OUT;
-                    gate1FadeTimer = 0f;
+                    setGateMessage("Press E to clear!");
+
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                        gate1ObstacleActive = false;
+                        gate1Cleared = true;
+                    }
+                }
+                if (py >= obBottom) {
+                    player.setPosition(px, obBottom - 20f);
                 }
             }
         }
@@ -502,19 +517,29 @@ public class GameScreen implements Screen {
             player.setPosition(px, MAP_HEIGHT_PER_PART - 80f);
         }
 
-        // Gate 2: obstacle at top of map 2 — blocks until player has 20 fish
-        if (currentMapIndex == 1 && gate2ObstacleActive && gate2FadeState == Gate2FadeState.NONE) {
+        //Gate 2
+        if (currentMapIndex == 1 && gate2ObstacleActive) {
             float obBottom = gate2ObstacleY;
             float obRight  = gate2ObstacleX + gate2DrawWidth;
-            if (py >= obBottom && px >= gate2ObstacleX && px <= obRight) {
+
+            if (py >= obBottom - 50f && py <= obBottom + 50f &&
+                    px >= gate2ObstacleX && px <= obRight) {
+
                 int fishNeeded = FISH_QUOTA_GATE2 - fishCollected;
+
                 if (fishNeeded > 0) {
-                    player.setPosition(px, obBottom - 20f);
-                    setGateMessage("Collect " + fishNeeded + " more fish to advance!");
+                    setGateMessage("Need " + fishNeeded + " more fish!");
                 } else {
-                    // Enough fish — start fade-clear sequence
-                    gate2FadeState = Gate2FadeState.FADE_OUT;
-                    gate2FadeTimer = 0f;
+                    setGateMessage("Press E to clear!");
+
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                        gate2ObstacleActive = false;
+                        gate2Cleared = true;
+                    }
+                }
+
+                if (py >= obBottom) {
+                    player.setPosition(px, obBottom - 20f);
                 }
             }
         }
@@ -830,7 +855,7 @@ public class GameScreen implements Screen {
 
     private void setGateMessage(String msg) {
         gateMessage = msg;
-        gateMessageTimer = 3f;
+        gateMessageTimer = 0.1f;
     }
 
     private boolean checkFishCollection() {
@@ -859,17 +884,14 @@ public class GameScreen implements Screen {
 
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
-                timer.stop();
-                if (backgroundMusic != null) {
-                    backgroundMusic.stop();
-                    backgroundMusic.dispose();
-                    backgroundMusic = null;
+                fishCollected = Respawn.respawn(player, police, timer, currentMapIndex,
+                        fishCollected, mapYOffsets, RESPAWN_FISH_PENALTY, RESPAWN_TIME_PENALTY);
+                return true;
                 }
-                game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + 1));
-            }
         }
         return false;
     }
+
 
     private void renderHud() {
         hudBatch.setProjectionMatrix(hudCamera.combined);
@@ -900,7 +922,7 @@ public class GameScreen implements Screen {
         }
 
         if (gateMessageTimer > 0) {
-            hudFont.draw(hudBatch, gateMessage, VIEW_WIDTH / 2 - 200f, VIEW_HEIGHT / 2f);
+            hudFont.draw(hudBatch, gateMessage, VIEW_WIDTH / 2 - 200f, 150f);
         }
 
         if (cinematicState == CinematicState.HOLD) {

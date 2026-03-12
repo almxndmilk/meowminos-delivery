@@ -25,6 +25,13 @@ public class Timer {
         }
     }
 
+    public void subtractTime(float seconds) {
+        timeRemaining -= seconds;
+        if (timeRemaining < 0f) {
+            timeRemaining = 0f;
+        }
+    }
+
     public boolean isFinished()    { return timeRemaining <= 0f; }
     public int getRemainingSeconds() { return (int) timeRemaining; }
     public int getElapsedSeconds()   { return (int) elapsedTime; }
