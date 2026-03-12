@@ -7,8 +7,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 public class CatOffBike {
-    private static final float SIZE = 125f;
-    private static final float SPEED = 400f;
+    private static final float SIZE = 170f;
+    private static final float SPEED = 250f;
     private float currentSpeed = SPEED;
 
     //for puddle speed change

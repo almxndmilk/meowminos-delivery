@@ -118,7 +118,16 @@ public class GameScreen implements Screen {
     private SpriteBatch batch;
     private ExtendViewport viewport;
     private GameCamera gameCamera;
+
+    // the player
     private Player player;
+    private CatOffBike catOffBike;
+    private boolean isOnBike = true;
+    private float parkedBikeX = -9999f, parkedBikeY = -9999f;
+    private boolean bikeParked = false;
+    private Texture parkedBikeTexture;
+
+
     private List<PoliceEnemy> police;
     private List<PuddleEnemy> puddles;
     private List<Fish> fishList;
@@ -207,7 +216,11 @@ public class GameScreen implements Screen {
             0f,
             mapHeights[0]);
         viewport   = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
+
+        // the player
         player     = new Player(300f, 300f);
+        catOffBike = new CatOffBike(300f, 300f);
+        parkedBikeTexture = new Texture(Gdx.files.internal("small assets/catBike.png"));
 
         police = new ArrayList<>();
         police.add(new PoliceEnemy(3000f, 300f));
@@ -363,7 +376,26 @@ public class GameScreen implements Screen {
             if (transitionState == TransitionState.NONE
                     && cinematicState == CinematicState.NONE
                     && gate1FadeState == Gate1FadeState.NONE) {
-                player.update(delta, barrierLookup);
+
+                // mount and dismount bike
+                if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+                    if (isOnBike) {
+                        parkedBikeX = player.getCenterX();
+                        parkedBikeY = player.getCenterY();
+                        bikeParked = true;
+                        catOffBike.setPosition(player.getCenterX(), player.getCenterY());
+                    } else {
+                        player.setPosition(catOffBike.getCenterX(), catOffBike.getCenterY());
+                        bikeParked = false;
+                    }
+                    isOnBike = !isOnBike;
+                }
+
+                if (isOnBike) {
+                    player.update(delta, barrierLookup);
+                } else {
+                    catOffBike.update(delta, barrierLookup);
+                }
                 checkGates();
             }
             // Capture state and timer before update so renderIris uses pre-advance values.
@@ -376,7 +408,7 @@ public class GameScreen implements Screen {
             cinematicBars.update(delta);
             // During cinematic the camera is driven by updateCinematic; hand back to normal tracking otherwise.
             if (cinematicState == CinematicState.NONE) {
-                gameCamera.update(player.getCenterX(), player.getCenterY());
+                gameCamera.update(getActiveX(), getActiveY());
             }
             if (cinematicState == CinematicState.NONE
                     && gate1FadeState == Gate1FadeState.NONE
@@ -390,13 +422,13 @@ public class GameScreen implements Screen {
             house.update(delta);
             if (cinematicState == CinematicState.NONE
                     && house.hasOrder()
-                    && house.isPlayerInRange(player.getCenterX(), player.getCenterY())) {
+                    && house.isPlayerInRange(getActiveX(), getActiveY())) {
                 showDeliverPrompt = true;
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
                     if (SettingsScreen.soundOn) {
                         deliveredSound.play(1.0f);
                     }
-                    if (house.tryDeliver(player.getCenterX(), player.getCenterY())) {
+                    if (house.tryDeliver(getActiveX(), getActiveY())) {
                         fishCollected += 10;
                     }
                 }
@@ -423,11 +455,14 @@ public class GameScreen implements Screen {
         }
 
         player.resetSpeed();
+        catOffBike.resetSpeed();
         boolean isOnPuddle = false;
         for (PuddleEnemy puddle : puddles) {
-            if (puddle.onPuddle(player.getCenterX(), player.getCenterY())) {
+            if (puddle.onPuddle(getActiveX(), getActiveY())) {
                 isOnPuddle = true;
-                player.setSpeed(70f);
+                if (isOnBike) player.setSpeed(70f);
+                else catOffBike.setSpeed(70f);
+
                 if (!wasOnPuddle) {
                     fishCollected -= 1;
                 }
@@ -439,7 +474,16 @@ public class GameScreen implements Screen {
         for (Fish fish : fishList) {
             fish.render(batch);
         }
-        player.render(batch);
+        // replaced player.render(batch)
+        if (bikeParked) {
+            float bikeSize = 125f;
+            batch.draw(parkedBikeTexture,
+                    parkedBikeX - bikeSize / 2f,
+                    parkedBikeY - bikeSize / 2f,
+                    bikeSize, bikeSize);
+        }
+        if (isOnBike) player.render(batch);
+        else catOffBike.render(batch);
 
         for (PoliceEnemy enemy : police) {
             enemy.resetSpeed();
@@ -451,7 +495,7 @@ public class GameScreen implements Screen {
                 }
             }
             if (!isPaused && transitionState == TransitionState.NONE && cinematicState == CinematicState.NONE) {
-                enemy.update(delta, player.getCenterX(), player.getCenterY(), barrierLookup);
+                enemy.update(delta, getActiveX(), getActiveY(), barrierLookup);
             }
             enemy.render(batch);
         }
@@ -480,8 +524,8 @@ public class GameScreen implements Screen {
 
     /** Check gate triggers — no delta needed; called only when transition is inactive. */
     private void checkGates() {
-        float px = player.getCenterX();
-        float py = player.getCenterY();
+        float px = getActiveX();
+        float py = getActiveY();
 
         //Gate 1
         if (currentMapIndex == 0 && gate1ObstacleActive) {
@@ -504,7 +548,8 @@ public class GameScreen implements Screen {
                     }
                 }
                 if (py >= obBottom) {
-                    player.setPosition(px, obBottom - 20f);
+                    if (isOnBike) player.setPosition(px, obBottom - 20f);
+                    else catOffBike.setPosition(px, obBottom - 20f);
                 }
             }
         }
@@ -517,8 +562,10 @@ public class GameScreen implements Screen {
         }
 
         // Hard boundary: keep player inside map 1 until cleared (and until the transition fires)
+        // with:
         if (py > MAP_HEIGHT_PER_PART && currentMapIndex < 1 && !gate1Cleared) {
-            player.setPosition(px, MAP_HEIGHT_PER_PART - 80f);
+            if (isOnBike) player.setPosition(px, MAP_HEIGHT_PER_PART - 80f);
+            else catOffBike.setPosition(px, MAP_HEIGHT_PER_PART - 80f);
         }
 
         //Gate 2
@@ -542,8 +589,9 @@ public class GameScreen implements Screen {
                     }
                 }
 
-                if (py >= obBottom) {
-                    player.setPosition(px, obBottom - 20f);
+                if (currentMapIndex == 1 && py > mapYOffsets[2] && !gate2Cleared) {
+                    if (isOnBike) player.setPosition(px, mapYOffsets[2] - 80f);
+                    else catOffBike.setPosition(px, mapYOffsets[2] - 80f);
                 }
             }
         }
@@ -557,7 +605,8 @@ public class GameScreen implements Screen {
 
         // Hard boundary: keep player inside map 2 until cleared
         if (currentMapIndex == 1 && py > mapYOffsets[2] && !gate2Cleared) {
-            player.setPosition(px, mapYOffsets[2] - 80f);
+            if (isOnBike) player.setPosition(px, mapYOffsets[2] - 80f);
+            else catOffBike.setPosition(px, mapYOffsets[2] - 80f);
         }
     }
 
@@ -703,8 +752,8 @@ public class GameScreen implements Screen {
             // Final resting position: where normal camera tracking would place us at zoom=1
             float finalHalfW = VIEW_WIDTH  / 2f;
             float finalHalfH = VIEW_HEIGHT / 2f;
-            float finalTargetX = MathUtils.clamp(player.getCenterX(), finalHalfW, mapMaxX - finalHalfW);
-            float finalTargetY = MathUtils.clamp(player.getCenterY(), mapMinY + finalHalfH, mapMaxY - finalHalfH);
+            float finalTargetX = MathUtils.clamp(getActiveX(), finalHalfW, mapMaxX - finalHalfW);
+            float finalTargetY = MathUtils.clamp(getActiveY(), mapMinY + finalHalfH, mapMaxY - finalHalfH);
 
             float rawX = MathUtils.lerp(panStartX, finalTargetX, t);
             float rawY = MathUtils.lerp(panStartY, finalTargetY, t);
@@ -747,8 +796,16 @@ public class GameScreen implements Screen {
         float[] policeX = {800f, 4600f, 1850f};
         float[] policeY = {300f, mapYOffsets[1] + 100f, mapYOffsets[2] + 100f};
 
+        //player.setPosition(spawnX[index], spawnY[index]);
+        //currentMapIndex = Math.max(currentMapIndex, index);
+        // changed:
         player.setPosition(spawnX[index], spawnY[index]);
+        catOffBike.setPosition(spawnX[index], spawnY[index]);
+        bikeParked = false;
+        isOnBike = true;
         currentMapIndex = Math.max(currentMapIndex, index);
+
+
         gameCamera.setMaxX(mapWidths[index] - BARRIER_X_OFFSET);
         gameCamera.setYBounds(mapYOffsets[index], mapYOffsets[index] + mapHeights[index]);
         for (PoliceEnemy enemy : police) {
@@ -843,6 +900,10 @@ public class GameScreen implements Screen {
         return count;
     }
 
+    // method definition for updated player on and off bike
+    private float getActiveX() { return isOnBike ? player.getCenterX() : catOffBike.getCenterX(); }
+    private float getActiveY() { return isOnBike ? player.getCenterY() : catOffBike.getCenterY(); }
+
     private void setGateMessage(String msg) {
         gateMessage = msg;
         gateMessageTimer = 0.1f;
@@ -853,8 +914,8 @@ public class GameScreen implements Screen {
         float rSquared = collectRadius * collectRadius;
         for (Fish fish : fishList) {
             if (fish.isCollected()) continue;
-            float dx = fish.getCenterX() - player.getCenterX();
-            float dy = fish.getCenterY() - player.getCenterY();
+            float dx = fish.getCenterX() - getActiveX();
+            float dy = fish.getCenterY() - getActiveY();
             if (dx * dx + dy * dy < rSquared) {
                 fish.collect();
                 fishCollected++;
@@ -873,9 +934,13 @@ public class GameScreen implements Screen {
         }
 
         for (PoliceEnemy enemy : police) {
-            if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
+            if (enemy.isCatching(getActiveX(), getActiveY())) {
                 fishCollected = Respawn.respawn(player, police, timer, currentMapIndex,
                         fishCollected, mapYOffsets, RESPAWN_FISH_PENALTY, RESPAWN_TIME_PENALTY);
+                // Sync catOffBike to the respawn position and reset bike state
+                catOffBike.setPosition(player.getCenterX(), player.getCenterY());
+                bikeParked = false;
+                isOnBike = true;
                 return true;
                 }
         }
@@ -977,5 +1042,7 @@ public class GameScreen implements Screen {
             backgroundMusic.dispose();
         }
         if (deliveredSound != null) deliveredSound.dispose();
+        catOffBike.dispose();
+        if (parkedBikeTexture != null) parkedBikeTexture.dispose();
     }
 }

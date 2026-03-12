@@ -16,8 +16,8 @@ public class Player {
     public void resetSpeed() { this.currentSpeed = SPEED; }
 
     private final Texture left1, left2;
-    private final Texture up1, up2, up3;
-    private final Texture down1, down2, down3;
+    private final Texture up1, up2;
+    private final Texture down1, down2;
 
 
 
@@ -36,12 +36,10 @@ public class Player {
     public Player(float startX, float startY) {
         left1 = new Texture(Gdx.files.internal("catOnBike/catOnBike_Down.png"));
         left2 = new Texture(Gdx.files.internal("catOnBike/catOnBike_Up.png"));
-        up1 = new Texture(Gdx.files.internal("catBack/catBack1.png"));
-        up2 = new Texture(Gdx.files.internal("catBack/catBack2.png"));
-        up3 = new Texture(Gdx.files.internal("catBack/catBack3.png"));
-        down1 = new Texture(Gdx.files.internal("catFront/catFront1.png"));
-        down2 = new Texture(Gdx.files.internal("catFront/catFront2.png"));
-        down3 = new Texture(Gdx.files.internal("catFront/catFront3.png"));
+        up1 = new Texture(Gdx.files.internal("catOnBike/catBikeBack_down.png"));
+        up2 = new Texture(Gdx.files.internal("catOnBike/catBikeBack_up.png"));
+        down1 = new Texture(Gdx.files.internal("catOnBike/catOnBikeFront_down.png"));
+        down2 = new Texture(Gdx.files.internal("catOnBike/catOnBikeFront_up.png"));
         currentFrame = down1;
         position = new Vector2(startX, startY);
     }
@@ -110,9 +108,6 @@ public class Player {
                 else if (currentFrameIndex == 1){
                     currentFrame = up2;
                 }
-                else{
-                    currentFrame = up3;
-                }
                 break;
             case DOWN:
                 if (currentFrameIndex == 0){
@@ -120,9 +115,6 @@ public class Player {
                 }
                 else if (currentFrameIndex == 1) {
                     currentFrame = down2;
-                }
-                else{
-                    currentFrame = down3;
                 }
                 break;
         }
@@ -145,7 +137,7 @@ public class Player {
 
     public void dispose() {
         left1.dispose(); left2.dispose();
-        up1.dispose(); up2.dispose(); up3.dispose();
-        down1.dispose(); down2.dispose(); down3.dispose();
+        up1.dispose(); up2.dispose();
+        down1.dispose(); down2.dispose();
     }
 }
