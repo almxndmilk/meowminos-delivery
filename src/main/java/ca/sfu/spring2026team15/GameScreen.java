@@ -162,6 +162,10 @@ public class GameScreen implements Screen {
     private String gateMessage = null;
     private float gateMessageTimer = 0f;
 
+    // Obama cutscene trigger — fires once when player has 90 fish and reaches the whitehouse
+    private boolean obamaTriggered = false;
+    private House whitehouse = null; // Reference to the whitehouse on map 3
+
     public GameScreen(Main game) {
         this.game = game;
     }
@@ -279,7 +283,8 @@ public class GameScreen implements Screen {
         // Map 3 houses (world Y 1804–2706) — positions are placeholders, tune against map art
         List<House> map3Houses = new ArrayList<>();
         map3Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
-        map3Houses.add(new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG); // The whitehouse
+        map3Houses.add(whitehouse);
         map3Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
         map3Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
         housesByMap.add(map3Houses);
@@ -370,7 +375,7 @@ public class GameScreen implements Screen {
                     backgroundMusic.dispose();
                     backgroundMusic = null;
                 }
-                game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
+                game.setScreen(new EndScreen(game, timer.getElapsedSeconds(), false)); // false = not from ObamaScreen
                 return;
             }
             if (transitionState == TransitionState.NONE
@@ -409,6 +414,12 @@ public class GameScreen implements Screen {
             // During cinematic the camera is driven by updateCinematic; hand back to normal tracking otherwise.
             if (cinematicState == CinematicState.NONE) {
                 gameCamera.update(getActiveX(), getActiveY());
+            }
+            // Check Obama trigger first — before any potential EndScreen triggers
+            if (!obamaTriggered && isPlayerNearWhitehouse()) {
+                obamaTriggered = true;
+                triggerObamaScene();
+                return;
             }
             if (cinematicState == CinematicState.NONE
                     && gate1FadeState == Gate1FadeState.NONE
@@ -900,6 +911,33 @@ public class GameScreen implements Screen {
         return count;
     }
 
+    private boolean isPlayerNearWhitehouse() {
+        // Trigger rectangle in map3.png image coords: (1155,940)→(1850,860)
+        // Conversion: worldX = imgX - 75,  worldY = mapYOffsets[2] + (mapHeights[2] - imgY)
+        float px = player.getCenterX();
+        float py = player.getCenterY();
+        return currentMapIndex == 2
+            && px >= 1080f && px <= 1775f
+            && py >= mapYOffsets[2] + mapHeights[2] - 940f
+            && py <= mapYOffsets[2] + mapHeights[2] - 860f;
+    }
+
+    private void triggerObamaScene() {
+        timer.stop();
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+            backgroundMusic.dispose();
+            backgroundMusic = null;
+        }
+        int elapsed = timer.getElapsedSeconds();
+        float yOffset = mapYOffsets[2];
+        float height  = mapHeights[2];
+        float px = player.getCenterX();
+        float py = player.getCenterY();
+        dispose();
+        game.setScreen(new ObamaScreen(game, elapsed, yOffset, height, px, py));
+    }
+
     // method definition for updated player on and off bike
     private float getActiveX() { return isOnBike ? player.getCenterX() : catOffBike.getCenterX(); }
     private float getActiveY() { return isOnBike ? player.getCenterY() : catOffBike.getCenterY(); }
@@ -929,7 +967,7 @@ public class GameScreen implements Screen {
                 backgroundMusic.dispose();
                 backgroundMusic = null;
             }
-            game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
+            game.setScreen(new EndScreen(game, timer.getElapsedSeconds(), false)); // false = not from ObamaScreen
             return true;
         }
 

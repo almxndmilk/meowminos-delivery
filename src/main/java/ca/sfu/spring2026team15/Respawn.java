@@ -8,7 +8,7 @@ public class Respawn {
                               int currentMapIndex, int currentFish, float[] mapYOffsets,
                               int fishPenalty, float timePenalty) {
 
-        int newFishCount = currentFish - fishPenalty;
+        int newFishCount = Math.max(0, currentFish - fishPenalty);
         timer.subtractTime(timePenalty);
 
         if (currentMapIndex == 0) {
