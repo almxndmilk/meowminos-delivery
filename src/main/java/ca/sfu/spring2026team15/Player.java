@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 public class Player {
-    private static final float SIZE = 150f;
+    private static final float SIZE = 125f;
     private static final float SPEED = 400f;
     private float currentSpeed = SPEED;
 
@@ -34,8 +34,8 @@ public class Player {
     private final Vector2 position;
 
     public Player(float startX, float startY) {
-        left1 = new Texture(Gdx.files.internal("catOffBike/catOffBike1.png"));
-        left2 = new Texture(Gdx.files.internal("catOffBike/catOffBike2.png"));
+        left1 = new Texture(Gdx.files.internal("catOnBike/catOnBike_Down.png"));
+        left2 = new Texture(Gdx.files.internal("catOnBike/catOnBike_Up.png"));
         up1 = new Texture(Gdx.files.internal("catBack/catBack1.png"));
         up2 = new Texture(Gdx.files.internal("catBack/catBack2.png"));
         up3 = new Texture(Gdx.files.internal("catBack/catBack3.png"));
