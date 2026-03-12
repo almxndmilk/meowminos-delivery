@@ -6,9 +6,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
-public class Player {
-    private static final float SIZE = 125f;
-    private static final float SPEED = 400f;
+public class CatOffBike {
+    private static final float SIZE = 170f;
+    private static final float SPEED = 250f;
     private float currentSpeed = SPEED;
 
     //for puddle speed change
@@ -16,8 +16,8 @@ public class Player {
     public void resetSpeed() { this.currentSpeed = SPEED; }
 
     private final Texture left1, left2;
-    private final Texture up1, up2;
-    private final Texture down1, down2;
+    private final Texture up1, up2, up3;
+    private final Texture down1, down2, down3;
 
 
 
@@ -33,13 +33,15 @@ public class Player {
 
     private final Vector2 position;
 
-    public Player(float startX, float startY) {
-        left1 = new Texture(Gdx.files.internal("catOnBike/catOnBike_Down.png"));
-        left2 = new Texture(Gdx.files.internal("catOnBike/catOnBike_Up.png"));
-        up1 = new Texture(Gdx.files.internal("catOnBike/catBikeBack_down.png"));
-        up2 = new Texture(Gdx.files.internal("catOnBike/catBikeBack_up.png"));
-        down1 = new Texture(Gdx.files.internal("catOnBike/catOnBikeFront_down.png"));
-        down2 = new Texture(Gdx.files.internal("catOnBike/catOnBikeFront_up.png"));
+    public CatOffBike(float startX, float startY) {
+        left1 = new Texture(Gdx.files.internal("catOffBike/catOffBike1.png"));
+        left2 = new Texture(Gdx.files.internal("catOffBike/catOffBike2.png"));
+        up1 = new Texture(Gdx.files.internal("catBack/catBack1.png"));
+        up2 = new Texture(Gdx.files.internal("catBack/catBack2.png"));
+        up3 = new Texture(Gdx.files.internal("catBack/catBack3.png"));
+        down1 = new Texture(Gdx.files.internal("catFront/catFront1.png"));
+        down2 = new Texture(Gdx.files.internal("catFront/catFront2.png"));
+        down3 = new Texture(Gdx.files.internal("catFront/catFront3.png"));
         currentFrame = down1;
         position = new Vector2(startX, startY);
     }
@@ -65,18 +67,18 @@ public class Player {
 
         // Check X — bottom 20% of sprite
         boolean blockedX =
-            lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
-            lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
-            lookup.isBarrier(newX - hitW, position.y - hitTop) ||
-            lookup.isBarrier(newX + hitW, position.y - hitTop);
+                lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
+                        lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
+                        lookup.isBarrier(newX - hitW, position.y - hitTop) ||
+                        lookup.isBarrier(newX + hitW, position.y - hitTop);
         if (!blockedX) position.x = newX;
 
         // Check Y — bottom 20% of sprite
         boolean blockedY =
-            lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
-            lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
-            lookup.isBarrier(position.x - hitW, newY - hitTop) ||
-            lookup.isBarrier(position.x + hitW, newY - hitTop);
+                lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
+                        lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
+                        lookup.isBarrier(position.x - hitW, newY - hitTop) ||
+                        lookup.isBarrier(position.x + hitW, newY - hitTop);
         if (!blockedY) position.y = newY;
 
         if (isMoving) {
@@ -108,6 +110,9 @@ public class Player {
                 else if (currentFrameIndex == 1){
                     currentFrame = up2;
                 }
+                else{
+                    currentFrame = up3;
+                }
                 break;
             case DOWN:
                 if (currentFrameIndex == 0){
@@ -115,6 +120,9 @@ public class Player {
                 }
                 else if (currentFrameIndex == 1) {
                     currentFrame = down2;
+                }
+                else{
+                    currentFrame = down3;
                 }
                 break;
         }
@@ -137,7 +145,7 @@ public class Player {
 
     public void dispose() {
         left1.dispose(); left2.dispose();
-        up1.dispose(); up2.dispose();
-        down1.dispose(); down2.dispose();
+        up1.dispose(); up2.dispose(); up3.dispose();
+        down1.dispose(); down2.dispose(); down3.dispose();
     }
 }

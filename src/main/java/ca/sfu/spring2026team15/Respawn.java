@@ -22,15 +22,7 @@ public class Respawn {
         }
 
         for (PoliceEnemy enemy : police) {
-            if (currentMapIndex == 0) {
-                enemy.setPosition(3000f, 300f);
-            }
-            else if (currentMapIndex == 1) {
-                enemy.setPosition(2000f, mapYOffsets[1] + 1000f);
-            }
-            else if (currentMapIndex == 2) {
-                enemy.setPosition(2500f, mapYOffsets[2] + 2000f);
-            }
+            enemy.resetToSpawn();
         }
 
         return newFishCount;

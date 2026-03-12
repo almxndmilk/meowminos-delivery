@@ -26,7 +26,7 @@ public class PoliceEnemy {
     private final Texture question;
     private Texture currentFrame;
 
-    //anamation
+    //animation
     private float animTimer = 0f;
     private int currentFrameIndex = 0;
 
@@ -43,6 +43,9 @@ public class PoliceEnemy {
     private final Vector2 position;
     private float wanderTimer = 0f;
     private final Random random = new Random();
+    private float spawnX;
+    private float spawnY;
+
 
     //sound
     private final Sound heySound;
@@ -60,7 +63,9 @@ public class PoliceEnemy {
         heySound = Gdx.audio.newSound(Gdx.files.internal("audio/HEY.mp3"));
 
         currentFrame = front1;
-        position= new Vector2(spawnX, spawnY);
+        this.spawnX = spawnX;
+        this.spawnY = spawnY;
+        position = new Vector2(spawnX, spawnY);
     }
 
     public void setChaseSpeed(float speed) { this.VAR_CHASE_SPEED = speed; }
@@ -226,6 +231,12 @@ public class PoliceEnemy {
         return alertState == AlertState.CHASING
             && Vector2.dst(position.x, position.y, playerX, playerY) < 75f;
     }
+
+    public void resetToSpawn() {
+        position.x = spawnX;
+        position.y = spawnY;
+    }
+
 
     public void dispose() {
         side1.dispose();  side2.dispose();
