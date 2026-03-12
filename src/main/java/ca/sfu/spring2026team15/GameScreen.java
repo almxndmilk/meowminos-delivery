@@ -53,6 +53,10 @@ public class GameScreen implements Screen {
     private static final float CINEMATIC_HOLD_DURATION = 3.5f;
     // Target zoom computed at runtime: (mapWidth - offset) / VIEW_WIDTH to show full map width
 
+    // Respawn Penalties
+    private static final int RESPAWN_FISH_PENALTY = 10;
+    private static final float RESPAWN_TIME_PENALTY = 30f;
+
     // Gate 1 obstacle — blocks top of map 1 until player has enough fish
     private Texture gate1ObstacleTexture;
     private float   gate1ObstacleX, gate1ObstacleY; // computed in show()
@@ -842,17 +846,14 @@ public class GameScreen implements Screen {
 
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(player.getCenterX(), player.getCenterY())) {
-                timer.stop();
-                if (backgroundMusic != null) {
-                    backgroundMusic.stop();
-                    backgroundMusic.dispose();
-                    backgroundMusic = null;
+                fishCollected = Respawn.respawn(player, police, timer, currentMapIndex,
+                        fishCollected, mapYOffsets, RESPAWN_FISH_PENALTY, RESPAWN_TIME_PENALTY);
+                return true;
                 }
-                game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + 1));
-            }
         }
         return false;
     }
+
 
     private void renderHud() {
         hudBatch.setProjectionMatrix(hudCamera.combined);
