@@ -822,8 +822,10 @@ public class GameScreen implements Screen {
         int elapsed = timer.getElapsedSeconds();
         float yOffset = mapYOffsets[2];
         float height  = mapHeights[2];
+        float px = player.getCenterX();
+        float py = player.getCenterY();
         dispose();
-        game.setScreen(new ObamaScreen(game, elapsed, yOffset, height));
+        game.setScreen(new ObamaScreen(game, elapsed, yOffset, height, px, py));
     }
 
     private void setGateMessage(String msg) {

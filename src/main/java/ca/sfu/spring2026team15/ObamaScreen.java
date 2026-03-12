@@ -6,73 +6,128 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 public class ObamaScreen implements Screen {
 
-    private static final float CUTSCENE_DURATION = 8f;
-    private static final float FRAME_DURATION    = 0.3f;
     private static final float MAP_DRAW_X        = -75f;
+    private static final float FRAME_DURATION    = 0.3f;
 
-    // Obama sprite size — door is 35×65 image px; Obama slightly wider/taller for visibility
-    private static final float OBAMA_W           = 50f;
-    private static final float OBAMA_H           = 100f;
-    private static final float OBAMA_WALK_SPEED  = 30f; // walks downward (−Y) toward the player
+    // Obama — same 150×150 size as police sprites
+    private static final float OBAMA_W           = 150f;
+    private static final float OBAMA_H           = 150f;
+    private static final float OBAMA_WALK_SPEED  = 25f;  // px/s downward
+
+    // Player sprite rendered during cutscene
+    private static final float PLAYER_SIZE       = 150f;
+    private static final float PLAYER_WALK_SPEED = 80f;  // px/s horizontal
+
+    // How long the talk pose is held before transitioning to EndScreen
+    private static final float TALK_DURATION     = 2.0f;
+
+    // Cutscene phases
+    private enum Phase { OBAMA_WALK, PLAYER_WALK, TALK }
+    private Phase phase = Phase.OBAMA_WALK;
 
     private final Main game;
     private final int  elapsedSeconds;
-
-    // Camera and Obama positions computed from live map dimensions passed in from GameScreen
-    private final float camX, camY;
     private final float map3YOffset, map3Height;
 
-    private SpriteBatch     batch;
-    private ExtendViewport  viewport;
+    // Obama world positions (bottom-left of sprite)
+    private float obamaX;
+    private float obamaY;
+    private final float obamaTargetX;
+    private final float obamaTargetY;
+
+    // Camera pan: slowly sweep toward the White House while Obama walks out
+    // camStartY: frames the player / trigger zone; camEndY: frames the door
+    private final float camStartY;
+    private final float camEndY;
+    private float camCurrentY;  // tracks live camera Y so resize() can restore it
+
+    // Player sprite state
+    private float playerX;
+    private float playerY;
+    private final float playerTargetX;
+    private final float playerTargetY;
+    private final boolean playerFacingRight;
+
+    // Timers / animation
+    private float animTimer  = 0f;
+    private boolean showFrame1 = true;
+    private float talkTimer  = 0f;
+
+    // LibGDX rendering
+    private SpriteBatch    batch;
+    private ExtendViewport viewport;
     private OrthographicCamera camera;
 
+    // Textures
     private Texture mapTexture;
     private Texture obamaWalk1;
     private Texture obamaWalk2;
-
-    private float   cutsceneTimer = 0f;
-    private float   animTimer     = 0f;
-    private boolean showFrame1    = true;
-
-    // Obama world position — updated each frame
-    private float obamaX;
-    private float obamaY;
+    private Texture obamaTalk;
+    private Texture playerFrame1;
+    private Texture playerFrame2;
 
     /**
-     * @param map3YOffset  mapYOffsets[2] from GameScreen — world Y of map 3's bottom edge
-     * @param map3Height   mapHeights[2]  from GameScreen — actual pixel height of map part3.png
+     * @param map3YOffset    mapYOffsets[2] — world Y of map 3's bottom edge
+     * @param map3Height     mapHeights[2]  — actual pixel height of map part3.png
+     * @param playerCenterX  player's center X when the scene was triggered
+     * @param playerCenterY  player's center Y when the scene was triggered
      *
-     * Coordinate conversion used throughout (image pixel → world):
-     *   worldX = imgX - 75
-     *   worldY = map3YOffset + (map3Height - imgY)
+     * Coordinate conversion (image pixel → world):
+     *   worldX = imgX − 75
+     *   worldY = map3YOffset + (map3Height − imgY)
      *
-     * Door image coords:    (1465,745)→(1500,810)  → worldX center 1408, worldY bottom = map3YOffset+map3Height-810
-     * Trigger image coords: (1155,940)→(1850,860)  → worldX 1080–1775
-     * Camera imgY centre:   (745+940)/2 = 842.5    → worldY = map3YOffset+map3Height-843
-     * Camera imgX centre:   (1155+1850)/2−75 = 1428
+     * Door image coords:   (1465,745)→(1500,810)  → Obama starts at worldX≈1407, worldY=map3YOffset+map3Height−810
+     * Target image coords: (1475,885)              → worldX=1400, worldY=map3YOffset+map3Height−885
      */
-    public ObamaScreen(Main game, int elapsedSeconds, float map3YOffset, float map3Height) {
+    public ObamaScreen(Main game, int elapsedSeconds,
+                       float map3YOffset, float map3Height,
+                       float playerCenterX, float playerCenterY) {
         this.game           = game;
         this.elapsedSeconds = elapsedSeconds;
         this.map3YOffset    = map3YOffset;
         this.map3Height     = map3Height;
 
-        // Camera centred to frame both the door and the trigger zone below it
-        this.camX = 1428f;
-        this.camY = map3YOffset + map3Height - 843f;
+        // Obama: start at door, walk to (1475, 885) image coords
+        float doorWorldX  = 1407f;
+        float doorBottomY = map3YOffset + map3Height - 810f;
+        this.obamaX = doorWorldX - OBAMA_W / 2f;    // centre Obama on door X
+        this.obamaY = doorBottomY;
 
-        // Obama starts at the door, centred horizontally, at the door's bottom edge
-        this.obamaX = 1408f - OBAMA_W / 2f;              // door worldX centre − half sprite
-        this.obamaY = map3YOffset + map3Height - 810f;    // door bottom in world Y
+        this.obamaTargetX = 1400f - OBAMA_W / 2f;   // = 1325
+        this.obamaTargetY = map3YOffset + map3Height - 885f;
 
-        camera   = new OrthographicCamera();
+        // Camera pan: start near player/trigger zone, slowly pan toward the White House door
+        this.camStartY   = map3YOffset + map3Height - 910f;
+        this.camEndY     = map3YOffset + map3Height - 790f;
+        this.camCurrentY = camStartY;
+
+        // Player sprite: start position (bottom-left from center)
+        this.playerX = playerCenterX - PLAYER_SIZE / 2f;
+        this.playerY = playerCenterY - PLAYER_SIZE / 2f;
+
+        // Decide which side to stand on and which direction to walk
+        float obamaCenterX = obamaTargetX + OBAMA_W / 2f;  // ≈ 1400
+        if (playerCenterX < obamaCenterX) {
+            // Player is left of Obama → walk right, stop to Obama's left
+            this.playerTargetX   = obamaTargetX - PLAYER_SIZE - 10f;
+            this.playerFacingRight = true;
+        } else {
+            // Player is right of Obama → walk left, stop to Obama's right
+            this.playerTargetX   = obamaTargetX + OBAMA_W + 10f;
+            this.playerFacingRight = false;
+        }
+        this.playerTargetY = obamaTargetY;
+
+        // Build camera + viewport (starts at camStartY)
+        camera = new OrthographicCamera();
         camera.setToOrtho(false, 1280f, 720f);
-        camera.position.set(camX, camY, 0);
+        camera.position.set(1428f, camCurrentY, 0);
         camera.update();
 
         viewport = new ExtendViewport(1280f, 720f, camera);
@@ -81,43 +136,122 @@ public class ObamaScreen implements Screen {
 
     @Override
     public void show() {
-        mapTexture = new Texture(Gdx.files.internal("map/map part3.png"));
-        obamaWalk1 = new Texture(Gdx.files.internal("Obama/obama_walk1.png"));
-        obamaWalk2 = new Texture(Gdx.files.internal("Obama/obama_walk2.png"));
+        mapTexture   = new Texture(Gdx.files.internal("map/map part3.png"));
+        obamaWalk1   = new Texture(Gdx.files.internal("Obama/obama_walk1.png"));
+        obamaWalk2   = new Texture(Gdx.files.internal("Obama/obama_walk2.png"));
+        obamaTalk    = new Texture(Gdx.files.internal("Obama/obama_talk.png"));
+        playerFrame1 = new Texture(Gdx.files.internal("catOffBike/catOffBike1.png"));
+        playerFrame2 = new Texture(Gdx.files.internal("catOffBike/catOffBike2.png"));
     }
 
     @Override
     public void render(float delta) {
-        // Skip on any input
+        // Skip cutscene on any input
         if (Gdx.input.justTouched() || anyKeyJustPressed()) {
             transitionToEnd();
             return;
         }
 
-        cutsceneTimer += delta;
-        if (cutsceneTimer >= CUTSCENE_DURATION) {
-            transitionToEnd();
-            return;
-        }
-
-        // Toggle animation frames
+        // Advance animation frame timer (shared for both Obama and player)
         animTimer += delta;
         if (animTimer >= FRAME_DURATION) {
             animTimer  -= FRAME_DURATION;
             showFrame1  = !showFrame1;
         }
 
-        // Obama walks downward (−Y = toward the player who triggered the scene)
+        switch (phase) {
+            case OBAMA_WALK:
+                updateObamaWalk(delta);
+                break;
+            case PLAYER_WALK:
+                updatePlayerWalk(delta);
+                break;
+            case TALK:
+                talkTimer += delta;
+                if (talkTimer >= TALK_DURATION) {
+                    transitionToEnd();
+                    return;
+                }
+                break;
+        }
+
+        drawScene();
+    }
+
+    private void updateObamaWalk(float delta) {
+        // Walk Obama downward toward target
         obamaY -= OBAMA_WALK_SPEED * delta;
 
-        // Render
+        // Gently slide X toward target as well (minor correction if door/target differ)
+        float xDiff = obamaTargetX - obamaX;
+        if (Math.abs(xDiff) > 1f) {
+            obamaX += Math.signum(xDiff) * OBAMA_WALK_SPEED * delta;
+        }
+
+        // Camera slowly pans upward (toward White House) during Obama's walk
+        // Use fixed pan speed so it feels smooth regardless of Obama arriving early
+        float panSpeed = (camEndY - camStartY) * (OBAMA_WALK_SPEED / Math.abs(obamaTargetY - (map3YOffset + map3Height - 810f) + 1f));
+        camCurrentY = Math.min(camCurrentY + Math.abs(panSpeed) * delta, camEndY);
+        camera.position.set(1428f, camCurrentY, 0);
+        camera.update();
+
+        // Check if Obama has reached (or passed) the target
+        if (obamaY <= obamaTargetY) {
+            obamaY = obamaTargetY;
+            obamaX = obamaTargetX;
+            phase = Phase.PLAYER_WALK;
+            animTimer = 0f;  // reset anim for player walk
+            showFrame1 = true;
+        }
+    }
+
+    private void updatePlayerWalk(float delta) {
+        float dx = playerTargetX - playerX;
+        if (Math.abs(dx) <= 5f) {
+            // Player has arrived — lock position and switch to talk
+            playerX = playerTargetX;
+            playerY = playerTargetY;
+            phase = Phase.TALK;
+            return;
+        }
+        playerX += Math.signum(dx) * PLAYER_WALK_SPEED * delta;
+
+        // Also slide player Y toward target Y
+        float dy = playerTargetY - playerY;
+        if (Math.abs(dy) > 1f) {
+            playerY += Math.signum(dy) * PLAYER_WALK_SPEED * delta;
+        }
+    }
+
+    private void drawScene() {
         ScreenUtils.clear(Color.BLACK);
         viewport.apply();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+
+        // Map
         batch.draw(mapTexture, MAP_DRAW_X, map3YOffset, mapTexture.getWidth(), mapTexture.getHeight());
-        Texture frame = showFrame1 ? obamaWalk1 : obamaWalk2;
-        batch.draw(frame, obamaX, obamaY, OBAMA_W, OBAMA_H);
+
+        // Obama sprite
+        Texture obamaFrame;
+        if (phase == Phase.TALK) {
+            obamaFrame = obamaTalk;
+        } else {
+            obamaFrame = showFrame1 ? obamaWalk1 : obamaWalk2;
+        }
+        batch.draw(obamaFrame, obamaX, obamaY, OBAMA_W, OBAMA_H);
+
+        // Player sprite (shown during PLAYER_WALK and TALK)
+        if (phase == Phase.PLAYER_WALK || phase == Phase.TALK) {
+            Texture playerTex = (phase == Phase.PLAYER_WALK && !showFrame1) ? playerFrame2 : playerFrame1;
+            if (playerFacingRight) {
+                // Mirror: draw from right edge leftward
+                batch.draw(playerTex, playerX + PLAYER_SIZE, playerY, -PLAYER_SIZE, PLAYER_SIZE);
+            } else {
+                batch.draw(playerTex, playerX, playerY, PLAYER_SIZE, PLAYER_SIZE);
+            }
+        }
+
         batch.end();
     }
 
@@ -136,8 +270,8 @@ public class ObamaScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
-        // Re-lock the camera after the viewport resets it
-        camera.position.set(camX, camY, 0);
+        // Restore live camera position after viewport reset
+        camera.position.set(1428f, camCurrentY, 0);
         camera.update();
     }
 
@@ -147,9 +281,12 @@ public class ObamaScreen implements Screen {
 
     @Override
     public void dispose() {
-        if (mapTexture != null) { mapTexture.dispose(); mapTexture = null; }
-        if (obamaWalk1 != null) { obamaWalk1.dispose(); obamaWalk1 = null; }
-        if (obamaWalk2 != null) { obamaWalk2.dispose(); obamaWalk2 = null; }
-        if (batch      != null) { batch.dispose();      batch      = null; }
+        if (mapTexture   != null) { mapTexture.dispose();   mapTexture   = null; }
+        if (obamaWalk1   != null) { obamaWalk1.dispose();   obamaWalk1   = null; }
+        if (obamaWalk2   != null) { obamaWalk2.dispose();   obamaWalk2   = null; }
+        if (obamaTalk    != null) { obamaTalk.dispose();    obamaTalk    = null; }
+        if (playerFrame1 != null) { playerFrame1.dispose(); playerFrame1 = null; }
+        if (playerFrame2 != null) { playerFrame2.dispose(); playerFrame2 = null; }
+        if (batch        != null) { batch.dispose();        batch        = null; }
     }
 }
