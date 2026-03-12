@@ -59,6 +59,7 @@ public class GameScreen implements Screen {
     // Respawn Penalties
     private static final int RESPAWN_FISH_PENALTY = 10;
     private static final float RESPAWN_TIME_PENALTY = 30f;
+    private int totalTimePenalties = 0;
 
     // Gate 1 obstacle — blocks top of map 1 until player has enough fish
     private Texture gate1ObstacleTexture;
@@ -375,7 +376,7 @@ public class GameScreen implements Screen {
                     backgroundMusic.dispose();
                     backgroundMusic = null;
                 }
-                game.setScreen(new EndScreen(game, timer.getElapsedSeconds(), false)); // false = not from ObamaScreen
+                game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + totalTimePenalties, false));
                 return;
             }
             if (transitionState == TransitionState.NONE
@@ -487,7 +488,7 @@ public class GameScreen implements Screen {
         }
         // replaced player.render(batch)
         if (bikeParked) {
-            float bikeSize = 125f;
+            float bikeSize = 110f;
             batch.draw(parkedBikeTexture,
                     parkedBikeX - bikeSize / 2f,
                     parkedBikeY - bikeSize / 2f,
@@ -837,36 +838,36 @@ public class GameScreen implements Screen {
 
         if (index == 2 && police.size() < 16) {
             police.add(new PoliceEnemy(500f, mapYOffsets[2] + 850f));
-            police.add(new PoliceEnemy(1500f, mapYOffsets[2] + 1000f));
-            police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1200f));
+            police.add(new PoliceEnemy(1300f, mapYOffsets[2] + 1200f));
+            police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1300f));
             police.add(new PoliceEnemy(800f, mapYOffsets[2] + 1450f));
-            police.add(new PoliceEnemy(2000f, mapYOffsets[2] + 1600f));
+            police.add(new PoliceEnemy(1800f, mapYOffsets[2] + 1600f));
             police.add(new PoliceEnemy(1380f, mapYOffsets[2] + 800f));
             police.add(new PoliceEnemy(2700f, mapYOffsets[2] + 1900f));
-            police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2000f));
-            police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2100f));
+            police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2300f));
+            police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2300f));
             police.add(new PoliceEnemy(2300f, mapYOffsets[2] + 2150f));
-            police.add(new PoliceEnemy(900f, mapYOffsets[2] + 2250f));
+            police.add(new PoliceEnemy(2200f, mapYOffsets[2] + 700f));
             police.add(new PoliceEnemy(600f, mapYOffsets[2] + 2480f));
-            police.add(new PoliceEnemy(1500f, mapYOffsets[2] + 1000f));
-            police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1200f));
-            police.add(new PoliceEnemy(800f, mapYOffsets[2] + 1450f));
+            police.add(new PoliceEnemy(1500f, mapYOffsets[2] + 1300f));
+            police.add(new PoliceEnemy(400f, mapYOffsets[2] + 1400f));
+            police.add(new PoliceEnemy(920f, mapYOffsets[2] + 1650f));
             police.add(new PoliceEnemy(2000f, mapYOffsets[2] + 1600f));
-            police.add(new PoliceEnemy(2700f, mapYOffsets[2] + 1900f));
+            police.add(new PoliceEnemy(1700f, mapYOffsets[2] + 900f));
             police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2000f));
             police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2100f));
-            police.add(new PoliceEnemy(900f, mapYOffsets[2] + 2250f));
+            police.add(new PoliceEnemy(1100f, mapYOffsets[2] + 2250f));
 
-            puddles.add(new PuddleEnemy(500f, mapYOffsets[2] + 850f));
+            puddles.add(new PuddleEnemy(550f, mapYOffsets[2] + 800f));
             puddles.add(new PuddleEnemy(1500f, mapYOffsets[2] + 1000f));
             puddles.add(new PuddleEnemy(2500f, mapYOffsets[2] + 1200f));
-            puddles.add(new PuddleEnemy(800f, mapYOffsets[2] + 1450f));
-            puddles.add(new PuddleEnemy(2000f, mapYOffsets[2] + 1600f));
+            puddles.add(new PuddleEnemy(900f, mapYOffsets[2] + 1450f));
+            puddles.add(new PuddleEnemy(2000f, mapYOffsets[2] + 1500f));
             puddles.add(new PuddleEnemy(1200f, mapYOffsets[2] + 1750f));
-            puddles.add(new PuddleEnemy(2700f, mapYOffsets[2] + 1900f));
+            puddles.add(new PuddleEnemy(2100f, mapYOffsets[2] + 1900f));
             puddles.add(new PuddleEnemy(400f, mapYOffsets[2] + 2000f));
-            puddles.add(new PuddleEnemy(1600f, mapYOffsets[2] + 2100f));
-            puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2150f));
+            puddles.add(new PuddleEnemy(1600f, mapYOffsets[2] + 2200f));
+            puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2250f));
             puddles.add(new PuddleEnemy(900f, mapYOffsets[2] + 2200f));
             puddles.add(new PuddleEnemy(600f, mapYOffsets[2] + 2480f));
             puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2480f));
@@ -967,8 +968,7 @@ public class GameScreen implements Screen {
                 backgroundMusic.dispose();
                 backgroundMusic = null;
             }
-            game.setScreen(new EndScreen(game, timer.getElapsedSeconds(), false)); // false = not from ObamaScreen
-            return true;
+            game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + totalTimePenalties, false));            return true;
         }
 
         for (PoliceEnemy enemy : police) {
@@ -976,6 +976,7 @@ public class GameScreen implements Screen {
                 fishCollected = Respawn.respawn(player, police, timer, currentMapIndex,
                         fishCollected, mapYOffsets, RESPAWN_FISH_PENALTY, RESPAWN_TIME_PENALTY);
                 // Sync catOffBike to the respawn position and reset bike state
+                totalTimePenalties += (int) RESPAWN_TIME_PENALTY;
                 catOffBike.setPosition(player.getCenterX(), player.getCenterY());
                 bikeParked = false;
                 isOnBike = true;
