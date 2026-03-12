@@ -351,7 +351,7 @@ public class GameScreen implements Screen {
                     backgroundMusic.dispose();
                     backgroundMusic = null;
                 }
-                game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
+                game.setScreen(new EndScreen(game, timer.getElapsedSeconds(), false)); // false = not from ObamaScreen
                 return;
             }
             if (transitionState == TransitionState.NONE
@@ -878,7 +878,7 @@ public class GameScreen implements Screen {
                 backgroundMusic.dispose();
                 backgroundMusic = null;
             }
-            game.setScreen(new EndScreen(game, timer.getElapsedSeconds()));
+            game.setScreen(new EndScreen(game, timer.getElapsedSeconds(), false)); // false = not from ObamaScreen
             return true;
         }
 

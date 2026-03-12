@@ -14,6 +14,7 @@ public class EndScreen implements Screen {
 
     private final Main game;
     private final int score; // seconds survived
+    private final boolean fromObamaScene; // true if came from ObamaScreen
 
     private SpriteBatch batch;
     private ExtendViewport viewport;
@@ -47,10 +48,12 @@ public class EndScreen implements Screen {
 
     //music
     private Music backgroundMusic;
+    private Music yipeeSound;
 
-    public EndScreen(Main game, int score) {
+    public EndScreen(Main game, int score, boolean fromObamaScene) {
         this.game  = game;
         this.score = score;
+        this.fromObamaScene = fromObamaScene;
         batch      = new SpriteBatch();
         viewport   = new ExtendViewport(1280f, 720f);
     }
@@ -69,11 +72,23 @@ public class EndScreen implements Screen {
             backgroundMusic.setLooping(true);
             backgroundMusic.setVolume(0.5f);
             backgroundMusic.play();
+            
+            // Play yipee sound if came from ObamaScreen
+            if (fromObamaScene) {
+                yipeeSound = Gdx.audio.newMusic(Gdx.files.internal("Obama/yipee.mp3"));
+                yipeeSound.setVolume(0.8f);
+                yipeeSound.play();
+            }
         }
         else{
             backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
             backgroundMusic.setLooping(true);
             backgroundMusic.setVolume(0.5f);
+            
+            // Load yipee sound even if sound is off (for consistency)
+            if (fromObamaScene) {
+                yipeeSound = Gdx.audio.newMusic(Gdx.files.internal("Obama/yipee.mp3"));
+            }
         }
     }
 
@@ -140,6 +155,9 @@ public class EndScreen implements Screen {
         if (backgroundMusic != null) {
             backgroundMusic.stop();
         }
+        if (yipeeSound != null) {
+            yipeeSound.stop();
+        }
     }
 
     @Override
@@ -150,6 +168,9 @@ public class EndScreen implements Screen {
         }
         if (backgroundMusic != null) {
             backgroundMusic.dispose();
+        }
+        if (yipeeSound != null) {
+            yipeeSound.dispose();
         }
         batch.dispose();
     }

@@ -29,6 +29,8 @@ public class ObamaScreen implements Screen {
 
     // Fallback talk duration when sound is off
     private static final float TALK_FALLBACK_DURATION = 10f;
+    // Delay after audio finishes before transitioning to EndScreen
+    private static final float END_DELAY = 2f;
 
     // Dialogue spoken by Obama during the talk phase
     private static final String DIALOGUE =
@@ -67,6 +69,9 @@ public class ObamaScreen implements Screen {
     private float animTimer  = 0f;
     private boolean showFrame1 = true;
     private float talkTimer  = 0f;   // fallback timer when sound is off
+    private float dialogueTimer = 0f; // tracks time for progressive text reveal
+    private boolean audioFinished = false;
+    private float endDelayTimer = 0f;
 
     // Audio
     private Music obamaVoice;
@@ -87,7 +92,8 @@ public class ObamaScreen implements Screen {
     private Texture mapTexture;
     private Texture obamaWalk1;
     private Texture obamaWalk2;
-    private Texture obamaTalk;
+    private Texture obamaTalk1;
+    private Texture obamaTalk2;
     private Texture playerFrame1;
     private Texture playerFrame2;
 
@@ -152,6 +158,15 @@ public class ObamaScreen implements Screen {
 
         viewport = new ExtendViewport(1280f, 720f, camera);
         batch    = new SpriteBatch();
+        
+        // Explicitly initialize timing variables to ensure clean state after respawn
+        this.animTimer = 0f;
+        this.showFrame1 = true;
+        this.talkTimer = 0f;
+        this.dialogueTimer = 0f;
+        this.audioStarted = false;
+        this.audioFinished = false;
+        this.endDelayTimer = 0f;
     }
 
     @Override
@@ -159,11 +174,16 @@ public class ObamaScreen implements Screen {
         mapTexture   = new Texture(Gdx.files.internal("map/map part3.png"));
         obamaWalk1   = new Texture(Gdx.files.internal("Obama/obama_walk1.png"));
         obamaWalk2   = new Texture(Gdx.files.internal("Obama/obama_walk2.png"));
-        obamaTalk    = new Texture(Gdx.files.internal("Obama/obama_talk.png"));
+        obamaTalk1   = new Texture(Gdx.files.internal("Obama/obama_talk1.png"));
+        obamaTalk2   = new Texture(Gdx.files.internal("Obama/obama_talk2.png"));
         playerFrame1 = new Texture(Gdx.files.internal("catOffBike/catOffBike1.png"));
         playerFrame2 = new Texture(Gdx.files.internal("catOffBike/catOffBike2.png"));
 
         obamaVoice = Gdx.audio.newMusic(Gdx.files.internal("Obama/obamaCutScene.mp3"));
+        obamaVoice.setOnCompletionListener(music -> {
+            audioFinished = true;
+            endDelayTimer = 0f;
+        });
 
         // HUD layer — matches GameScreen style exactly
         hudBatch  = new SpriteBatch();
@@ -207,24 +227,36 @@ public class ObamaScreen implements Screen {
                 // on subsequent frames so isPlaying() has time to return true.
                 if (!audioStarted) {
                     audioStarted = true;
+                    dialogueTimer = 0f; // reset dialogue timer when audio starts
+                    talkTimer = 0f;
+                    audioFinished = false;
+                    endDelayTimer = 0f;
                     if (SettingsScreen.soundOn) {
                         obamaVoice.play();
                     }
                     break; // skip completion check this frame
                 }
 
-                // Wait for audio to end; fall back to timer if sound is off
-                boolean audioDone;
-                if (SettingsScreen.soundOn) {
-                    audioDone = !obamaVoice.isPlaying();
-                } else {
+                // Update dialogue timer for progressive text reveal
+                dialogueTimer += delta;
+
+                // Sound on: completion listener sets audioFinished exactly at clip end.
+                // Sound off: use fallback duration so cutscene can still progress.
+                if (!audioFinished && !SettingsScreen.soundOn) {
                     talkTimer += delta;
-                    audioDone = talkTimer >= TALK_FALLBACK_DURATION;
+                    if (talkTimer >= TALK_FALLBACK_DURATION) {
+                        audioFinished = true;
+                        endDelayTimer = 0f;
+                    }
                 }
 
-                if (audioDone) {
-                    transitionToEnd();
-                    return;
+                // After audio finishes, wait for END_DELAY before transitioning
+                if (audioFinished) {
+                    endDelayTimer += delta;
+                    if (endDelayTimer >= END_DELAY) {
+                        transitionToEnd();
+                        return;
+                    }
                 }
                 break;
         }
@@ -292,7 +324,7 @@ public class ObamaScreen implements Screen {
         // Obama sprite
         Texture obamaFrame;
         if (phase == Phase.TALK) {
-            obamaFrame = obamaTalk;
+            obamaFrame = showFrame1 ? obamaTalk1 : obamaTalk2;
         } else {
             obamaFrame = showFrame1 ? obamaWalk1 : obamaWalk2;
         }
@@ -326,9 +358,41 @@ public class ObamaScreen implements Screen {
         hudBatch.draw(blackPixel, 0, 0, 1280f, bannerH);
         hudBatch.setColor(Color.WHITE);
 
-        font.draw(hudBatch, DIALOGUE, margin, bannerH - 18f, textW, Align.left, true);
+        // Calculate how much of the dialogue to show based on elapsed time
+        String textToShow = getProgressiveDialogue();
+        font.draw(hudBatch, textToShow, margin, bannerH - 18f, textW, Align.left, true);
 
         hudBatch.end();
+    }
+
+    /** Returns the portion of dialogue that should be visible based on elapsed time */
+    private String getProgressiveDialogue() {
+        // Split dialogue into words
+        String[] words = DIALOGUE.split(" ");
+        
+        // Calculate duration to use (prefer actual audio duration, fall back to constant)
+        float totalDuration = TALK_FALLBACK_DURATION;
+        if (SettingsScreen.soundOn && obamaVoice != null) {
+            // Use fallback duration as approximation since LibGDX doesn't easily provide audio duration
+            totalDuration = TALK_FALLBACK_DURATION;
+        }
+        
+        // Calculate how many words should be visible
+        float wordsPerSecond = words.length / totalDuration;
+        int wordsToShow = Math.min(words.length, (int)(dialogueTimer * wordsPerSecond));
+        
+        // Build the partial dialogue string
+        if (wordsToShow <= 0) {
+            return "";
+        }
+        
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < wordsToShow; i++) {
+            if (i > 0) result.append(" ");
+            result.append(words[i]);
+        }
+        
+        return result.toString();
     }
 
     private boolean anyKeyJustPressed() {
@@ -340,7 +404,7 @@ public class ObamaScreen implements Screen {
 
     private void transitionToEnd() {
         dispose();
-        game.setScreen(new EndScreen(game, elapsedSeconds));
+        game.setScreen(new EndScreen(game, elapsedSeconds, true)); // true = came from ObamaScreen
     }
 
     @Override
@@ -362,7 +426,8 @@ public class ObamaScreen implements Screen {
         if (mapTexture  != null) { mapTexture.dispose();                      mapTexture  = null; }
         if (obamaWalk1  != null) { obamaWalk1.dispose();                      obamaWalk1  = null; }
         if (obamaWalk2  != null) { obamaWalk2.dispose();                      obamaWalk2  = null; }
-        if (obamaTalk   != null) { obamaTalk.dispose();                       obamaTalk   = null; }
+        if (obamaTalk1  != null) { obamaTalk1.dispose();                      obamaTalk1  = null; }
+        if (obamaTalk2  != null) { obamaTalk2.dispose();                      obamaTalk2  = null; }
         if (playerFrame1 != null) { playerFrame1.dispose();                   playerFrame1 = null; }
         if (playerFrame2 != null) { playerFrame2.dispose();                   playerFrame2 = null; }
         if (font        != null) { font.dispose();                            font        = null; }
