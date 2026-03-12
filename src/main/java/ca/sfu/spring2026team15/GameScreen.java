@@ -914,8 +914,8 @@ public class GameScreen implements Screen {
     private boolean isPlayerNearWhitehouse() {
         // Trigger rectangle in map3.png image coords: (1155,940)→(1850,860)
         // Conversion: worldX = imgX - 75,  worldY = mapYOffsets[2] + (mapHeights[2] - imgY)
-        float px = player.getCenterX();
-        float py = player.getCenterY();
+        float px = getActiveX();
+        float py = getActiveY();
         return currentMapIndex == 2
             && px >= 1080f && px <= 1775f
             && py >= mapYOffsets[2] + mapHeights[2] - 940f
@@ -932,8 +932,8 @@ public class GameScreen implements Screen {
         int elapsed = timer.getElapsedSeconds();
         float yOffset = mapYOffsets[2];
         float height  = mapHeights[2];
-        float px = player.getCenterX();
-        float py = player.getCenterY();
+        float px = getActiveX();
+        float py = getActiveY();
         dispose();
         game.setScreen(new ObamaScreen(game, elapsed, yOffset, height, px, py));
     }
