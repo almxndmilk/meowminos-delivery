@@ -94,6 +94,8 @@ public class GameScreen implements Screen {
     private ShapeRenderer shapeRenderer;
     private Texture blackTexture;
 
+    private CinematicBars cinematicBars;
+
     // Tracks the highest map part the player has unlocked (0 = only map 1 rendered)
     private int currentMapIndex = 0;
     // Which map we're transitioning into; set before starting FADE_OUT
@@ -195,6 +197,8 @@ public class GameScreen implements Screen {
         blackPm.fill();
         blackTexture = new Texture(blackPm);
         blackPm.dispose();
+
+        cinematicBars = new CinematicBars();
 
         // Camera bounds scoped to map 1; updated on each map transition (raw map edges, halfViewH applied internally).
         // X uses mapWidth - BARRIER_X_OFFSET because the map is drawn at worldX = -75, so the right world-edge is mapWidth - 75.
@@ -369,6 +373,7 @@ public class GameScreen implements Screen {
             updateGate1Fade(delta);
             updateGate2Fade(delta);
             updateCinematic(delta);
+            cinematicBars.update(delta);
             // During cinematic the camera is driven by updateCinematic; hand back to normal tracking otherwise.
             if (cinematicState == CinematicState.NONE) {
                 gameCamera.update(player.getCenterX(), player.getCenterY());
@@ -647,6 +652,7 @@ public class GameScreen implements Screen {
         panStartZoom = cam.zoom;
         cinematicTimer = 0f;
         cinematicState = CinematicState.PAN_TO_HOUSES;
+        cinematicBars.show();
     }
 
     private void updateCinematic(float delta) {
@@ -687,6 +693,7 @@ public class GameScreen implements Screen {
                 panStartZoom = cam.zoom;
                 cinematicState = CinematicState.PAN_BACK;
                 cinematicTimer = 0f;
+                cinematicBars.hide();
             }
 
         } else if (cinematicState == CinematicState.PAN_BACK) {
@@ -908,11 +915,9 @@ public class GameScreen implements Screen {
             hudFont.draw(hudBatch, gateMessage, VIEW_WIDTH / 2 - 200f, 150f);
         }
 
+        cinematicBars.render(hudBatch);
+
         if (cinematicState == CinematicState.HOLD) {
-            // Semi-transparent dark banner at the bottom of the screen
-            hudBatch.setColor(0f, 0f, 0f, 0.65f);
-            hudBatch.draw(blackTexture, 0, 0, VIEW_WIDTH, VIEW_HEIGHT * 0.18f);
-            hudBatch.setColor(Color.WHITE);
             String msg = "Your final task: deliver the pizza to the president!";
             hudFont.draw(hudBatch, msg, VIEW_WIDTH / 2f - 380f, VIEW_HEIGHT * 0.13f);
         }
@@ -966,6 +971,7 @@ public class GameScreen implements Screen {
         if (gate2ObstacleTexture != null) gate2ObstacleTexture.dispose();
         shapeRenderer.dispose();
         blackTexture.dispose();
+        cinematicBars.dispose();
         if (backgroundMusic != null) {
             backgroundMusic.stop();
             backgroundMusic.dispose();
