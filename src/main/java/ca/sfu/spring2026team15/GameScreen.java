@@ -368,15 +368,15 @@ public class GameScreen implements Screen {
             if (cinematicState == CinematicState.NONE) {
                 gameCamera.update(player.getCenterX(), player.getCenterY());
             }
-            if (cinematicState == CinematicState.NONE
-                    && gate1FadeState == Gate1FadeState.NONE
-                    && checkFishCollection()) return;
-            // Check Obama trigger: 90 fish + proximity to whitehouse
-            if (!obamaTriggered && fishCollected >= 10 && isPlayerNearWhitehouse()) {
+            // Check Obama trigger first — before any potential EndScreen triggers
+            if (!obamaTriggered && isPlayerNearWhitehouse()) {
                 obamaTriggered = true;
                 triggerObamaScene();
                 return;
             }
+            if (cinematicState == CinematicState.NONE
+                    && gate1FadeState == Gate1FadeState.NONE
+                    && checkFishCollection()) return;
             gateMessageTimer -= delta;
         }
 

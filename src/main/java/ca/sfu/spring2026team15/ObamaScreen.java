@@ -2,11 +2,14 @@ package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
@@ -24,8 +27,15 @@ public class ObamaScreen implements Screen {
     private static final float PLAYER_SIZE       = 150f;
     private static final float PLAYER_WALK_SPEED = 80f;  // px/s horizontal
 
-    // How long the talk pose is held before transitioning to EndScreen
-    private static final float TALK_DURATION     = 2.0f;
+    // Fallback talk duration when sound is off
+    private static final float TALK_FALLBACK_DURATION = 10f;
+
+    // Dialogue spoken by Obama during the talk phase
+    private static final String DIALOGUE =
+        "Thank you for the pizza kind, citizen. You are doing a great job with "
+        + "delivering this pizza. I love Meowmino's pizza. It's the best pizza in the "
+        + "whole town. Anyways, here is your tip. Thank you for getting here in time. "
+        + "I am going to return to my presidential duties.";
 
     // Cutscene phases
     private enum Phase { OBAMA_WALK, PLAYER_WALK, TALK }
@@ -42,7 +52,6 @@ public class ObamaScreen implements Screen {
     private final float obamaTargetY;
 
     // Camera pan: slowly sweep toward the White House while Obama walks out
-    // camStartY: frames the player / trigger zone; camEndY: frames the door
     private final float camStartY;
     private final float camEndY;
     private float camCurrentY;  // tracks live camera Y so resize() can restore it
@@ -57,12 +66,22 @@ public class ObamaScreen implements Screen {
     // Timers / animation
     private float animTimer  = 0f;
     private boolean showFrame1 = true;
-    private float talkTimer  = 0f;
+    private float talkTimer  = 0f;   // fallback timer when sound is off
 
-    // LibGDX rendering
+    // Audio
+    private Music obamaVoice;
+    private boolean audioStarted = false;
+
+    // World-space rendering
     private SpriteBatch    batch;
     private ExtendViewport viewport;
     private OrthographicCamera camera;
+
+    // HUD-space rendering (screen-space, matches GameScreen HUD style)
+    private SpriteBatch        hudBatch;
+    private OrthographicCamera hudCamera;
+    private BitmapFont         font;
+    private Texture            blackPixel;
 
     // Textures
     private Texture mapTexture;
@@ -124,9 +143,10 @@ public class ObamaScreen implements Screen {
         }
         this.playerTargetY = obamaTargetY;
 
-        // Build camera + viewport (starts at camStartY)
+        // World-space camera (zoomed in 2× for close-up cutscene)
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 1280f, 720f);
+        camera.zoom = 0.5f;
         camera.position.set(1428f, camCurrentY, 0);
         camera.update();
 
@@ -142,6 +162,22 @@ public class ObamaScreen implements Screen {
         obamaTalk    = new Texture(Gdx.files.internal("Obama/obama_talk.png"));
         playerFrame1 = new Texture(Gdx.files.internal("catOffBike/catOffBike1.png"));
         playerFrame2 = new Texture(Gdx.files.internal("catOffBike/catOffBike2.png"));
+
+        obamaVoice = Gdx.audio.newMusic(Gdx.files.internal("Obama/obamaCutScene.mp3"));
+
+        // HUD layer — matches GameScreen style exactly
+        hudBatch  = new SpriteBatch();
+        hudCamera = new OrthographicCamera();
+        hudCamera.setToOrtho(false, 1280f, 720f);
+
+        font = new BitmapFont();
+        font.getData().setScale(2f);
+
+        Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pm.setColor(Color.BLACK);
+        pm.fill();
+        blackPixel = new Texture(pm);
+        pm.dispose();
     }
 
     @Override
@@ -167,8 +203,26 @@ public class ObamaScreen implements Screen {
                 updatePlayerWalk(delta);
                 break;
             case TALK:
-                talkTimer += delta;
-                if (talkTimer >= TALK_DURATION) {
+                // Start audio once on the first frame of TALK; only check completion
+                // on subsequent frames so isPlaying() has time to return true.
+                if (!audioStarted) {
+                    audioStarted = true;
+                    if (SettingsScreen.soundOn) {
+                        obamaVoice.play();
+                    }
+                    break; // skip completion check this frame
+                }
+
+                // Wait for audio to end; fall back to timer if sound is off
+                boolean audioDone;
+                if (SettingsScreen.soundOn) {
+                    audioDone = !obamaVoice.isPlaying();
+                } else {
+                    talkTimer += delta;
+                    audioDone = talkTimer >= TALK_FALLBACK_DURATION;
+                }
+
+                if (audioDone) {
                     transitionToEnd();
                     return;
                 }
@@ -176,6 +230,10 @@ public class ObamaScreen implements Screen {
         }
 
         drawScene();
+
+        if (phase == Phase.TALK) {
+            drawDialogue();
+        }
     }
 
     private void updateObamaWalk(float delta) {
@@ -189,7 +247,6 @@ public class ObamaScreen implements Screen {
         }
 
         // Camera slowly pans upward (toward White House) during Obama's walk
-        // Use fixed pan speed so it feels smooth regardless of Obama arriving early
         float panSpeed = (camEndY - camStartY) * (OBAMA_WALK_SPEED / Math.abs(obamaTargetY - (map3YOffset + map3Height - 810f) + 1f));
         camCurrentY = Math.min(camCurrentY + Math.abs(panSpeed) * delta, camEndY);
         camera.position.set(1428f, camCurrentY, 0);
@@ -200,7 +257,7 @@ public class ObamaScreen implements Screen {
             obamaY = obamaTargetY;
             obamaX = obamaTargetX;
             phase = Phase.PLAYER_WALK;
-            animTimer = 0f;  // reset anim for player walk
+            animTimer = 0f;
             showFrame1 = true;
         }
     }
@@ -241,8 +298,8 @@ public class ObamaScreen implements Screen {
         }
         batch.draw(obamaFrame, obamaX, obamaY, OBAMA_W, OBAMA_H);
 
-        // Player sprite (shown during PLAYER_WALK and TALK)
-        if (phase == Phase.PLAYER_WALK || phase == Phase.TALK) {
+        // Player sprite (always visible — static during OBAMA_WALK, walks during PLAYER_WALK)
+        {
             Texture playerTex = (phase == Phase.PLAYER_WALK && !showFrame1) ? playerFrame2 : playerFrame1;
             if (playerFacingRight) {
                 // Mirror: draw from right edge leftward
@@ -253,6 +310,25 @@ public class ObamaScreen implements Screen {
         }
 
         batch.end();
+    }
+
+    /** Renders the dialogue subtitle banner in screen-space, matching GameScreen's HUD style. */
+    private void drawDialogue() {
+        float bannerH = 220f;
+        float margin  = 90f;
+        float textW   = 1280f - margin * 2f;
+
+        hudBatch.setProjectionMatrix(hudCamera.combined);
+        hudBatch.begin();
+
+        // Semi-transparent black banner at bottom (matches GameScreen cinematic banner)
+        hudBatch.setColor(0f, 0f, 0f, 0.70f);
+        hudBatch.draw(blackPixel, 0, 0, 1280f, bannerH);
+        hudBatch.setColor(Color.WHITE);
+
+        font.draw(hudBatch, DIALOGUE, margin, bannerH - 18f, textW, Align.left, true);
+
+        hudBatch.end();
     }
 
     private boolean anyKeyJustPressed() {
@@ -270,7 +346,8 @@ public class ObamaScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
-        // Restore live camera position after viewport reset
+        // Restore live camera position and zoom after viewport reset
+        camera.zoom = 0.5f;
         camera.position.set(1428f, camCurrentY, 0);
         camera.update();
     }
@@ -281,12 +358,16 @@ public class ObamaScreen implements Screen {
 
     @Override
     public void dispose() {
-        if (mapTexture   != null) { mapTexture.dispose();   mapTexture   = null; }
-        if (obamaWalk1   != null) { obamaWalk1.dispose();   obamaWalk1   = null; }
-        if (obamaWalk2   != null) { obamaWalk2.dispose();   obamaWalk2   = null; }
-        if (obamaTalk    != null) { obamaTalk.dispose();    obamaTalk    = null; }
-        if (playerFrame1 != null) { playerFrame1.dispose(); playerFrame1 = null; }
-        if (playerFrame2 != null) { playerFrame2.dispose(); playerFrame2 = null; }
-        if (batch        != null) { batch.dispose();        batch        = null; }
+        if (obamaVoice  != null) { obamaVoice.stop(); obamaVoice.dispose();  obamaVoice  = null; }
+        if (mapTexture  != null) { mapTexture.dispose();                      mapTexture  = null; }
+        if (obamaWalk1  != null) { obamaWalk1.dispose();                      obamaWalk1  = null; }
+        if (obamaWalk2  != null) { obamaWalk2.dispose();                      obamaWalk2  = null; }
+        if (obamaTalk   != null) { obamaTalk.dispose();                       obamaTalk   = null; }
+        if (playerFrame1 != null) { playerFrame1.dispose();                   playerFrame1 = null; }
+        if (playerFrame2 != null) { playerFrame2.dispose();                   playerFrame2 = null; }
+        if (font        != null) { font.dispose();                            font        = null; }
+        if (blackPixel  != null) { blackPixel.dispose();                      blackPixel  = null; }
+        if (hudBatch    != null) { hudBatch.dispose();                        hudBatch    = null; }
+        if (batch       != null) { batch.dispose();                           batch       = null; }
     }
 }
