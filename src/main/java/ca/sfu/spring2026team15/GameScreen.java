@@ -282,6 +282,10 @@ public class GameScreen implements Screen {
         }
 
         deliveredSound = Gdx.audio.newSound(Gdx.files.internal("audio/deliveredOrder.mp3"));
+
+        // Open with iris expanding from black (FADE_IN only — no preceding FADE_OUT)
+        transitionState = TransitionState.FADE_IN;
+        transitionTimer = 0f;
     }
 
     /** Spawns fish on drivable road tiles across all three maps. */
