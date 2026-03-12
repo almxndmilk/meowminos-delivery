@@ -42,6 +42,9 @@ public class GameScreen implements Screen {
     private enum TransitionState { NONE, FADE_OUT, FADE_IN }
     private TransitionState transitionState = TransitionState.NONE;
     private float transitionTimer = 0f;
+    private float preRenderTransitionTimer = 0f;
+    private TransitionState preRenderTransitionState = TransitionState.NONE;
+    private boolean pendingFadeInSwitch = false; // delays FADE_OUT→FADE_IN by one frame to guarantee a full-black frame
     private static final float TRANSITION_DURATION = 1.2f;
 
     // Map 3 intro cinematic
@@ -359,6 +362,9 @@ public class GameScreen implements Screen {
                 player.update(delta, barrierLookup);
                 checkGates();
             }
+            // Capture state and timer before update so renderIris uses pre-advance values.
+            preRenderTransitionState = transitionState;
+            preRenderTransitionTimer = transitionTimer;
             updateTransition(delta);
             updateGate1Fade(delta);
             updateGate2Fade(delta);
@@ -451,12 +457,12 @@ public class GameScreen implements Screen {
         renderGate1Fade();
         renderGate2Fade();
 
-        if (transitionState != TransitionState.NONE) {
+        if (preRenderTransitionState != TransitionState.NONE) {
             float halfDiag = (float) Math.sqrt(
                 (VIEW_WIDTH / 2f) * (VIEW_WIDTH / 2f) + (VIEW_HEIGHT / 2f) * (VIEW_HEIGHT / 2f)
             ) + 50f;
-            float t = transitionTimer / TRANSITION_DURATION;
-            float irisRadius = (transitionState == TransitionState.FADE_OUT)
+            float t = Math.min(preRenderTransitionTimer, TRANSITION_DURATION) / TRANSITION_DURATION;
+            float irisRadius = (preRenderTransitionState == TransitionState.FADE_OUT)
                 ? halfDiag * (1f - t)
                 : halfDiag * t;
             renderIris(Math.max(0f, irisRadius));
@@ -552,11 +558,22 @@ public class GameScreen implements Screen {
 
     private void updateTransition(float delta) {
         if (transitionState == TransitionState.NONE) return;
-        transitionTimer += delta;
-        if (transitionState == TransitionState.FADE_OUT && transitionTimer >= TRANSITION_DURATION) {
+
+        // Execute the deferred FADE_OUT→FADE_IN switch on the frame after FADE_OUT reaches full black.
+        // This guarantees one rendered frame at radius=0 (full black) before activateMap fires.
+        if (pendingFadeInSwitch) {
+            pendingFadeInSwitch = false;
             activateMap(pendingMapIndex);
             transitionTimer = 0f;
             transitionState = TransitionState.FADE_IN;
+            return;
+        }
+
+        transitionTimer += delta;
+        if (transitionState == TransitionState.FADE_OUT && transitionTimer >= TRANSITION_DURATION) {
+            // Clamp so preRenderTransitionTimer == TRANSITION_DURATION next frame → renders full black.
+            transitionTimer = TRANSITION_DURATION;
+            pendingFadeInSwitch = true;
         } else if (transitionState == TransitionState.FADE_IN && transitionTimer >= TRANSITION_DURATION) {
             transitionTimer = 0f;
             transitionState = TransitionState.NONE;
