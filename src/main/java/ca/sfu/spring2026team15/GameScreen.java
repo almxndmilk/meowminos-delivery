@@ -56,6 +56,20 @@ public class GameScreen implements Screen {
     private static final float CINEMATIC_HOLD_DURATION = 3.5f;
     // Target zoom computed at runtime: (mapWidth - offset) / VIEW_WIDTH to show full map width
 
+    // Intro cutscene — cat walks from door to bike at game start
+    private enum IntroState { FADE_WAIT, DOOR_DELAY, WALK_TO_BIKE, WAIT_MOUNT, MOUNT, DONE }
+    private IntroState introState = IntroState.FADE_WAIT;
+    private float introTimer = 0f;
+    private boolean showIntroMountPrompt = false;
+    private static final float INTRO_DOOR_DELAY = 1.0f;
+    private static final float INTRO_MOUNT_DURATION = 0.5f;
+    private static final float INTRO_WALK_SPEED = 150f;
+    private static final float INTRO_ZOOM = 0.5f;
+    private static final float INTRO_ZOOM_OUT_SPEED = 1.5f;
+    private static final float INTRO_DOOR_X = 361f, INTRO_DOOR_Y = 451f;
+    private static final float INTRO_BIKE_X = 325f, INTRO_BIKE_Y = 242f;
+    private static final float INTRO_STOP_X = 325f, INTRO_STOP_Y = 322f;
+
     // Respawn Penalties
     private static final int RESPAWN_FISH_PENALTY = 10;
     private static final float RESPAWN_TIME_PENALTY = 30f;
@@ -235,10 +249,15 @@ public class GameScreen implements Screen {
             mapHeights[0]);
         viewport   = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT, gameCamera.getCamera());
 
-        // the player
-        player     = new Player(300f, 300f);
-        catOffBike = new CatOffBike(300f, 300f);
+        // the player — starts off-bike at the door for the intro cutscene
+        player     = new Player(INTRO_BIKE_X, INTRO_BIKE_Y);
+        catOffBike = new CatOffBike(INTRO_DOOR_X, INTRO_DOOR_Y);
         parkedBikeTexture = new Texture(Gdx.files.internal("small assets/catBike.png"));
+        isOnBike = false;
+        bikeParked = true;
+        parkedBikeX = INTRO_BIKE_X;
+        parkedBikeY = INTRO_BIKE_Y;
+        introState = IntroState.FADE_WAIT;
 
         police = new ArrayList<>();
         police.add(new PoliceEnemy(3000f, 300f));
@@ -330,6 +349,10 @@ public class GameScreen implements Screen {
         // Open with iris expanding from black (FADE_IN only — no preceding FADE_OUT)
         transitionState = TransitionState.FADE_IN;
         transitionTimer = 0f;
+
+        // Zoom in on the door for the intro cutscene
+        gameCamera.getCamera().zoom = INTRO_ZOOM;
+        gameCamera.update(INTRO_DOOR_X, INTRO_DOOR_Y);
     }
 
     /** Spawns fish on drivable road tiles across all three maps. */
@@ -375,7 +398,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && cinematicState == CinematicState.NONE) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && cinematicState == CinematicState.NONE && introState == IntroState.DONE) {
             isPaused = !isPaused;
             if (isPaused) {
                 timer.pause();
@@ -387,7 +410,7 @@ public class GameScreen implements Screen {
         }
 
         if (!isPaused) {
-            timer.update(delta);
+            if (introState == IntroState.DONE) timer.update(delta);
             if (timer.isFinished()) {
                 if (backgroundMusic != null) {
                     backgroundMusic.stop();
@@ -399,7 +422,8 @@ public class GameScreen implements Screen {
             }
             if (transitionState == TransitionState.NONE
                     && cinematicState == CinematicState.NONE
-                    && gate1FadeState == Gate1FadeState.NONE) {
+                    && gate1FadeState == Gate1FadeState.NONE
+                    && introState == IntroState.DONE) {
 
                 // mount and dismount bike
                 if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
@@ -430,8 +454,12 @@ public class GameScreen implements Screen {
             updateGate2Fade(delta);
             updateCinematic(delta);
             cinematicBars.update(delta);
-            // During cinematic the camera is driven by updateCinematic; hand back to normal tracking otherwise.
-            if (cinematicState == CinematicState.NONE) {
+            // Intro cutscene update
+            if (introState != IntroState.DONE) {
+                updateIntro(delta);
+            }
+            // During cinematic the camera is driven by updateCinematic; during intro by updateIntro; hand back to normal tracking otherwise.
+            if (cinematicState == CinematicState.NONE && introState == IntroState.DONE) {
                 gameCamera.update(getActiveX(), getActiveY());
             }
             // Check Obama trigger first — before any potential EndScreen triggers
@@ -532,7 +560,7 @@ public class GameScreen implements Screen {
                     break;
                 }
             }
-            if (!isPaused && transitionState == TransitionState.NONE && cinematicState == CinematicState.NONE) {
+            if (!isPaused && transitionState == TransitionState.NONE && cinematicState == CinematicState.NONE && introState == IntroState.DONE) {
                 enemy.update(delta, getActiveX(), getActiveY(), barrierLookup);
             }
             enemy.render(batch);
@@ -793,6 +821,81 @@ public class GameScreen implements Screen {
         cinematicTimer = 0f;
         cinematicState = CinematicState.PAN_TO_HOUSES;
         cinematicBars.show();
+    }
+
+    private void updateIntro(float delta) {
+        OrthographicCamera cam = gameCamera.getCamera();
+        switch (introState) {
+            case FADE_WAIT:
+                // Keep camera zoomed in on the door while the iris wipe plays
+                cam.zoom = INTRO_ZOOM;
+                cam.position.x = catOffBike.getCenterX();
+                cam.position.y = catOffBike.getCenterY();
+                cam.update();
+                if (transitionState == TransitionState.NONE) {
+                    introState = IntroState.DOOR_DELAY;
+                    introTimer = 0f;
+                }
+                break;
+
+            case DOOR_DELAY:
+                // 1-second pause at the door before the cat starts walking
+                introTimer += delta;
+                cam.zoom = INTRO_ZOOM;
+                cam.position.x = catOffBike.getCenterX();
+                cam.position.y = catOffBike.getCenterY();
+                cam.update();
+                if (introTimer >= INTRO_DOOR_DELAY) {
+                    introState = IntroState.WALK_TO_BIKE;
+                }
+                break;
+
+            case WALK_TO_BIKE:
+                catOffBike.walkToward(INTRO_STOP_X, INTRO_STOP_Y, delta, INTRO_WALK_SPEED);
+                // Camera follows catOffBike while zoomed in
+                cam.zoom = INTRO_ZOOM;
+                cam.position.x = catOffBike.getCenterX();
+                cam.position.y = catOffBike.getCenterY();
+                cam.update();
+                // Check if arrived near the bike
+                float dx = INTRO_STOP_X - catOffBike.getCenterX();
+                float dy = INTRO_STOP_Y - catOffBike.getCenterY();
+                if (dx * dx + dy * dy < 5f * 5f) {
+                    introState = IntroState.WAIT_MOUNT;
+                    showIntroMountPrompt = true;
+                }
+                break;
+
+            case WAIT_MOUNT:
+                // Cat stands near bike, waiting for player to press Q
+                cam.zoom = INTRO_ZOOM;
+                cam.position.x = catOffBike.getCenterX();
+                cam.position.y = catOffBike.getCenterY();
+                cam.update();
+                if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+                    isOnBike = true;
+                    bikeParked = false;
+                    player.setPosition(INTRO_BIKE_X, INTRO_BIKE_Y);
+                    showIntroMountPrompt = false;
+                    introState = IntroState.MOUNT;
+                    introTimer = 0f;
+                }
+                break;
+
+            case MOUNT:
+                introTimer += delta;
+                // Smoothly zoom out from INTRO_ZOOM to 1.0
+                cam.zoom = Math.min(1.0f, cam.zoom + INTRO_ZOOM_OUT_SPEED * delta);
+                gameCamera.update(player.getCenterX(), player.getCenterY());
+                if (introTimer >= INTRO_MOUNT_DURATION && cam.zoom >= 1.0f) {
+                    cam.zoom = 1.0f;
+                    introState = IntroState.DONE;
+                }
+                break;
+
+            case DONE:
+                break;
+        }
     }
 
     private void updateCinematic(float delta) {
@@ -1098,6 +1201,10 @@ public class GameScreen implements Screen {
                     : "Press E to deliver!";
 
             hudFont.draw(hudBatch, prompt, VIEW_WIDTH / 2 - 100f, 80f);
+        }
+
+        if (showIntroMountPrompt) {
+            hudFont.draw(hudBatch, "Press Q to mount bike!", VIEW_WIDTH / 2 - 100f, 80f);
         }
 
         if (gateMessageTimer > 0) {

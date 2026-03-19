@@ -97,33 +97,53 @@ public class CatOffBike {
             animTimer = 0f;
         }
         prevDirection = lastDirection;
+        updateFrame();
+    }
 
+    /** Move toward a target programmatically (no keyboard input). Handles animation. */
+    public void walkToward(float targetX, float targetY, float delta, float speed) {
+        float dx = targetX - position.x;
+        float dy = targetY - position.y;
+        float dist = (float) Math.sqrt(dx * dx + dy * dy);
+        if (dist < 2f) return;
+
+        if (Math.abs(dy) >= Math.abs(dx)) {
+            lastDirection = (dy > 0) ? Direction.UP : Direction.DOWN;
+        } else {
+            lastDirection = (dx > 0) ? Direction.RIGHT : Direction.LEFT;
+        }
+
+        float step = Math.min(speed * delta, dist);
+        position.x += (dx / dist) * step;
+        position.y += (dy / dist) * step;
+
+        isMoving = true;
+        if (lastDirection != prevDirection) { currentFrameIndex = 0; animTimer = 0f; }
+        animTimer += delta;
+        if (animTimer >= FRAME_DURATION) {
+            animTimer = 0f;
+            int frameCount = (lastDirection == Direction.LEFT || lastDirection == Direction.RIGHT) ? 2 : 3;
+            currentFrameIndex = (currentFrameIndex + 1) % frameCount;
+        }
+        prevDirection = lastDirection;
+        updateFrame();
+    }
+
+    private void updateFrame() {
         switch (lastDirection) {
             case LEFT:
             case RIGHT:
                 currentFrame = (currentFrameIndex == 0) ? left1 : left2;
                 break;
             case UP:
-                if (currentFrameIndex == 0) {
-                    currentFrame = up1;
-                }
-                else if (currentFrameIndex == 1){
-                    currentFrame = up2;
-                }
-                else{
-                    currentFrame = up3;
-                }
+                if (currentFrameIndex == 0) currentFrame = up1;
+                else if (currentFrameIndex == 1) currentFrame = up2;
+                else currentFrame = up3;
                 break;
             case DOWN:
-                if (currentFrameIndex == 0){
-                    currentFrame = down1;
-                }
-                else if (currentFrameIndex == 1) {
-                    currentFrame = down2;
-                }
-                else{
-                    currentFrame = down3;
-                }
+                if (currentFrameIndex == 0) currentFrame = down1;
+                else if (currentFrameIndex == 1) currentFrame = down2;
+                else currentFrame = down3;
                 break;
         }
     }
