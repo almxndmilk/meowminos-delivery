@@ -130,6 +130,7 @@ public class GameScreen implements Screen {
     // Audio
     private Music backgroundMusic;
     private Sound deliveredSound;
+    private Sound fishSound;
 
     private SpriteBatch batch;
     private ExtendViewport viewport;
@@ -345,6 +346,8 @@ public class GameScreen implements Screen {
         deliveredSound = Gdx.audio.newSound(Gdx.files.internal("audio/deliveredOrder.mp3"));
         deliveryAlertSound = Gdx.audio.newSound(Gdx.files.internal("audio/deliveryDing.mp3"));
         activeNotifications = new ArrayList<>();
+
+        fishSound = Gdx.audio.newSound(Gdx.files.internal("audio/fishPickUp.mp3"));
 
         // Open with iris expanding from black (FADE_IN only — no preceding FADE_OUT)
         transitionState = TransitionState.FADE_IN;
@@ -1140,6 +1143,7 @@ public class GameScreen implements Screen {
             float dx = fish.getCenterX() - getActiveX();
             float dy = fish.getCenterY() - getActiveY();
             if (dx * dx + dy * dy < rSquared) {
+                fishSound.play(5.0f);
                 fish.collect();
                 fishCollected++;
             }
@@ -1274,6 +1278,7 @@ public class GameScreen implements Screen {
             backgroundMusic.dispose();
         }
         if (deliveredSound != null) deliveredSound.dispose();
+        fishSound.dispose();
         catOffBike.dispose();
         if (parkedBikeTexture != null) parkedBikeTexture.dispose();
         if (deliveryAlertSound != null) deliveryAlertSound.dispose();
