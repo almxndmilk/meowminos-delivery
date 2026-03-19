@@ -456,12 +456,14 @@ public class GameScreen implements Screen {
                     && house.isPlayerInRange(getActiveX(), getActiveY())) {
                 showDeliverPrompt = true;
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                    if (SettingsScreen.soundOn) {
-                        deliveredSound.play(1.0f);
-                    }
-                    if (house.tryDeliver(getActiveX(), getActiveY())) {
-                        fishCollected += 10;
-                    }
+                    if (!isOnBike) {
+                        if (SettingsScreen.soundOn) {
+                            deliveredSound.play(1.0f);
+                        }
+                        if (house.tryDeliver(getActiveX(), getActiveY())) {
+                            fishCollected += 10;
+                        }
+                       }
                 }
             }
         }
@@ -1086,7 +1088,11 @@ public class GameScreen implements Screen {
         timer.render(hudBatch, hudFont);
 
         if (showDeliverPrompt) {
-            hudFont.draw(hudBatch, "Press E to deliver!", VIEW_WIDTH / 2 - 100f, 80f);
+            String prompt = isOnBike
+                    ?  "Get off your bike (Q) to deliver!"
+                    : "Press E to deliver!";
+
+            hudFont.draw(hudBatch, prompt, VIEW_WIDTH / 2 - 100f, 80f);
         }
 
         if (gateMessageTimer > 0) {
