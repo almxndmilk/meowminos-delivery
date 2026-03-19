@@ -13,8 +13,9 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 public class EndScreen implements Screen {
 
     private final Main game;
-    private final int score; // seconds survived
-    private final boolean fromObamaScene; // true if came from ObamaScreen
+    private final int score; // fish collected
+    private final int time;  // seconds elapsed
+    private final boolean fromObamaScene;
 
     private SpriteBatch batch;
     private ExtendViewport viewport;
@@ -50,9 +51,10 @@ public class EndScreen implements Screen {
     private Music backgroundMusic;
     private Music yipeeSound;
 
-    public EndScreen(Main game, int score, boolean fromObamaScene) {
+    public EndScreen(Main game, int score, int time, boolean fromObamaScene) {
         this.game  = game;
         this.score = score;
+        this.time  = time;
         this.fromObamaScene = fromObamaScene;
         batch      = new SpriteBatch();
         viewport   = new ExtendViewport(1280f, 720f);
@@ -104,7 +106,7 @@ public class EndScreen implements Screen {
         batch.draw(background, 0, 0, viewport.getWorldWidth(), viewport.getWorldHeight());
 
         // Score: 5-digit zero-padded (capped at 99999 seconds)
-        int s = Math.min(score, 99999);
+        int s = Math.max(0, Math.min(score, 99999));
         int[] scoreDigits = {
             s / 10000,
             (s / 1000) % 10,
@@ -117,8 +119,8 @@ public class EndScreen implements Screen {
         }
 
         // Time: MM:SS (colon is baked into the background image)
-        int mm = Math.min(score / 60, 99);
-        int ss = score % 60;
+        int mm = Math.min(time / 60, 99);
+        int ss = time % 60;
         int[] timeDigits = { mm / 10, mm % 10, ss / 10, ss % 10 };
         for (int i = 0; i < 4; i++) {
             float offset = (i < 2) ? i * TIME_GAP : i * TIME_GAP + TIME_COLON_W;

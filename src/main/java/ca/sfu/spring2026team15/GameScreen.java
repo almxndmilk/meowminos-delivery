@@ -420,7 +420,8 @@ public class GameScreen implements Screen {
                     backgroundMusic.dispose();
                     backgroundMusic = null;
                 }
-                game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + totalTimePenalties, false));
+                dispose();
+                game.setScreen(new EndScreen(game, fishCollected, timer.getElapsedSeconds() + totalTimePenalties, false));
                 return;
             }
             if (transitionState == TransitionState.NONE
@@ -563,7 +564,8 @@ public class GameScreen implements Screen {
                     break;
                 }
             }
-            if (!isPaused && transitionState == TransitionState.NONE && cinematicState == CinematicState.NONE && introState == IntroState.DONE) {
+            if (!isPaused && transitionState == TransitionState.NONE
+                    && (cinematicState == CinematicState.NONE || currentMapIndex == 2)) {
                 enemy.update(delta, getActiveX(), getActiveY(), barrierLookup);
             }
             enemy.render(batch);
@@ -1123,7 +1125,7 @@ public class GameScreen implements Screen {
         float px = getActiveX();
         float py = getActiveY();
         dispose();
-        game.setScreen(new ObamaScreen(game, elapsed, yOffset, height, px, py));
+        game.setScreen(new ObamaScreen(game, elapsed, fishCollected, yOffset, height, px, py));
     }
 
     // method definition for updated player on and off bike
@@ -1156,20 +1158,28 @@ public class GameScreen implements Screen {
                 backgroundMusic.dispose();
                 backgroundMusic = null;
             }
-            game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + totalTimePenalties, false));            return true;
+            dispose();
+            game.setScreen(new EndScreen(game, fishCollected, timer.getElapsedSeconds() + totalTimePenalties, false));
+            return true;
         }
 
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(getActiveX(), getActiveY())) {
+                if (fishCollected - RESPAWN_FISH_PENALTY < 0) {
+                    timer.stop();
+                    int elapsed = timer.getElapsedSeconds() + totalTimePenalties;
+                    dispose();
+                    game.setScreen(new EndScreen(game, fishCollected - RESPAWN_FISH_PENALTY, elapsed, false));
+                    return true;
+                }
                 fishCollected = Respawn.respawn(player, police, timer, currentMapIndex,
                         fishCollected, mapYOffsets, RESPAWN_FISH_PENALTY, RESPAWN_TIME_PENALTY);
-                // Sync catOffBike to the respawn position and reset bike state
                 totalTimePenalties += (int) RESPAWN_TIME_PENALTY;
                 catOffBike.setPosition(player.getCenterX(), player.getCenterY());
                 bikeParked = false;
                 isOnBike = true;
                 return true;
-                }
+            }
         }
         return false;
     }
