@@ -158,6 +158,7 @@ public class GameScreen implements Screen {
     private Texture orderIndicatorTexture; // small house
     private Texture orderIndicatorTextureBIG;
     private boolean showDeliverPrompt = false;
+    private boolean showObamaPrompt = false;
 
     // Gate message
     private String gateMessage = null;
@@ -417,10 +418,14 @@ public class GameScreen implements Screen {
                 gameCamera.update(getActiveX(), getActiveY());
             }
             // Check Obama trigger first — before any potential EndScreen triggers
+            showObamaPrompt = false;
             if (!obamaTriggered && isPlayerNearWhitehouse()) {
-                obamaTriggered = true;
-                triggerObamaScene();
-                return;
+                showObamaPrompt = true;
+                if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                    obamaTriggered = true;
+                    triggerObamaScene();
+                    return;
+                }
             }
             if (cinematicState == CinematicState.NONE
                     && gate1FadeState == Gate1FadeState.NONE
@@ -1011,7 +1016,7 @@ public class GameScreen implements Screen {
 
         timer.render(hudBatch, hudFont);
 
-        if (showDeliverPrompt) {
+        if (showDeliverPrompt || showObamaPrompt) {
             hudFont.draw(hudBatch, "Press E to deliver!", VIEW_WIDTH / 2 - 100f, 80f);
         }
 
