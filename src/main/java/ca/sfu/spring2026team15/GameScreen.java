@@ -94,6 +94,7 @@ public class GameScreen implements Screen {
     // Iris rendering resources
     private ShapeRenderer shapeRenderer;
     private Texture blackTexture;
+    private Texture whiteTexture;
 
     private CinematicBars cinematicBars;
 
@@ -157,7 +158,12 @@ public class GameScreen implements Screen {
     private List<House> houses; // flat view used in update/render loops
     private Texture orderIndicatorTexture; // small house
     private Texture orderIndicatorTextureBIG;
+    private Texture orderIndicatorTextureBIG2;
+    private Texture orderIndicatorTextureBIGpick;
     private boolean showDeliverPrompt = false;
+    private List<DeliveryNotification> activeNotifications;
+    private Sound deliveryAlertSound;
+    private int activeDeliveryMap = 0;
     private boolean showObamaPrompt = false;
 
     // Gate message
@@ -213,6 +219,12 @@ public class GameScreen implements Screen {
         blackTexture = new Texture(blackPm);
         blackPm.dispose();
 
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE); // Pure white
+        pixmap.fill();
+        whiteTexture = new Texture(pixmap);
+        pixmap.dispose();
+
         cinematicBars = new CinematicBars();
 
         // Camera bounds scoped to map 1; updated on each map transition (raw map edges, halfViewH applied internally).
@@ -266,6 +278,8 @@ public class GameScreen implements Screen {
 
         orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket smallHouse.png"));
         orderIndicatorTextureBIG = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse.png"));
+        orderIndicatorTextureBIG2 = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse2.png"));
+
 
         // Map 1 houses (world Y 0–902)
         List<House> map1Houses = new ArrayList<>();
@@ -274,21 +288,22 @@ public class GameScreen implements Screen {
         map1Houses.add(new House(4755f, 275f, orderIndicatorTexture));
         housesByMap.add(map1Houses);
 
+
+        // Map 3 houses (world Y 1804–2706) — positions are placeholders, tune against map art
+        List<House> map2Houses = new ArrayList<>();
+        map2Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG); // The whitehouse
+        map2Houses.add(whitehouse);
+        map2Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        map2Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        housesByMap.add(map2Houses);
+
         // Map 2 houses - yall there isnt a map 2 LOL
-//        List<House> map2Houses = new ArrayList<>();
+        List<House> map3Houses = new ArrayList<>();
 //        map2Houses.add(new House(2700f, 700f, orderIndicatorTextureBIG));
 //        map2Houses.add(new House(3000f, 700f, orderIndicatorTextureBIG));
 //        map2Houses.add(new House(3250f, 700f, orderIndicatorTextureBIG));
 //        map2Houses.add(new House(3500f, 700f, orderIndicatorTextureBIG));
-//        housesByMap.add(map2Houses);
-
-        // Map 3 houses (world Y 1804–2706) — positions are placeholders, tune against map art
-        List<House> map3Houses = new ArrayList<>();
-        map3Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
-        whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG); // The whitehouse
-        map3Houses.add(whitehouse);
-        map3Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
-        map3Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
         housesByMap.add(map3Houses);
 
         // Flat list for update/render loops
@@ -309,6 +324,8 @@ public class GameScreen implements Screen {
         }
 
         deliveredSound = Gdx.audio.newSound(Gdx.files.internal("audio/deliveredOrder.mp3"));
+        deliveryAlertSound = Gdx.audio.newSound(Gdx.files.internal("audio/deliveryDing.mp3"));
+        activeNotifications = new ArrayList<>();
 
         // Open with iris expanding from black (FADE_IN only — no preceding FADE_OUT)
         transitionState = TransitionState.FADE_IN;
@@ -431,6 +448,8 @@ public class GameScreen implements Screen {
                     && gate1FadeState == Gate1FadeState.NONE
                     && checkFishCollection()) return;
             gateMessageTimer -= delta;
+
+            updateDeliveryNotifications(delta);
         }
 
         // Delivery prompt + interaction — house timers tick always, but interaction blocked during cinematic
@@ -442,12 +461,14 @@ public class GameScreen implements Screen {
                     && house.isPlayerInRange(getActiveX(), getActiveY())) {
                 showDeliverPrompt = true;
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                    if (SettingsScreen.soundOn) {
-                        deliveredSound.play(1.0f);
-                    }
-                    if (house.tryDeliver(getActiveX(), getActiveY())) {
-                        fishCollected += 10;
-                    }
+                    if (!isOnBike) {
+                        if (SettingsScreen.soundOn) {
+                            deliveredSound.play(1.0f);
+                        }
+                        if (house.tryDeliver(getActiveX(), getActiveY())) {
+                            fishCollected += 10;
+                        }
+                       }
                 }
             }
         }
@@ -520,6 +541,7 @@ public class GameScreen implements Screen {
         batch.end();
 
         renderHud();
+        renderDeliveryNotifications();
         renderGate1Fade();
         renderGate2Fade();
 
@@ -537,6 +559,58 @@ public class GameScreen implements Screen {
         if (isPaused) {
             renderPause();
         }
+
+    }
+
+
+    private void updateDeliveryNotifications(float delta) {
+        List<House> currentMapHouses = housesByMap.get(activeDeliveryMap);
+
+        for (House house : currentMapHouses) {
+            if (house.hasOrder()) {
+                boolean hasNotification = false;
+                for (DeliveryNotification notif : activeNotifications) {
+                    if (notif.getHouse() == house) {
+                        hasNotification = true;
+                        break;
+                    }
+                }
+
+                if (!hasNotification) {
+                    DeliveryNotification newNotif = new DeliveryNotification(
+                            house, orderIndicatorTexture, activeNotifications.size());
+                    activeNotifications.add(newNotif);
+
+                    // Play alert sound
+                    if (SettingsScreen.soundOn) {
+                        deliveryAlertSound.play(0.7f);
+                    }
+                }
+            }
+        }
+
+        for (DeliveryNotification notif : activeNotifications) {
+            notif.update(delta);
+        }
+
+        for (int i = activeNotifications.size() - 1; i >= 0; i--) {
+            if (activeNotifications.get(i).isExpired()) {
+                activeNotifications.remove(i);
+
+                for (int j = 0; j < activeNotifications.size(); j++) {
+                    activeNotifications.get(j).setSlotIndex(j);
+                }
+            }
+        }
+    }
+
+    private void renderDeliveryNotifications() {
+        hudBatch.setProjectionMatrix(hudCamera.combined);
+        hudBatch.begin();
+        for (DeliveryNotification notif : activeNotifications) {
+            notif.render(hudBatch, hudFont, VIEW_WIDTH, VIEW_HEIGHT, whiteTexture);
+        }
+        hudBatch.end();
     }
 
     /** Check gate triggers — no delta needed; called only when transition is inactive. */
@@ -822,6 +896,8 @@ public class GameScreen implements Screen {
         isOnBike = true;
         currentMapIndex = Math.max(currentMapIndex, index);
 
+        activeDeliveryMap = index;
+        activeNotifications.clear();
 
         gameCamera.setMaxX(mapWidths[index] - BARRIER_X_OFFSET);
         gameCamera.setYBounds(mapYOffsets[index], mapYOffsets[index] + mapHeights[index]);
@@ -1017,7 +1093,11 @@ public class GameScreen implements Screen {
         timer.render(hudBatch, hudFont);
 
         if (showDeliverPrompt || showObamaPrompt) {
-            hudFont.draw(hudBatch, "Press E to deliver!", VIEW_WIDTH / 2 - 100f, 80f);
+            String prompt = isOnBike
+                    ?  "Get off your bike (Q) to deliver!"
+                    : "Press E to deliver!";
+
+            hudFont.draw(hudBatch, prompt, VIEW_WIDTH / 2 - 100f, 80f);
         }
 
         if (gateMessageTimer > 0) {
@@ -1080,6 +1160,7 @@ public class GameScreen implements Screen {
         if (gate2ObstacleTexture != null) gate2ObstacleTexture.dispose();
         shapeRenderer.dispose();
         blackTexture.dispose();
+        whiteTexture.dispose();
         cinematicBars.dispose();
         if (backgroundMusic != null) {
             backgroundMusic.stop();
@@ -1088,5 +1169,6 @@ public class GameScreen implements Screen {
         if (deliveredSound != null) deliveredSound.dispose();
         catOffBike.dispose();
         if (parkedBikeTexture != null) parkedBikeTexture.dispose();
+        if (deliveryAlertSound != null) deliveryAlertSound.dispose();
     }
 }
