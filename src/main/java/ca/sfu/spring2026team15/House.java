@@ -59,6 +59,14 @@ public class House {
         return false;
     }
 
+    public float getOrderTimeRemaining() {
+        return ORDER_DURATION - orderTimer;
+    }
+
+    public float getOrderDuration() {
+        return ORDER_DURATION;
+    }
+
     public boolean isPlayerInRange(float playerX, float playerY) {
         float dx = playerX - x;
         float dy = playerY - y;
@@ -75,4 +83,5 @@ public class House {
     public boolean wasDelivered() { return everDelivered; }
     public float getX() { return x; }
     public float getY() { return y; }
+
 }
