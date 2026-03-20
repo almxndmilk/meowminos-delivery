@@ -296,7 +296,7 @@ public class GameScreen implements Screen {
         timer = new Timer();
         timer.start();
 
-        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket smallHouse.png"));
+        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket.png"));
         orderIndicatorTextureBIG = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse.png"));
         orderIndicatorTextureBIG2 = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse2.png"));
 

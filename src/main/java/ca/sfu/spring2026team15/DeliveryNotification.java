@@ -13,7 +13,7 @@ public class DeliveryNotification {
 
     private static final float SLIDE_SPEED = 3.5f;
     private static final float TICKET_WIDTH = 100f;
-    private static final float TICKET_HEIGHT = 80f;
+    private static final float TICKET_HEIGHT = 100f;
     private static final float TICKET_SPACING = 10f;
     private static final float SCREEN_RIGHT_MARGIN = 20f;
     private static final float SCREEN_BOTTOM_MARGIN = 20f;
