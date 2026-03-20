@@ -164,9 +164,9 @@ public class GameScreen implements Screen {
     private Texture pauseTexture;
     private SpriteBatch pauseBatch;
     private ExtendViewport pauseViewport;
-    private static final float RESUME_X1  = 460f, RESUME_X2  = 810f, RESUME_Y1  = 430f, RESUME_Y2  = 485f;
-    private static final float RESTART_X1 = 460f, RESTART_X2 = 800f, RESTART_Y1 = 345f, RESTART_Y2 = 405f;
-    private static final float QUIT_X1    = 500f, QUIT_X2    = 770f, QUIT_Y1    = 260f, QUIT_Y2    = 320f;
+    private static final float RESUME_X1  = 520f, RESUME_X2  = 750f, RESUME_Y1  = 345f, RESUME_Y2  = 445f;
+    private static final float RESTART_X1 = 520f, RESTART_X2 = 750f, RESTART_Y1 = 240f, RESTART_Y2 = 340f;
+    private static final float QUIT_X1    = 540f, QUIT_X2    = 730f, QUIT_Y1    = 135f, QUIT_Y2    = 235f;
 
     // Orders — per-map house lists for gate checking, flat list for update/render
     private final List<List<House>> housesByMap = new ArrayList<>();
@@ -289,7 +289,7 @@ public class GameScreen implements Screen {
         hudFont   = new BitmapFont();
         hudFont.getData().setScale(2f);
 
-        pauseTexture  = new Texture(Gdx.files.internal("Pause/Pause_screen.png"));
+        pauseTexture  = new Texture(Gdx.files.internal("Pause/Pause_screen2.png"));
         pauseBatch    = new SpriteBatch();
         pauseViewport = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT);
 
