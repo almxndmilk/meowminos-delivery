@@ -28,7 +28,7 @@ public class StartScreen implements Screen {
     private Texture settingsBtnTexture;
 
     // Start Button
-    float btnWidth  = 200f;
+    float btnWidth  = 225f;
     float btnHeight = 125f;
 
     // Title
@@ -36,8 +36,8 @@ public class StartScreen implements Screen {
     float titleHeight = 350f;
 
     // Instruction / Settings icon buttons
-    private static final float ICON_W = 80f;
-    private static final float ICON_H = 80f;
+    private static final float ICON_W = 130f;
+    private static final float ICON_H = 75f;
 
     private Music backgroundMusic;
     private Sound startButtonSound;
@@ -63,16 +63,16 @@ public class StartScreen implements Screen {
 
         // button coordinates
         float btnX = (viewport.getWorldWidth()  / 2) - (btnWidth  / 2);
-        float btnY = (viewport.getWorldHeight() / 3.75f) - (btnHeight / 2);
+        float btnY = (viewport.getWorldHeight() / 3.5f) - (btnHeight / 2);
 
         // title cooridnates
         float titleX = (viewport.getWorldWidth()  / 2) - (titleWidth  / 2);
         float titleY = (viewport.getWorldHeight() / 1.8f) - (titleHeight / 2);
 
         // Instruction / Settings button positions
-        float newBtnY = btnY - 100f;
-        float instrX  = (viewport.getWorldWidth() / 2f) - 50f - ICON_W;
-        float settX   = (viewport.getWorldWidth() / 2f) + 50f;
+        float newBtnY = btnY - 60f;
+        float instrX  = (viewport.getWorldWidth() / 2f) - ICON_W ;
+        float settX   = (viewport.getWorldWidth() / 2f);
 
         batch.begin();
         batch.draw(startTexture, 0, 0, viewport.getWorldWidth(), viewport.getWorldHeight());
