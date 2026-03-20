@@ -17,9 +17,6 @@ public class InstructionsScreen implements Screen {
     private ExtendViewport viewport;
     private Texture background;
 
-    // X (close) button baked into top-left of instructions.png
-    private static final float CLOSE_X1 = 0f,  CLOSE_X2 = 200f;
-    private static final float CLOSE_Y1 = 660f, CLOSE_Y2 = 720f;
 
     public InstructionsScreen(Main game) {
         this.game = game;
@@ -43,12 +40,6 @@ public class InstructionsScreen implements Screen {
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             goBack();
-        } else if (Gdx.input.justTouched()) {
-            Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-            if (touch.x >= CLOSE_X1 && touch.x <= CLOSE_X2 &&
-                    touch.y >= CLOSE_Y1 && touch.y <= CLOSE_Y2) {
-                goBack();
-            }
         }
     }
 
