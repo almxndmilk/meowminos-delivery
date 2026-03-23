@@ -31,6 +31,8 @@ public class ObamaScreen implements Screen {
     private static final float TALK_FALLBACK_DURATION = 10f;
     // Delay after audio finishes before transitioning to EndScreen
     private static final float END_DELAY = 2f;
+    // LibGDX Music volume range is [0, 1].
+    private static final float OBAMA_VOICE_VOLUME = 1.0f;
 
     // Dialogue spoken by Obama during the talk phase
     private static final String DIALOGUE =
@@ -180,6 +182,7 @@ public class ObamaScreen implements Screen {
         playerFrame2 = new Texture(Gdx.files.internal("catOffBike/catOffBike2.png"));
 
         obamaVoice = Gdx.audio.newMusic(Gdx.files.internal("Obama/obamaCutScene.mp3"));
+        obamaVoice.setVolume(OBAMA_VOICE_VOLUME);
         obamaVoice.setOnCompletionListener(music -> {
             audioFinished = true;
             endDelayTimer = 0f;
