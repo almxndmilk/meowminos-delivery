@@ -47,6 +47,7 @@ public class ObamaScreen implements Screen {
 
     private final Main game;
     private final int  elapsedSeconds;
+    private final int fishCollected;
     private final float map3YOffset, map3Height;
 
     // Obama world positions (bottom-left of sprite)
@@ -112,11 +113,12 @@ public class ObamaScreen implements Screen {
      * Door image coords:   (1465,745)→(1500,810)  → Obama starts at worldX≈1407, worldY=map3YOffset+map3Height−810
      * Target image coords: (1475,885)              → worldX=1400, worldY=map3YOffset+map3Height−885
      */
-    public ObamaScreen(Main game, int elapsedSeconds,
+    public ObamaScreen(Main game, int elapsedSeconds, int fishCollected,
                        float map3YOffset, float map3Height,
                        float playerCenterX, float playerCenterY) {
         this.game           = game;
         this.elapsedSeconds = elapsedSeconds;
+        this.fishCollected  = fishCollected;
         this.map3YOffset    = map3YOffset;
         this.map3Height     = map3Height;
 
@@ -407,7 +409,7 @@ public class ObamaScreen implements Screen {
 
     private void transitionToEnd() {
         dispose();
-        game.setScreen(new EndScreen(game, elapsedSeconds, true)); // true = came from ObamaScreen
+        game.setScreen(new EndScreen(game, fishCollected, elapsedSeconds, true)); // true = came from ObamaScreen
     }
 
     @Override

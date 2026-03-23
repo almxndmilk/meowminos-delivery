@@ -164,9 +164,9 @@ public class GameScreen implements Screen {
     private Texture pauseTexture;
     private SpriteBatch pauseBatch;
     private ExtendViewport pauseViewport;
-    private static final float RESUME_X1  = 460f, RESUME_X2  = 810f, RESUME_Y1  = 430f, RESUME_Y2  = 485f;
-    private static final float RESTART_X1 = 460f, RESTART_X2 = 800f, RESTART_Y1 = 345f, RESTART_Y2 = 405f;
-    private static final float QUIT_X1    = 500f, QUIT_X2    = 770f, QUIT_Y1    = 260f, QUIT_Y2    = 320f;
+    private static final float RESUME_X1  = 520f, RESUME_X2  = 750f, RESUME_Y1  = 345f, RESUME_Y2  = 445f;
+    private static final float RESTART_X1 = 520f, RESTART_X2 = 750f, RESTART_Y1 = 240f, RESTART_Y2 = 340f;
+    private static final float QUIT_X1    = 540f, QUIT_X2    = 730f, QUIT_Y1    = 135f, QUIT_Y2    = 235f;
 
     // Orders — per-map house lists for gate checking, flat list for update/render
     private final List<List<House>> housesByMap = new ArrayList<>();
@@ -289,14 +289,14 @@ public class GameScreen implements Screen {
         hudFont   = new BitmapFont();
         hudFont.getData().setScale(2f);
 
-        pauseTexture  = new Texture(Gdx.files.internal("Pause/Pause_screen.png"));
+        pauseTexture  = new Texture(Gdx.files.internal("Pause/Pause_screen2.png"));
         pauseBatch    = new SpriteBatch();
         pauseViewport = new ExtendViewport(VIEW_WIDTH, VIEW_HEIGHT);
 
         timer = new Timer();
         timer.start();
 
-        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket smallHouse.png"));
+        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket.png"));
         orderIndicatorTextureBIG = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse.png"));
         orderIndicatorTextureBIG2 = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse2.png"));
 
@@ -420,7 +420,8 @@ public class GameScreen implements Screen {
                     backgroundMusic.dispose();
                     backgroundMusic = null;
                 }
-                game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + totalTimePenalties, false));
+                dispose();
+                game.setScreen(new EndScreen(game, fishCollected, timer.getElapsedSeconds() + totalTimePenalties, false));
                 return;
             }
             if (transitionState == TransitionState.NONE
@@ -563,7 +564,8 @@ public class GameScreen implements Screen {
                     break;
                 }
             }
-            if (!isPaused && transitionState == TransitionState.NONE && cinematicState == CinematicState.NONE && introState == IntroState.DONE) {
+            if (!isPaused && transitionState == TransitionState.NONE
+                    && (cinematicState == CinematicState.NONE || currentMapIndex == 2)) {
                 enemy.update(delta, getActiveX(), getActiveY(), barrierLookup);
             }
             enemy.render(batch);
@@ -1123,7 +1125,7 @@ public class GameScreen implements Screen {
         float px = getActiveX();
         float py = getActiveY();
         dispose();
-        game.setScreen(new ObamaScreen(game, elapsed, yOffset, height, px, py));
+        game.setScreen(new ObamaScreen(game, elapsed, fishCollected, yOffset, height, px, py));
     }
 
     // method definition for updated player on and off bike
@@ -1156,20 +1158,28 @@ public class GameScreen implements Screen {
                 backgroundMusic.dispose();
                 backgroundMusic = null;
             }
-            game.setScreen(new EndScreen(game, timer.getElapsedSeconds() + totalTimePenalties, false));            return true;
+            dispose();
+            game.setScreen(new EndScreen(game, fishCollected, timer.getElapsedSeconds() + totalTimePenalties, false));
+            return true;
         }
 
         for (PoliceEnemy enemy : police) {
             if (enemy.isCatching(getActiveX(), getActiveY())) {
+                if (fishCollected - RESPAWN_FISH_PENALTY < 0) {
+                    timer.stop();
+                    int elapsed = timer.getElapsedSeconds() + totalTimePenalties;
+                    dispose();
+                    game.setScreen(new EndScreen(game, fishCollected - RESPAWN_FISH_PENALTY, elapsed, false));
+                    return true;
+                }
                 fishCollected = Respawn.respawn(player, police, timer, currentMapIndex,
                         fishCollected, mapYOffsets, RESPAWN_FISH_PENALTY, RESPAWN_TIME_PENALTY);
-                // Sync catOffBike to the respawn position and reset bike state
                 totalTimePenalties += (int) RESPAWN_TIME_PENALTY;
                 catOffBike.setPosition(player.getCenterX(), player.getCenterY());
                 bikeParked = false;
                 isOnBike = true;
                 return true;
-                }
+            }
         }
         return false;
     }
