@@ -120,6 +120,22 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
+                <configuration>
+                    <excludes>
+                        <!-- Screen classes require OpenGL runtime and cannot be unit tested -->
+                        <exclude>ca/sfu/spring2026team15/GameScreen.class</exclude>
+                        <exclude>ca/sfu/spring2026team15/GameScreen$*.class</exclude>
+                        <exclude>ca/sfu/spring2026team15/ObamaScreen.class</exclude>
+                        <exclude>ca/sfu/spring2026team15/ObamaScreen$*.class</exclude>
+                        <exclude>ca/sfu/spring2026team15/StartScreen.class</exclude>
+                        <exclude>ca/sfu/spring2026team15/EndScreen.class</exclude>
+                        <exclude>ca/sfu/spring2026team15/InstructionsScreen.class</exclude>
+                        <exclude>ca/sfu/spring2026team15/SettingsScreen.class</exclude>
+                        <!-- Entry points with no testable logic -->
+                        <exclude>ca/sfu/spring2026team15/GameLauncher.class</exclude>
+                        <exclude>ca/sfu/spring2026team15/Main.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

@@ -984,7 +984,7 @@ public class GameScreen implements Screen {
 
     /** Smoothstep easing: starts and ends slow, fast in the middle. */
     private float smoothStep(float t) {
-        return t * t * (3f - 2f * t);
+        return GameLogicHelper.smoothStep(t);
     }
 
     private void activateMap(int index) {
@@ -1094,22 +1094,13 @@ public class GameScreen implements Screen {
     }
 
     private int deliveriesNeeded(int mapIndex) {
-        int count = 0;
-        for (House h : housesByMap.get(mapIndex)) {
-            if (!h.wasDelivered()) count++;
-        }
-        return count;
+        return GameLogicHelper.deliveriesNeeded(housesByMap.get(mapIndex));
     }
 
     private boolean isPlayerNearWhitehouse() {
-        // Trigger rectangle in map3.png image coords: (1155,940)→(1850,860)
-        // Conversion: worldX = imgX - 75,  worldY = mapYOffsets[2] + (mapHeights[2] - imgY)
-        float px = getActiveX();
-        float py = getActiveY();
-        return currentMapIndex == 2
-            && px >= 1080f && px <= 1775f
-            && py >= mapYOffsets[2] + mapHeights[2] - 940f
-            && py <= mapYOffsets[2] + mapHeights[2] - 860f;
+        return GameLogicHelper.isNearWhitehouse(
+            getActiveX(), getActiveY(), currentMapIndex,
+            mapYOffsets[2], mapHeights[2]);
     }
 
     private void triggerObamaScene() {

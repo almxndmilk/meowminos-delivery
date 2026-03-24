@@ -6,8 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.objenesis.ObjenesisStd;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests for GameCamera clamping logic.
@@ -196,5 +195,24 @@ public class GameCameraTest extends GdxTestSetup {
 
         gameCamera.update(2723f, 0f);
         assertEquals(HALF_H, stubCamera.position.y, 0.01f);
+    }
+
+    // --- Additional tests ---
+
+    @Test
+    public void testGetCameraReturnsNonNull() {
+        assertNotNull(gameCamera.getCamera());
+    }
+
+    @Test
+    public void testGetCameraPositionIsNonNull() {
+        assertNotNull(gameCamera.getCamera().position);
+    }
+
+    @Test
+    public void testCameraViewportDimensions() {
+        OrthographicCamera cam = gameCamera.getCamera();
+        assertEquals(VIEW_WIDTH, cam.viewportWidth, 0.01f);
+        assertEquals(VIEW_HEIGHT, cam.viewportHeight, 0.01f);
     }
 }

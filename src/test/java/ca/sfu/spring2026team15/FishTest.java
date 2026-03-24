@@ -50,4 +50,88 @@ public class FishTest extends GdxTestSetup {
         f1.collect();
         assertFalse(f2.isCollected());
     }
+
+    // --- getCenterX/getCenterY for various values ---
+
+    @Test
+    public void fishAtOriginHasCorrectCenter() {
+        Fish fish = new Fish(0f, 0f, true);
+        assertEquals(0f, fish.getCenterX(), 0.01f);
+        assertEquals(0f, fish.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void fishAtLargeCoordinatesHasCorrectCenter() {
+        Fish fish = new Fish(5000f, 2500f, true);
+        assertEquals(5000f, fish.getCenterX(), 0.01f);
+        assertEquals(2500f, fish.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void fishAtNegativeCoordinatesHasCorrectCenter() {
+        Fish fish = new Fish(-100f, -200f, true);
+        assertEquals(-100f, fish.getCenterX(), 0.01f);
+        assertEquals(-200f, fish.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void fishAtFractionalCoordinatesHasCorrectCenter() {
+        Fish fish = new Fish(33.33f, 66.66f, true);
+        assertEquals(33.33f, fish.getCenterX(), 0.01f);
+        assertEquals(66.66f, fish.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void fishCenterXMatchesExactConstructorValue() {
+        float x = 1234.5678f;
+        float y = 9876.5432f;
+        Fish fish = new Fish(x, y, true);
+        assertEquals(x, fish.getCenterX(), 0.001f);
+        assertEquals(y, fish.getCenterY(), 0.001f);
+    }
+
+    // --- multiple fish independent collection ---
+
+    @Test
+    public void threeFishIndependentCollection() {
+        Fish f1 = new Fish(100f, 100f, true);
+        Fish f2 = new Fish(200f, 200f, true);
+        Fish f3 = new Fish(300f, 300f, true);
+
+        f2.collect();
+
+        assertFalse(f1.isCollected());
+        assertTrue(f2.isCollected());
+        assertFalse(f3.isCollected());
+    }
+
+    @Test
+    public void collectingAllFishMarksAllAsCollected() {
+        Fish f1 = new Fish(100f, 100f, true);
+        Fish f2 = new Fish(200f, 200f, true);
+        Fish f3 = new Fish(300f, 300f, true);
+
+        f1.collect();
+        f2.collect();
+        f3.collect();
+
+        assertTrue(f1.isCollected());
+        assertTrue(f2.isCollected());
+        assertTrue(f3.isCollected());
+    }
+
+    @Test
+    public void fishCollectionOrderDoesNotMatter() {
+        Fish f1 = new Fish(0f, 0f, true);
+        Fish f2 = new Fish(50f, 50f, true);
+
+        // Collect second before first
+        f2.collect();
+        assertFalse(f1.isCollected());
+        assertTrue(f2.isCollected());
+
+        f1.collect();
+        assertTrue(f1.isCollected());
+        assertTrue(f2.isCollected());
+    }
 }

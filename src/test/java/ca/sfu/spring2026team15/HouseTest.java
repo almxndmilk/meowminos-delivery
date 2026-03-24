@@ -99,4 +99,60 @@ public class HouseTest {
         House house = new House(X, Y, null);
         assertFalse(house.isPlayerInRange(X + ORDER_RADIUS + 50f, Y));
     }
+
+    // --- getOrderTimeRemaining() ---
+
+    @Test
+    public void getOrderTimeRemainingStartsAt10() {
+        House house = new House(X, Y, null);
+        house.update(15f); // spawn order, orderTimer resets to 0
+        // orderTimeRemaining = ORDER_DURATION - orderTimer = 10 - 0 = 10
+        assertEquals(10f, house.getOrderTimeRemaining(), 0.01f);
+    }
+
+    @Test
+    public void getOrderTimeRemainingDecreasesAfterUpdate() {
+        House house = new House(X, Y, null);
+        house.update(15f); // spawn order
+        house.update(3f);  // orderTimer = 3
+        // orderTimeRemaining = 10 - 3 = 7
+        assertEquals(7f, house.getOrderTimeRemaining(), 0.01f);
+    }
+
+    @Test
+    public void getOrderTimeRemainingApproachesZero() {
+        House house = new House(X, Y, null);
+        house.update(15f); // spawn order
+        house.update(9.5f); // orderTimer = 9.5
+        assertEquals(0.5f, house.getOrderTimeRemaining(), 0.01f);
+    }
+
+    // --- getOrderDuration() ---
+
+    @Test
+    public void getOrderDurationReturns10() {
+        House house = new House(X, Y, null);
+        assertEquals(10f, house.getOrderDuration(), 0.01f);
+    }
+
+    // --- getX() and getY() accessors ---
+
+    @Test
+    public void getXReturnsConstructorX() {
+        House house = new House(X, Y, null);
+        assertEquals(X, house.getX(), 0.01f);
+    }
+
+    @Test
+    public void getYReturnsConstructorY() {
+        House house = new House(X, Y, null);
+        assertEquals(Y, house.getY(), 0.01f);
+    }
+
+    @Test
+    public void getXAndGetYWithDifferentValues() {
+        House house = new House(123f, 456f, null);
+        assertEquals(123f, house.getX(), 0.01f);
+        assertEquals(456f, house.getY(), 0.01f);
+    }
 }

@@ -135,4 +135,128 @@ public class PoliceEnemyTest extends GdxTestSetup {
         // Normal CHASE_SPEED=250; should move ~200 units toward player in 1s
         assertTrue(moved > 100f);
     }
+
+    // --- Additional resetToSpawn tests ---
+
+    @Test
+    public void resetToSpawnAfterChasing() {
+        // Use makePolice to avoid random wander direction
+        PoliceEnemy p = makePolice(100f, 100f);
+        setEnumField(p, "alertState", "CHASING");
+        float playerX = 200f, playerY = 100f;
+        // Chase toward player
+        p.update(1.0f, playerX, playerY, OPEN);
+        // Police has moved toward player
+        assertTrue(p.getCenterX() > 100f);
+        // Reset
+        p.resetToSpawn();
+        assertEquals(100f, p.getCenterX(), 0.01f);
+        assertEquals(100f, p.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void resetToSpawnMultipleTimes() {
+        PoliceEnemy p = new PoliceEnemy(300f, 400f, true);
+        p.update(0.1f, 350f, 400f, OPEN);
+        p.resetToSpawn();
+        assertEquals(300f, p.getCenterX(), 0.01f);
+        p.update(0.1f, 350f, 400f, OPEN);
+        p.resetToSpawn();
+        assertEquals(300f, p.getCenterX(), 0.01f);
+        assertEquals(400f, p.getCenterY(), 0.01f);
+    }
+
+    // --- setChaseSpeed and setWanderSpeed ---
+
+    @Test
+    public void setWanderSpeedAffectsWandering() {
+        PoliceEnemy p = makePolice(500f, 500f);
+        p.setWanderSpeed(200f);
+        setEnumField(p, "alertState", "NONE");
+        float xBefore = p.getCenterX();
+        float yBefore = p.getCenterY();
+        // Update with player far away to stay in NONE/wander
+        p.update(1f, 5000f, 5000f, OPEN);
+        float dx = p.getCenterX() - xBefore;
+        float dy = p.getCenterY() - yBefore;
+        float totalMoved = (float) Math.sqrt(dx * dx + dy * dy);
+        // Should have wandered at 200 speed for 1s
+        assertTrue(totalMoved > 50f);
+    }
+
+    @Test
+    public void setChaseSpeedToZeroPreventsMovement() {
+        PoliceEnemy p = makePolice(500f, 500f);
+        p.setChaseSpeed(0f);
+        setEnumField(p, "alertState", "CHASING");
+        float xBefore = p.getCenterX();
+        float yBefore = p.getCenterY();
+        p.update(1f, 700f, 500f, OPEN);
+        assertEquals(xBefore, p.getCenterX(), 0.01f);
+        assertEquals(yBefore, p.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void resetSpeedRestoresWanderSpeed() {
+        PoliceEnemy p = makePolice(500f, 500f);
+        p.setWanderSpeed(0f);
+        p.resetSpeed();
+        setEnumField(p, "alertState", "NONE");
+        float xBefore = p.getCenterX();
+        float yBefore = p.getCenterY();
+        p.update(1f, 5000f, 5000f, OPEN);
+        float dx = p.getCenterX() - xBefore;
+        float dy = p.getCenterY() - yBefore;
+        float totalMoved = (float) Math.sqrt(dx * dx + dy * dy);
+        // Default WANDER_SPEED=80, so should move ~80 units
+        assertTrue(totalMoved > 30f);
+    }
+
+    // --- setPosition resets alert state ---
+
+    @Test
+    public void setPositionUpdatesCoordinates() {
+        PoliceEnemy p = new PoliceEnemy(100f, 100f, true);
+        p.setPosition(999f, 888f);
+        assertEquals(999f, p.getCenterX(), 0.01f);
+        assertEquals(888f, p.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void setPositionResetsAlertStateFromChasing() {
+        PoliceEnemy p = new PoliceEnemy(500f, 500f, true);
+        float playerX = 600f, playerY = 500f;
+        // Get into CHASING state
+        p.update(1.5f, playerX, playerY, OPEN);
+        // Now setPosition — should reset to NONE
+        p.setPosition(100f, 100f);
+        // After setPosition, police should not be catching even if player is close
+        assertFalse(p.isCatching(100f, 100f));
+    }
+
+    @Test
+    public void setPositionResetsAlertStateFromAlerted() {
+        PoliceEnemy p = new PoliceEnemy(500f, 500f, true);
+        float playerX = 600f, playerY = 500f;
+        // Get into ALERTED state (update < 1s)
+        p.update(0.5f, playerX, playerY, OPEN);
+        // Now setPosition
+        p.setPosition(100f, 100f);
+        // Police should be in NONE state — won't catch
+        assertFalse(p.isCatching(100f, 100f));
+    }
+
+    @Test
+    public void setPositionThenUpdateDoesNotImmediatelyChase() {
+        PoliceEnemy p = new PoliceEnemy(500f, 500f, true);
+        float playerX = 600f, playerY = 500f;
+        // Get into CHASING
+        p.update(1.5f, playerX, playerY, OPEN);
+        // Teleport away and reset state
+        p.setPosition(1000f, 1000f);
+        // Update with player nearby — should start fresh from NONE
+        p.update(0.1f, 1050f, 1000f, OPEN);
+        // Not enough time to go through ALERTED -> CHASING
+        assertFalse(p.isCatching(1050f, 1000f));
+    }
 }
