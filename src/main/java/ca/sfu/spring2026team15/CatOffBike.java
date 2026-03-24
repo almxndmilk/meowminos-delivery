@@ -46,6 +46,13 @@ public class CatOffBike {
         position = new Vector2(startX, startY);
     }
 
+    public CatOffBike(float startX, float startY, boolean testing) {
+        position = new Vector2(startX, startY);
+        left1 = null; left2 = null;
+        up1 = null; up2 = null; up3 = null;
+        down1 = null; down2 = null; down3 = null;
+    }
+
     public void update(float delta, BarrierLookup lookup) {
         isMoving = false;
 
