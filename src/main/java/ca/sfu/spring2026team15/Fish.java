@@ -17,6 +17,11 @@ public class Fish {
         position = new Vector2(x, y);
     }
 
+    public Fish(float x, float y, boolean testing) {
+        texture = null;
+        position = new Vector2(x, y);
+    }
+
     public void render(SpriteBatch batch) {
         if (collected) return;
         float drawX = position.x - SIZE / 2f;

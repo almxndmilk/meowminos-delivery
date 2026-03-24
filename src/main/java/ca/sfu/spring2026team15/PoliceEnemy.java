@@ -68,6 +68,17 @@ public class PoliceEnemy {
         position = new Vector2(spawnX, spawnY);
     }
 
+    public PoliceEnemy(float spawnX, float spawnY, boolean testing) {
+        side1 = null; side2 = null;
+        back1 = null; back2 = null;
+        front1 = null; front2 = null;
+        exclamation = null; question = null;
+        heySound = null;
+        this.spawnX = spawnX;
+        this.spawnY = spawnY;
+        position = new Vector2(spawnX, spawnY);
+    }
+
     public void setChaseSpeed(float speed) { this.VAR_CHASE_SPEED = speed; }
     public void setWanderSpeed(float speed) { this.VAR_WANDER_SPEED = speed; }
     public void resetSpeed() { this.VAR_CHASE_SPEED = CHASE_SPEED; this.VAR_WANDER_SPEED = WANDER_SPEED; }

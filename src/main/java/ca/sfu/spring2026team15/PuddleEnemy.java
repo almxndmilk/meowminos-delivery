@@ -16,6 +16,11 @@ public class PuddleEnemy {
         position = new Vector2(spawnX, spawnY);
     }
 
+    public PuddleEnemy(float spawnX, float spawnY, boolean testing) {
+        puddle = null;
+        position = new Vector2(spawnX, spawnY);
+    }
+
     public void render(SpriteBatch batch) {
         float x = position.x - SIZE / 2f;
         float y = position.y - SIZE / 2f;
