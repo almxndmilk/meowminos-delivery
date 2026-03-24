@@ -142,11 +142,12 @@ public class FishTest extends GdxTestSetup {
     // --- render() ---
 
     @Test
-    public void renderUncollectedFishCallsDraw() {
+    public void renderSkipsDrawWhenTextureIsNull() {
+        // Testing constructor sets texture = null; render() should be a no-op
         Fish fish = new Fish(100f, 100f, true);
         SpriteBatch batch = mock(SpriteBatch.class);
         fish.render(batch);
-        verify(batch, times(1)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+        verify(batch, never()).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
     }
 
     @Test

@@ -23,7 +23,7 @@ public class Fish {
     }
 
     public void render(SpriteBatch batch) {
-        if (collected) return;
+        if (collected || texture == null) return;
         float drawX = position.x - SIZE / 2f;
         float drawY = position.y - SIZE / 2f;
         batch.draw(texture, drawX, drawY, SIZE, SIZE);
@@ -36,6 +36,6 @@ public class Fish {
     public float getCenterY() { return position.y; }
 
     public void dispose() {
-        texture.dispose();
+        if (texture != null) texture.dispose();
     }
 }

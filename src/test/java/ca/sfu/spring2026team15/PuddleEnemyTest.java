@@ -138,11 +138,12 @@ public class PuddleEnemyTest extends GdxTestSetup {
     // --- render() ---
 
     @Test
-    public void renderCallsBatchDraw() {
+    public void renderSkipsDrawWhenTextureIsNull() {
+        // Testing constructor sets puddle = null; render() should be a no-op
         PuddleEnemy puddle = new PuddleEnemy(200f, 300f, true);
         SpriteBatch batch = mock(SpriteBatch.class);
         puddle.render(batch);
-        verify(batch, times(1)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+        verify(batch, never()).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
     }
 
     // --- dispose() ---

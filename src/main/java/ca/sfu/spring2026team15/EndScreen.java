@@ -69,37 +69,22 @@ public class EndScreen implements Screen {
             digits[i] = new Texture(Gdx.files.internal("End/" + i + ".png"));
         }
 
-        // Load and play background music
-        if (SettingsScreen.soundOn) {
-            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
-            backgroundMusic.setLooping(true);
-            backgroundMusic.setVolume(0.5f);
-            backgroundMusic.play();
-            
-            // Play yipee sound if came from ObamaScreen
-            if (fromObamaScene) {
-                yipeeSound = Gdx.audio.newMusic(Gdx.files.internal("Obama/yipee.mp3"));
-                yipeeSound.setVolume(0.8f);
-                yipeeSound.play();
-            }
-            else{
-                doowopSound = Gdx.audio.newMusic(Gdx.files.internal("audio/boowop.mp3"));
-                doowopSound.setVolume(1.5f);
-                doowopSound.play();
-            }
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(0.5f);
+
+        if (fromObamaScene) {
+            yipeeSound = Gdx.audio.newMusic(Gdx.files.internal("Obama/yipee.mp3"));
+            yipeeSound.setVolume(0.8f);
+        } else {
+            doowopSound = Gdx.audio.newMusic(Gdx.files.internal("audio/boowop.mp3"));
+            doowopSound.setVolume(1.5f);
         }
-        else{
-            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
-            backgroundMusic.setLooping(true);
-            backgroundMusic.setVolume(0.5f);
-            
-            // Load yipee sound even if sound is off (for consistency)
-            if (fromObamaScene) {
-                yipeeSound = Gdx.audio.newMusic(Gdx.files.internal("Obama/yipee.mp3"));
-            }
-            else{
-                doowopSound = Gdx.audio.newMusic(Gdx.files.internal("audio/boowop.mp3"));
-            }
+
+        if (SettingsScreen.soundOn) {
+            backgroundMusic.play();
+            if (yipeeSound != null) yipeeSound.play();
+            if (doowopSound != null) doowopSound.play();
         }
     }
 
@@ -163,12 +148,9 @@ public class EndScreen implements Screen {
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {
-        if (backgroundMusic != null) {
-            backgroundMusic.stop();
-        }
-        if (yipeeSound != null) {
-            yipeeSound.stop();
-        }
+        if (backgroundMusic != null) backgroundMusic.stop();
+        if (yipeeSound != null) yipeeSound.stop();
+        if (doowopSound != null) doowopSound.stop();
     }
 
     @Override
@@ -177,12 +159,9 @@ public class EndScreen implements Screen {
         for (Texture t : digits) {
             t.dispose();
         }
-        if (backgroundMusic != null) {
-            backgroundMusic.dispose();
-        }
-        if (yipeeSound != null) {
-            yipeeSound.dispose();
-        }
+        if (backgroundMusic != null) backgroundMusic.dispose();
+        if (yipeeSound != null) yipeeSound.dispose();
+        if (doowopSound != null) doowopSound.dispose();
         batch.dispose();
     }
 }
