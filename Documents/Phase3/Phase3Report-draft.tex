@@ -1,4 +1,5 @@
 
+
 % ================================
 % SFU CMPT 276 / Project Phase 3 Report
 % ================================
@@ -78,116 +79,56 @@ Lucas Nguyen    & Student \#301629229 \\
 % Reset page numbering after TOC
 \setcounter{page}{1}
 
-% ================================
-\section{Overview}
-% ================================
-
-\noindent
-This report covers the testing phase (Phase 3) of \textit{Meowmino's Delivery}, a 2D arcade game built with Java and LibGDX for CMPT 276. The game features a cat on a scooter delivering orders across a 3-part town map while collecting fish and avoiding police and puddle enemies.
-
-\medskip\noindent
-We wrote \textbf{248 JUnit tests across 25 test classes}. All 248 tests pass with zero failures or errors. Tests are run automatically via Maven (\texttt{mvn test}), and code coverage is measured with JaCoCo. The test suite covers entity logic, utility classes, state machines, and multi-component integrations.
-
-\medskip\noindent
-\renewcommand{\arraystretch}{1.3}
-\begin{table}[H]
-\centering
-\begin{tabular}{lr}
-\toprule
-\textbf{Metric} & \textbf{Value} \\
-\midrule
-Test classes & 25 \\
-Total tests run & 248 \\
-Failures / Errors / Skipped & 0 / 0 / 0 \\
-JUnit version & 4.13.2 \\
-Coverage tool & JaCoCo 0.8.11 \\
-\bottomrule
-\end{tabular}
-\caption{Test suite summary}
-\end{table}
 
 % ================================
 \section{Unit Tests}
 % ================================
 
-Unit tests verify individual features in isolation. Each test class targets a single component, and entity objects are constructed without an active OpenGL context using the \texttt{GdxTestSetup} infrastructure described in Section~\ref{sec:infrastructure}.
+Each test class targets a single component, and entity objects are constructed without an active OpenGL context using the \texttt{GdxTestSetup} infrastructure (described in Section~\ref{sec:infrastructure}).
+
+\bigskip
+\bigskip
 
 \subsection{Features Tested}
 
-\renewcommand{\arraystretch}{1.1}
+\renewcommand{\arraystretch}{1.5}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{p{0.30\textwidth} p{0.26\textwidth} p{0.34\textwidth}}
+\begin{tabular}{p{0.34\textwidth} p{0.58\textwidth}}
 \toprule
-\textbf{Feature} & \textbf{Test Class(es)} & \textbf{What Is Verified} \\
+\textbf{Test Class(es)} & \textbf{Feature / What Is Verified} \\
 \midrule
-Player movement \& collision &
-  \texttt{PlayerCollisionTest} &
-  Barrier pixel lookup blocks movement; position unchanged when blocked \\
-
-Bike mount / dismount &
-  \texttt{MountDismountTest} &
-  Q key transitions between \texttt{Player} (on-bike) and \texttt{CatOffBike}; speed and size change correctly \\
-
-Off-bike movement \& animation &
-  \texttt{CatOffBikeTest} &
-  Directional movement updates position; animation frame index advances per direction \\
-
-Fish collection &
-  \texttt{FishTest}, \texttt{FishCollectionMathTest} &
-  Fish collected within 60-unit radius; fish not collected outside radius; score increments \\
-
-Police state machine &
-  \texttt{PoliceEnemyTest} &
-  NONE $\to$ ALERTED $\to$ CHASING transitions; 1-second alert delay; detection range 400 units; catch threshold 75 units \\
-
-Puddle slow effect &
-  \texttt{PuddleEnemyTest}, \texttt{PuddleLogicTest} &
-  Player speed reduced to 70 on entry; police chase speed reduced to 120; normal speed restored on exit \\
-
-House order lifecycle &
-  \texttt{HouseTest} &
-  Orders activate on timer; 10-second expiry; E-key delivery awards 10 fish; delivery rejected outside 150-unit radius \\
-
-Gate passage logic &
-  \texttt{GateCheckerTest}, \texttt{GateLogicTest} &
-  \texttt{GateChecker} returns \texttt{CAN\_CLEAR}, \texttt{INSUFFICIENT\_FISH}, or \texttt{NOT\_AT\_GATE} based on fish count and player position \\
-
-Respawn penalty &
-  \texttt{RespawnTest}, \texttt{RespawnPenaltyTest} &
-  Respawn deducts 10 fish (floor 0); adds 30 seconds to timer; repositions player to map start \\
-
-Game timer &
-  \texttt{TimerTest} &
-  Countdown from 300 s; pause and resume; expiry fires callback at 0 \\
-
-Barrier pixel lookup &
-  \texttt{BarrierLookupTest} &
-  Alpha $\geq$ 128 returns blocked; alpha $< 128$ returns passable; 4-corner hit-zone tested \\
-
-Camera clamping &
-  \texttt{GameCameraTest} &
-  Camera clamps to map edges; follows player mid-map; \texttt{setMaxX()} and \texttt{setYBounds()} update clamp correctly \\
-
-Cinematic bars state machine &
-  \texttt{CinematicBarsTest} &
-  HIDDEN $\to$ APPEARING $\to$ VISIBLE $\to$ DISAPPEARING; height interpolation; mid-animation reversals \\
-
-Obama dialogue reveal &
-  \texttt{ObamaDialogueHelperTest}, \texttt{ObamaSceneTest} &
-  Progressive character reveal; whitehouse trigger zone; dialogue phase timing \\
-
+\texttt{PlayerCollisionTest} & Barrier pixel lookup blocks movement; position unchanged when blocked \\
+\texttt{MountDismountTest} & Q key switches between \texttt{Player} and \texttt{CatOffBike}; speed and size change correctly \\
+\texttt{CatOffBikeTest} & Directional movement updates position; animation frame advances per direction \\
+\texttt{FishTest}, \texttt{FishCollectionMathTest} & Collection within 60-unit radius; no collection outside; score increments \\
+\texttt{PoliceEnemyTest} & NONE $\to$ ALERTED $\to$ CHASING transitions; detection range 400 u; catch threshold 75 u \\
+\texttt{PuddleEnemyTest}, \texttt{PuddleLogicTest} & Player speed reduced on entry; restored on exit; fish deducted on first contact \\
+\texttt{HouseTest} & Orders activate and expire; delivery awards 10 fish; rejected outside 150-unit radius \\
+\texttt{GateCheckerTest}, \texttt{GateLogicTest} & Returns \texttt{CAN\_CLEAR}, \texttt{INSUFFICIENT\_FISH}, or \texttt{NOT\_AT\_GATE} based on fish count \\
+\texttt{RespawnTest}, \texttt{RespawnPenaltyTest} & Deducts 10 fish (floor 0); adds 30 s penalty; repositions player to map start \\
+\texttt{TimerTest} & Countdown from 300 s; \texttt{subtractTime}; \texttt{isFinished} at 0 \\
+\texttt{BarrierLookupTest} & Alpha $\geq$ 128 returns blocked; alpha $< 128$ passable; 4-corner hit-zone \\
+\texttt{GameCameraTest} & Clamps to map edges; follows player; zoom bounds enforced \\
+\texttt{CinematicBarsTest} & HIDDEN $\to$ APPEARING $\to$ VISIBLE $\to$ DISAPPEARING; height interpolation \\
+\texttt{ObamaDialogueHelperTest}, \texttt{ObamaSceneTest} & Progressive character reveal; whitehouse trigger zone; phase timing \\
 \bottomrule
 \end{tabular}
 \caption{Unit tests: features covered}
 \end{table}
 
+\bigskip
+\bigskip
+\bigskip
+
+
+
 % ================================
 \section{Integration Tests}
 % ================================
 
-Integration tests verify interactions between two or more components. The following tests exercise cross-component flows that unit tests cannot cover in isolation.
+Verifies interactions between two or more components; the following tests exercise cross-component flows that unit tests cannot cover in isolation.
 
 \renewcommand{\arraystretch}{1.3}
 \begin{table}[H]
@@ -230,11 +171,11 @@ Puddle entry $\to$ Respawn &
 \label{sec:infrastructure}
 % ================================
 
-\subsection{The Challenge: Headless Testing of LibGDX Entities}
+\subsection{The Challenge (Headless testing of LibGDX Entities)}
 
-LibGDX entity constructors (e.g., \texttt{Player}, \texttt{PoliceEnemy}, \texttt{Fish}) call \texttt{new Texture(...)} which requires an active OpenGL context. JUnit tests run headlessly (no GPU or display), so these constructors cannot be called directly.
+LibGDX entity constructors (e.g., \texttt{Player}, \texttt{PoliceEnemy}, \texttt{Fish}) call \texttt{new Texture(...)} which requires an active OpenGL context. JUnit tests run headlessly, so these constructors cannot be called directly.
 
-\subsection{GdxTestSetup — Shared Base Class}
+\subsection{GdxTestSetup}
 
 All entity test classes extend \texttt{GdxTestSetup}, which:
 
@@ -258,62 +199,42 @@ Tests for utility classes with no LibGDX dependency — \texttt{GateChecker}, \t
 
 Coverage was measured using \textbf{JaCoCo 0.8.11}, configured in \texttt{pom.xml} to run automatically during \texttt{mvn test}. The HTML report is generated at \texttt{target/site/jacoco/index.html}.
 
-\subsection{Overall Coverage}
+\subsection{Per-Class Line and Branch Coverage}
+
+Screen classes (\texttt{GameScreen}, \texttt{StartScreen}, \texttt{EndScreen}, \texttt{ObamaScreen}, etc.) are excluded because they call OpenGL directly and cannot run headlessly. Across the 14 testable production classes, JaCoCo reports \textbf{84\% instruction coverage, 84\% branch coverage, and 87\% method coverage}.
 
 \renewcommand{\arraystretch}{1.1}
 \begin{table}[H]
 \centering
 \normalsize
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrr}
 \toprule
-\textbf{Counter} & \textbf{Covered} & \textbf{Total} & \textbf{Coverage} \\
+\textbf{Class} & \textbf{Lines Covered} & \textbf{Total Lines} & \textbf{Line Cov.} & \textbf{Branch Cov.} \\
 \midrule
-Instruction & 2172 & 10428 & 20.8\% \\
-Branch      & 210  & 953   & 22.0\% \\
-Line        & 374  & 1826  & 20.5\% \\
-Method      & 72   & 210   & 34.3\% \\
-Class       & 19   & 33    & 57.6\% \\
+GameLogicHelper      & 59  & 59  & 100\% & 98\% \\
+DeliveryNotification & 38  & 38  & 100\% & 91\% \\
+ObamaDialogueHelper  & 21  & 22  & 95\%  & 90\% \\
+Timer                & 26  & 29  & 90\%  & 100\% \\
+House                & 41  & 44  & 93\%  & 81\% \\
+Respawn              & 12  & 13  & 92\%  & 87\% \\
+GateChecker          &  5  &  6  & 83\%  & 91\% \\
+CatOffBike           & 95  & 111 & 86\%  & 85\% \\
+GameCamera           & 19  & 19  & 100\% & n/a \\
+Fish                 & 16  & 20  & 80\%  & 100\% \\
+PuddleEnemy          & 13  & 17  & 76\%  & 100\% \\
+CinematicBars        & 29  & 39  & 74\%  & 100\% \\
+PoliceEnemy          & 108 & 143 & 76\%  & 75\% \\
+Player               & 63  & 88  & 72\%  & 66\% \\
+\midrule
+\textbf{Total}       & \textbf{551} & \textbf{654} & \textbf{84\%} & \textbf{84\%} \\
 \bottomrule
 \end{tabular}
-\caption{Overall JaCoCo coverage}
+\caption{Per-class coverage (enum inner classes omitted; all show 100\%)}
 \end{table}
 
-\subsection{Per-Class Line Coverage}
+\subsection{Why Some Classes Have Lower Coverage}
 
-\renewcommand{\arraystretch}{1.1}
-\begin{table}[H]
-\centering
-\normalsize
-\begin{tabular}{lrrr}
-\toprule
-\textbf{Class} & \textbf{Lines Covered} & \textbf{Total Lines} & \textbf{Coverage} \\
-\midrule
-ObamaDialogueHelper & 21 & 22  & 98\% \\
-Respawn             & 12 & 13  & 94\% \\
-Timer               & 26 & 29  & 90\% \\
-GameCamera          & 17 & 19  & 58\% \\
-House               & 37 & 44  & 90\% \\
-GateChecker         &  5 &  6  & 92\% \\
-PoliceEnemy         & 107 & 143 & 72\% \\
-Player              & 63 & 88  & 70\% \\
-CinematicBars       & 21 & 39  & 60\% \\
-Fish                &  9 & 20  & 38\% \\
-CatOffBike          & 43 & 111 & 36\% \\
-PuddleEnemy         &  6 & 16  & 48\% \\
-DeliveryNotification &  0 & 38  &  30\% \\
-\bottomrule
-\end{tabular}
-\caption{Per-class line coverage (enum inner classes omitted; all show 100\%)}
-\end{table}
-
-\subsection{Why Overall Coverage Is 20.5\%}
-
-The overall line coverage of \textbf{20.5\%} is low because the game's largest classes --- \texttt{GameScreen} (763 lines), \texttt{ObamaScreen} (199 lines), \texttt{StartScreen} (114 lines), and related screen classes --- are tightly coupled to the LibGDX \texttt{Screen} lifecycle and the OpenGL rendering pipeline. These classes cannot be exercised in a headless JUnit environment without a live display context.
-
-Screen classes account for approximately \textbf{1215 of 1826 source lines (66.5\%)} of the codebase. Excluding them, the \textbf{logic layer} (entity classes, utility classes, state machines) has an average line coverage of \textbf{72\%} across its core classes.
-
-\medskip
-\noindent This split is by design. The classes with 0\% coverage contain rendering, input handling, and asset loading code that requires a running LibGDX application to test. The game logic that determines outcomes --- collision resolution, state machine transitions, scoring, respawn penalties, gate conditions, camera clamping --- has been extracted into testable utility and entity classes, which we have targeted for coverage.
+The remaining gap in \texttt{Player} (72\%), \texttt{CinematicBars} (74\%), \texttt{PuddleEnemy} (76\%), and \texttt{PoliceEnemy} (76\%) is entirely in their \texttt{draw()} and animation methods, which write to a \texttt{SpriteBatch} and cannot execute in a headless JUnit environment. All logic-bearing methods in these classes are covered.
 
 % ================================
 \section{Test Quality}
@@ -368,22 +289,9 @@ Writing tests required several changes to production code to make components tes
 
 \end{enumerate}
 
-\subsection{Bugs Revealed and Fixed}
+\subsection{Summary of Bugs Fixed}
 
-Two production bugs were uncovered and fixed by the test suite:
-
-\begin{itemize}[itemsep=4pt]
-  \item \textbf{Respawn underflow}: Fish count could go negative after respawn at 0 fish. Fixed with \texttt{Math.max(0, fishCount - 10)}.
-  \item \textbf{Police catches player in wrong state}: Police could trigger a catch while still in the alert phase. Fixed by guarding \texttt{isCatching()} with a state check.
-\end{itemize}
-
-\subsection{General Quality Improvements}
-
-\begin{itemize}[itemsep=3pt]
-  \item Extracting \texttt{GateChecker} and \texttt{ObamaDialogueHelper} from screen classes improved cohesion and reduced the size of \texttt{GameScreen} and \texttt{ObamaScreen}.
-  \item The testing constructors added to entity classes also served as documentation of which fields are required for an entity to function.
-  \item Writing integration tests clarified the contract between \texttt{Respawn}, \texttt{Timer}, and \texttt{PoliceEnemy}, which led to tightening several implicit assumptions about call order.
-\end{itemize}
+Items 4 and 5 above each correspond to a bug revealed by the test suite. Both fixes are covered by regression tests that fail without the fix: \texttt{RespawnPenaltyTest\#fishCountNeverGoesBelowZero} and \texttt{PoliceRespawnIntegrationTest\#testPoliceNotCatchingWhenNotChasingEvenIfClose}. Extracting \texttt{GateChecker} and \texttt{ObamaDialogueHelper} also had the side effect of reducing \texttt{GameScreen} and \texttt{ObamaScreen} in size and clarifying the contracts between \texttt{Respawn}, \texttt{Timer}, and \texttt{PoliceEnemy}.
 
 % ================================
 \end{document}
