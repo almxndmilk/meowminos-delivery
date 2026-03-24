@@ -7,6 +7,13 @@ Kaushik, Krish,	kka182@sfu.ca
 Muntaseer, Tanveer,	tma123@sfu.ca  
 Nguyen, Lucas,	qdn@sfu.ca  
 
+## Testing
+Run all tests:
+mvn test
+
+Coverage report is generated at:
+target/site/jacoco/index.html
+
 ---
 
 
