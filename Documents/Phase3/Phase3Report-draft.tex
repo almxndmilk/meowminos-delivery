@@ -114,10 +114,11 @@ Unit tests verify individual features in isolation. Each test class targets a si
 
 \subsection{Features Tested}
 
-\renewcommand{\arraystretch}{1.3}
+\renewcommand{\arraystretch}{1.1}
 \begin{table}[H]
 \centering
-\begin{tabular}{p{0.32\textwidth} p{0.28\textwidth} p{0.30\textwidth}}
+\footnotesize
+\begin{tabular}{p{0.30\textwidth} p{0.26\textwidth} p{0.34\textwidth}}
 \toprule
 \textbf{Feature} & \textbf{Test Class(es)} & \textbf{What Is Verified} \\
 \midrule
@@ -125,67 +126,54 @@ Player movement \& collision &
   \texttt{PlayerCollisionTest} &
   Barrier pixel lookup blocks movement; position unchanged when blocked \\
 
-\addlinespace
 Bike mount / dismount &
   \texttt{MountDismountTest} &
   Q key transitions between \texttt{Player} (on-bike) and \texttt{CatOffBike}; speed and size change correctly \\
 
-\addlinespace
 Off-bike movement \& animation &
   \texttt{CatOffBikeTest} &
   Directional movement updates position; animation frame index advances per direction \\
 
-\addlinespace
 Fish collection &
   \texttt{FishTest}, \texttt{FishCollectionMathTest} &
   Fish collected within 60-unit radius; fish not collected outside radius; score increments \\
 
-\addlinespace
 Police state machine &
   \texttt{PoliceEnemyTest} &
   NONE $\to$ ALERTED $\to$ CHASING transitions; 1-second alert delay; detection range 400 units; catch threshold 75 units \\
 
-\addlinespace
 Puddle slow effect &
   \texttt{PuddleEnemyTest}, \texttt{PuddleLogicTest} &
   Player speed reduced to 70 on entry; police chase speed reduced to 120; normal speed restored on exit \\
 
-\addlinespace
 House order lifecycle &
   \texttt{HouseTest} &
   Orders activate on timer; 10-second expiry; E-key delivery awards 10 fish; delivery rejected outside 150-unit radius \\
 
-\addlinespace
 Gate passage logic &
   \texttt{GateCheckerTest}, \texttt{GateLogicTest} &
   \texttt{GateChecker} returns \texttt{CAN\_CLEAR}, \texttt{INSUFFICIENT\_FISH}, or \texttt{NOT\_AT\_GATE} based on fish count and player position \\
 
-\addlinespace
 Respawn penalty &
   \texttt{RespawnTest}, \texttt{RespawnPenaltyTest} &
   Respawn deducts 10 fish (floor 0); adds 30 seconds to timer; repositions player to map start \\
 
-\addlinespace
 Game timer &
   \texttt{TimerTest} &
   Countdown from 300 s; pause and resume; expiry fires callback at 0 \\
 
-\addlinespace
 Barrier pixel lookup &
   \texttt{BarrierLookupTest} &
   Alpha $\geq$ 128 returns blocked; alpha $< 128$ returns passable; 4-corner hit-zone tested \\
 
-\addlinespace
 Camera clamping &
   \texttt{GameCameraTest} &
   Camera clamps to map edges; follows player mid-map; \texttt{setMaxX()} and \texttt{setYBounds()} update clamp correctly \\
 
-\addlinespace
 Cinematic bars state machine &
   \texttt{CinematicBarsTest} &
   HIDDEN $\to$ APPEARING $\to$ VISIBLE $\to$ DISAPPEARING; height interpolation; mid-animation reversals \\
 
-\addlinespace
 Obama dialogue reveal &
   \texttt{ObamaDialogueHelperTest}, \texttt{ObamaSceneTest} &
   Progressive character reveal; whitehouse trigger zone; dialogue phase timing \\
@@ -209,27 +197,27 @@ Integration tests verify interactions between two or more components. The follow
 \textbf{Interaction} & \textbf{Test Class} & \textbf{What Is Verified} \\
 \midrule
 Police catch $\to$ Respawn &
-  \texttt{PoliceRespawnIntegrationTest} &
+  \texttt{PoliceRespawnIntegrat\-ionTest} &
   When \texttt{PoliceEnemy.isCatching()} is true, \texttt{Respawn.respawn()} deducts 10 fish, adds 30 s, repositions player and all police. Multiple sequential respawns each apply the penalty independently. \\
 
 \addlinespace
 Delivery $\to$ Fish award &
-  \texttt{DeliveryFishIntegrationTest} &
+  \texttt{DeliveryFishIntegrati\-onTest} &
   Completing a delivery via \texttt{House.deliver()} increments the player fish count by 10 and marks the order as inactive. \\
 
 \addlinespace
 Respawn $\to$ Timer &
-  \texttt{RespawnTimerIntegrationTest} &
+  \texttt{RespawnTimerIntegrati\-onTest} &
   Calling \texttt{Respawn.respawn()} while the timer is running correctly adds 30 s to the remaining countdown without resetting it. \\
 
 \addlinespace
 Gate check $\to$ Fish count &
-  \texttt{GateFishIntegrationTest} &
+  \texttt{GateFishIntegrationT\-est} &
   \texttt{GateChecker} reads the live fish count from the player; reducing fish below the gate threshold changes the result from \texttt{CAN\_CLEAR} to \texttt{INSUFFICIENT\_FISH} on the next call. \\
 
 \addlinespace
 Puddle entry $\to$ Respawn &
-  \texttt{PuddleRespawnIntegrationTest} &
+  \texttt{PuddleRespawnIntegrat\-ionTest} &
   Entering a puddle deducts 1 fish; if that deduction causes fish to drop to 0, subsequent respawn correctly applies the penalty without underflowing below 0. \\
 
 \bottomrule
@@ -272,9 +260,10 @@ Coverage was measured using \textbf{JaCoCo 0.8.11}, configured in \texttt{pom.xm
 
 \subsection{Overall Coverage}
 
-\renewcommand{\arraystretch}{1.3}
+\renewcommand{\arraystretch}{1.1}
 \begin{table}[H]
 \centering
+\normalsize
 \begin{tabular}{lrrr}
 \toprule
 \textbf{Counter} & \textbf{Covered} & \textbf{Total} & \textbf{Coverage} \\
@@ -291,9 +280,10 @@ Class       & 19   & 33    & 57.6\% \\
 
 \subsection{Per-Class Line Coverage}
 
-\renewcommand{\arraystretch}{1.3}
+\renewcommand{\arraystretch}{1.1}
 \begin{table}[H]
 \centering
+\normalsize
 \begin{tabular}{lrrr}
 \toprule
 \textbf{Class} & \textbf{Lines Covered} & \textbf{Total Lines} & \textbf{Coverage} \\
