@@ -146,6 +146,43 @@ public class PuddleEnemyTest extends GdxTestSetup {
         verify(batch, never()).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
     }
 
+    @Test
+    public void renderDrawsWhenPuddleTextureNonNull() {
+        // Create puddle with testing constructor (null texture)
+        PuddleEnemy puddle = new PuddleEnemy(200f, 300f, true);
+        // Inject mock texture
+        Texture mockTex = mock(Texture.class);
+        setField(puddle, "puddle", mockTex);
+        // Call render with mock batch
+        SpriteBatch mockBatch = mock(SpriteBatch.class);
+        puddle.render(mockBatch);
+        // Verify batch.draw() was called with correct coordinates
+        // x = 200 - 50 = 150, y = 300 - 50 = 250, SIZE = 100
+        verify(mockBatch, times(1)).draw(mockTex, 150f, 250f, 100f, 100f);
+    }
+
+    @Test
+    public void renderDrawsCorrectCoordinatesAtOrigin() {
+        PuddleEnemy puddle = new PuddleEnemy(0f, 0f, true);
+        Texture mockTex = mock(Texture.class);
+        setField(puddle, "puddle", mockTex);
+        SpriteBatch mockBatch = mock(SpriteBatch.class);
+        puddle.render(mockBatch);
+        // x = 0 - 50 = -50, y = 0 - 50 = -50, SIZE = 100
+        verify(mockBatch, times(1)).draw(mockTex, -50f, -50f, 100f, 100f);
+    }
+
+    @Test
+    public void renderDrawsAtLargeCoordinates() {
+        PuddleEnemy puddle = new PuddleEnemy(1000f, 2000f, true);
+        Texture mockTex = mock(Texture.class);
+        setField(puddle, "puddle", mockTex);
+        SpriteBatch mockBatch = mock(SpriteBatch.class);
+        puddle.render(mockBatch);
+        // x = 1000 - 50 = 950, y = 2000 - 50 = 1950, SIZE = 100
+        verify(mockBatch, times(1)).draw(mockTex, 950f, 1950f, 100f, 100f);
+    }
+
     // --- dispose() ---
 
     @Test
@@ -155,5 +192,12 @@ public class PuddleEnemyTest extends GdxTestSetup {
         setField(puddle, "puddle", mockTex);
         puddle.dispose();
         verify(mockTex, times(1)).dispose();
+    }
+
+    @Test
+    public void disposeDoesNotThrowWhenPuddleIsNull() {
+        PuddleEnemy puddle = new PuddleEnemy(0f, 0f, true);
+        // puddle field is null from testing constructor — should not throw
+        puddle.dispose();
     }
 }

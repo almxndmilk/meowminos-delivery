@@ -34,6 +34,6 @@ public class PuddleEnemy {
     }
 
     public void dispose() {
-        puddle.dispose();
+        if (puddle != null) puddle.dispose();
     }
 }
