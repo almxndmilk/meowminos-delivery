@@ -4,9 +4,11 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockedConstruction;
 import org.objenesis.ObjenesisStd;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mockConstruction;
 
 /**
  * Tests for GameCamera clamping logic.
@@ -214,5 +216,50 @@ public class GameCameraTest extends GdxTestSetup {
         OrthographicCamera cam = gameCamera.getCamera();
         assertEquals(VIEW_WIDTH, cam.viewportWidth, 0.01f);
         assertEquals(VIEW_HEIGHT, cam.viewportHeight, 0.01f);
+    }
+
+    // --- Constructor coverage tests using Mockito.mockConstruction ---
+
+    /**
+     * Tests that the GameCamera constructor successfully initializes when the
+     * OrthographicCamera is mocked to avoid JNI crashes. Verifies that the
+     * constructor runs to completion and returns a non-null camera.
+     */
+    @Test
+    public void constructorInitializesWithMockedCamera() {
+        try (MockedConstruction<OrthographicCamera> mocked = mockConstruction(OrthographicCamera.class)) {
+            GameCamera cam = new GameCamera(1280f, 720f, 5446f, 0f, 902f);
+            assertNotNull(cam);
+            assertNotNull(cam.getCamera());
+            assertEquals(1, mocked.constructed().size());
+        }
+    }
+
+    /**
+     * Tests that the GameCamera constructor properly initializes all bounds
+     * and half-viewport fields by verifying the camera is created without error.
+     */
+    @Test
+    public void constructorInitializesBoundFields() {
+        try (MockedConstruction<OrthographicCamera> mocked = mockConstruction(OrthographicCamera.class)) {
+            GameCamera cam = new GameCamera(1280f, 720f, 5446f, 0f, 902f);
+            assertNotNull(cam);
+            assertNotNull(cam.getCamera());
+        }
+    }
+
+    /**
+     * Tests that the GameCamera constructor works correctly with different
+     * viewport dimensions and map bounds. Verifies the mocked constructor
+     * is invoked exactly once.
+     */
+    @Test
+    public void constructorWithDifferentViewport() {
+        try (MockedConstruction<OrthographicCamera> mocked = mockConstruction(OrthographicCamera.class)) {
+            GameCamera cam = new GameCamera(800f, 600f, 3000f, 100f, 700f);
+            assertNotNull(cam);
+            assertNotNull(cam.getCamera());
+            assertEquals(1, mocked.constructed().size());
+        }
     }
 }

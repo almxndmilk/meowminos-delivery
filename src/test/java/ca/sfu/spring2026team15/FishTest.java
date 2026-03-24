@@ -169,4 +169,77 @@ public class FishTest extends GdxTestSetup {
         fish.dispose();
         verify(mockTex, times(1)).dispose();
     }
+
+    @Test
+    public void disposeDoesNotThrowWhenTextureIsNull() {
+        // Testing constructor with true flag sets texture = null
+        // dispose() should handle null gracefully (if (texture != null) check)
+        Fish fish = new Fish(0f, 0f, true);
+        fish.dispose();
+        // If no exception is thrown, test passes
+    }
+
+    // --- render() with non-null texture ---
+
+    @Test
+    public void renderDrawsWhenTextureNonNullAndNotCollected() {
+        // Create a fish and inject a mock texture via setField
+        Fish fish = new Fish(100f, 200f, true);
+        Texture mockTex = mock(Texture.class);
+        setField(fish, "texture", mockTex);
+
+        SpriteBatch batch = mock(SpriteBatch.class);
+        fish.render(batch);
+
+        // Verify batch.draw() was called with correct coordinates
+        // drawX = centerX - SIZE/2 = 100 - 25 = 75
+        // drawY = centerY - SIZE/2 = 200 - 25 = 175
+        verify(batch, times(1)).draw(mockTex, 75f, 175f, 50f, 50f);
+    }
+
+    @Test
+    public void renderDrawsAtCorrectCoordinates() {
+        // Test with different coordinates to verify offset calculation
+        Fish fish = new Fish(300f, 400f, true);
+        Texture mockTex = mock(Texture.class);
+        setField(fish, "texture", mockTex);
+
+        SpriteBatch batch = mock(SpriteBatch.class);
+        fish.render(batch);
+
+        // drawX = 300 - 25 = 275
+        // drawY = 400 - 25 = 375
+        verify(batch, times(1)).draw(mockTex, 275f, 375f, 50f, 50f);
+    }
+
+    @Test
+    public void renderDrawsAtOrigin() {
+        // Test rendering at origin (0, 0)
+        Fish fish = new Fish(0f, 0f, true);
+        Texture mockTex = mock(Texture.class);
+        setField(fish, "texture", mockTex);
+
+        SpriteBatch batch = mock(SpriteBatch.class);
+        fish.render(batch);
+
+        // drawX = 0 - 25 = -25
+        // drawY = 0 - 25 = -25
+        verify(batch, times(1)).draw(mockTex, -25f, -25f, 50f, 50f);
+    }
+
+    @Test
+    public void renderDoesNotDrawAfterCollect() {
+        // Even with a non-null texture, collected fish should not draw
+        Fish fish = new Fish(100f, 100f, true);
+        Texture mockTex = mock(Texture.class);
+        setField(fish, "texture", mockTex);
+
+        fish.collect();
+
+        SpriteBatch batch = mock(SpriteBatch.class);
+        fish.render(batch);
+
+        // Verify draw was never called (collected flag takes precedence)
+        verify(batch, never()).draw(any(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
 }
