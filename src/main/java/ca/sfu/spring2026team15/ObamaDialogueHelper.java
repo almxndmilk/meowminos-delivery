@@ -17,6 +17,8 @@ public class ObamaDialogueHelper {
     /** Total fallback duration in seconds for the dialogue. */
     public static final float TALK_FALLBACK_DURATION = 10f;
 
+    private static final String[] DIALOGUE_WORDS = DIALOGUE.split(" ");
+
     /**
      * Returns how much of the dialogue should be visible based on elapsed time.
      *
@@ -24,7 +26,7 @@ public class ObamaDialogueHelper {
      * @return the partial dialogue string to display
      */
     public static String getProgressiveDialogue(float dialogueTimer) {
-        String[] words = DIALOGUE.split(" ");
+        String[] words = DIALOGUE_WORDS;
         float wordsPerSecond = words.length / TALK_FALLBACK_DURATION;
         int wordsToShow = Math.min(words.length, (int)(dialogueTimer * wordsPerSecond));
 
@@ -44,7 +46,7 @@ public class ObamaDialogueHelper {
      * @return word count
      */
     public static int getWordCount() {
-        return DIALOGUE.split(" ").length;
+        return DIALOGUE_WORDS.length;
     }
 
     /**
@@ -54,9 +56,8 @@ public class ObamaDialogueHelper {
      * @return number of words to show
      */
     public static int getWordsToShow(float dialogueTimer) {
-        String[] words = DIALOGUE.split(" ");
-        float wordsPerSecond = words.length / TALK_FALLBACK_DURATION;
-        return Math.min(words.length, (int)(dialogueTimer * wordsPerSecond));
+        float wordsPerSecond = DIALOGUE_WORDS.length / TALK_FALLBACK_DURATION;
+        return Math.min(DIALOGUE_WORDS.length, (int)(dialogueTimer * wordsPerSecond));
     }
 
     /**

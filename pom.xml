@@ -16,6 +16,7 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>11</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <gdx.version>1.12.1</gdx.version>
     </properties>
@@ -90,6 +91,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.2</version>
+                <configuration>
+                    <!-- -Djava.awt.headless=true allows tests to run on headless CI servers (Linux, GitHub Actions) -->
+                    <argLine>@{argLine} -Dnet.bytebuddy.experimental=true -Djava.awt.headless=true</argLine>
+                </configuration>
             </plugin>
 
             <!-- Compiler Plugin -->
@@ -141,6 +146,11 @@
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <includes>
+                                <include>ca/sfu/spring2026team15/*</include>
+                            </includes>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>report</id>
@@ -190,24 +200,14 @@
             </plugin>
 
             <!-- Exec Maven Plugin for running the game -->
-            <!-- Uses exec:exec (not exec:java) so a fresh JVM is spawned and
-                 -XstartOnFirstThread can be passed — exec:java runs inside the
-                 Maven JVM and cannot accept JVM flags at all. -->
+            <!-- Uses exec:exec (not exec:java) so a fresh JVM is spawned —
+                 exec:java runs inside the Maven JVM and cannot accept JVM flags.
+                 OS-specific JVM flags (e.g. -XstartOnFirstThread on macOS) are
+                 configured per-platform in the profiles below. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
-                <configuration>
-                    <executable>java</executable>
-                    <arguments>
-                        <!-- macOS: GLFW/LWJGL3 requires the OS main thread -->
-                        <argument>-XstartOnFirstThread</argument>
-                        <argument>-classpath</argument>
-                        <!-- expands to the full Maven dependency classpath -->
-                        <classpath/>
-                        <argument>ca.sfu.spring2026team15.GameLauncher</argument>
-                    </arguments>
-                </configuration>
             </plugin>
         </plugins>
     </build>

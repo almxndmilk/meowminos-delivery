@@ -167,17 +167,10 @@ public class StartScreen implements Screen {
         instructionBtnTexture = new Texture(Gdx.files.internal("StartScreen/instructionButton.PNG"));
         settingsBtnTexture    = new Texture(Gdx.files.internal("StartScreen/settingButton.PNG"));
 
-        // Load and play background music
-        if (SettingsScreen.soundOn) {
-            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
-            backgroundMusic.setLooping(true);
-            backgroundMusic.setVolume(0.5f);
-            backgroundMusic.play();
-        } else {
-            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
-            backgroundMusic.setLooping(true);
-            backgroundMusic.setVolume(0.5f);
-        }
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(0.5f);
+        if (SettingsScreen.soundOn) backgroundMusic.play();
 
         // audio
         startButtonSound = Gdx.audio.newSound(Gdx.files.internal("audio/startButton.mp3"));

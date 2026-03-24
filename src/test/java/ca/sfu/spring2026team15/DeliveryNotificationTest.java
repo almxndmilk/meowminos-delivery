@@ -1,9 +1,13 @@
 package ca.sfu.spring2026team15;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import org.junit.Test;
 import org.objenesis.ObjenesisStd;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for DeliveryNotification — slide animation, expiry, slot management.
@@ -106,5 +110,68 @@ public class DeliveryNotificationTest extends GdxTestSetup {
         assertEquals(1, notif.getSlotIndex());
         notif.setSlotIndex(2);
         assertEquals(2, notif.getSlotIndex());
+    }
+
+    // --- render() ---
+
+    @Test
+    public void renderWithOrderDrawsThreeTimes() {
+        // house has order, orderTimer=0 => progress=1.0 (gold branch, 3 draws)
+        House h = makeTestHouse(true);
+        setField(h, "orderTimer", 0f);
+        DeliveryNotification notif = new DeliveryNotification(h, null, 0);
+        notif.update(1f); // slidePosition → 1.0
+        SpriteBatch batch = mock(SpriteBatch.class);
+        notif.render(batch, null, 1280f, 720f, null);
+        verify(batch, times(3)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderWithoutOrderDrawsOnce() {
+        // house has no order → only ticket drawn (1 draw)
+        House h = makeTestHouse(false);
+        DeliveryNotification notif = new DeliveryNotification(h, null, 0);
+        notif.update(1f);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        notif.render(batch, null, 1280f, 720f, null);
+        verify(batch, times(1)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderSlideAtZeroStillDrawsTicket() {
+        // slidePosition=0 (not updated) — still draws ticket
+        House h = makeTestHouse(false);
+        DeliveryNotification notif = new DeliveryNotification(h, null, 0);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        notif.render(batch, null, 1280f, 720f, null);
+        verify(batch, times(1)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderLowProgressStillDrawsTimerBar() {
+        // orderTimer=9f → timeRemaining=1f → progress=0.1 < 0.25 (flash branch), still 3 draws
+        House h = makeTestHouse(true);
+        setField(h, "orderTimer", 9f);
+        DeliveryNotification notif = new DeliveryNotification(h, null, 0);
+        notif.update(1f);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        notif.render(batch, null, 1280f, 720f, null);
+        verify(batch, times(3)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderSlot1OffsetsDifferentlyFromSlot0() {
+        House h = makeTestHouse(false);
+        DeliveryNotification slot0 = new DeliveryNotification(h, null, 0);
+        DeliveryNotification slot1 = new DeliveryNotification(h, null, 1);
+        slot0.update(1f);
+        slot1.update(1f);
+        // Both should draw once without exception
+        SpriteBatch b0 = mock(SpriteBatch.class);
+        SpriteBatch b1 = mock(SpriteBatch.class);
+        slot0.render(b0, null, 1280f, 720f, null);
+        slot1.render(b1, null, 1280f, 720f, null);
+        verify(b0, times(1)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+        verify(b1, times(1)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
     }
 }

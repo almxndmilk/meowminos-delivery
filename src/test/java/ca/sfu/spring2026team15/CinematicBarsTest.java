@@ -1,5 +1,7 @@
 package ca.sfu.spring2026team15;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import org.junit.Before;
 import org.junit.Test;
 import org.objenesis.ObjenesisStd;
@@ -7,6 +9,8 @@ import org.objenesis.ObjenesisStd;
 import java.lang.reflect.Field;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for CinematicBars cinematic letterbox animation.
@@ -469,5 +473,55 @@ public class CinematicBarsTest extends GdxTestSetup {
         float height = getCurrentHeight(bars);
         // (0.01 / 0.5) * 100 = 2
         assertEquals(2f, height, DELTA);
+    }
+
+    // --- render() ---
+
+    @Test
+    public void renderHiddenStateSkipsDraw() {
+        setEnumField(bars, "state", "HIDDEN");
+        setField(bars, "currentHeight", 0f);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        bars.render(batch);
+        verify(batch, never()).draw(any(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderAppearingStateDrawsTwoBars() {
+        setEnumField(bars, "state", "APPEARING");
+        setField(bars, "currentHeight", 50f);
+        setField(bars, "blackTexture", mock(Texture.class));
+        SpriteBatch batch = mock(SpriteBatch.class);
+        bars.render(batch);
+        verify(batch, times(2)).draw(any(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderVisibleStateDrawsTwoBars() {
+        setEnumField(bars, "state", "VISIBLE");
+        setField(bars, "currentHeight", 100f);
+        setField(bars, "blackTexture", mock(Texture.class));
+        SpriteBatch batch = mock(SpriteBatch.class);
+        bars.render(batch);
+        verify(batch, times(2)).draw(any(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderZeroHeightSkipsDraw() {
+        setEnumField(bars, "state", "APPEARING");
+        setField(bars, "currentHeight", 0f);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        bars.render(batch);
+        verify(batch, never()).draw(any(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    // --- dispose() ---
+
+    @Test
+    public void disposeCallsBlackTextureDispose() {
+        Texture mockTex = mock(Texture.class);
+        setField(bars, "blackTexture", mockTex);
+        bars.dispose();
+        verify(mockTex, times(1)).dispose();
     }
 }

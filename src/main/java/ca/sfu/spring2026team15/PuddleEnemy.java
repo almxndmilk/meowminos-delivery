@@ -22,6 +22,7 @@ public class PuddleEnemy {
     }
 
     public void render(SpriteBatch batch) {
+        if (puddle == null) return;
         float x = position.x - SIZE / 2f;
         float y = position.y - SIZE / 2f;
         batch.draw(puddle, x, y, SIZE, SIZE);

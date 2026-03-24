@@ -64,7 +64,7 @@ public class PoliceEnemyTest extends GdxTestSetup {
         closePolice.update(0.6f, playerX, playerY, OPEN);
         closePolice.update(0.6f, playerX, playerY, OPEN); // total alert time >= 1.0s
         // Police is now CHASING and within 75 units of player
-        assertTrue(closePolice.isCatching(closePolice.getCenterX(), closePolice.getCenterY()));
+        assertTrue(closePolice.isCatching(playerX, playerY));
     }
 
     @Test
