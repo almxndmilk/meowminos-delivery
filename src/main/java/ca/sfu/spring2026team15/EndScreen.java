@@ -50,6 +50,7 @@ public class EndScreen implements Screen {
     //music
     private Music backgroundMusic;
     private Music yipeeSound;
+    private Music doowopSound;
 
     public EndScreen(Main game, int score, int time, boolean fromObamaScene) {
         this.game  = game;
@@ -81,6 +82,11 @@ public class EndScreen implements Screen {
                 yipeeSound.setVolume(0.8f);
                 yipeeSound.play();
             }
+            else{
+                doowopSound = Gdx.audio.newMusic(Gdx.files.internal("audio/boowop.mp3"));
+                doowopSound.setVolume(1.5f);
+                doowopSound.play();
+            }
         }
         else{
             backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/endMusic.mp3"));
@@ -90,6 +96,9 @@ public class EndScreen implements Screen {
             // Load yipee sound even if sound is off (for consistency)
             if (fromObamaScene) {
                 yipeeSound = Gdx.audio.newMusic(Gdx.files.internal("Obama/yipee.mp3"));
+            }
+            else{
+                doowopSound = Gdx.audio.newMusic(Gdx.files.internal("audio/boowop.mp3"));
             }
         }
     }
