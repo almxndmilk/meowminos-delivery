@@ -1,9 +1,13 @@
 package ca.sfu.spring2026team15;
 
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for PuddleEnemy.onPuddle detection.
@@ -129,5 +133,26 @@ public class PuddleEnemyTest extends GdxTestSetup {
         PuddleEnemy puddle = new PuddleEnemy(500f, 500f, true);
         // Player above puddle: (500, 580) => dist from (500,505) = 75 > 67
         assertFalse(puddle.onPuddle(500f, 580f));
+    }
+
+    // --- render() ---
+
+    @Test
+    public void renderCallsBatchDraw() {
+        PuddleEnemy puddle = new PuddleEnemy(200f, 300f, true);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        puddle.render(batch);
+        verify(batch, times(1)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    // --- dispose() ---
+
+    @Test
+    public void disposeCallsPuddleTextureDispose() {
+        PuddleEnemy puddle = new PuddleEnemy(0f, 0f, true);
+        Texture mockTex = mock(Texture.class);
+        setField(puddle, "puddle", mockTex);
+        puddle.dispose();
+        verify(mockTex, times(1)).dispose();
     }
 }

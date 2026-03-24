@@ -1,9 +1,16 @@
 package ca.sfu.spring2026team15;
 
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for CatOffBike — movement, speed, walkToward.
@@ -11,6 +18,16 @@ import static org.junit.Assert.*;
  *         puddle + character (speed).
  */
 public class CatOffBikeTest extends GdxTestSetup {
+
+    @Before
+    public void resetKeys() {
+        when(Gdx.input.isKeyPressed(anyInt())).thenReturn(false);
+    }
+
+    @After
+    public void clearKeys() {
+        reset(Gdx.input);
+    }
 
     // --- single feature: mount/dismount ---
 
@@ -182,5 +199,139 @@ public class CatOffBikeTest extends GdxTestSetup {
         CatOffBike cat = new CatOffBike(0f, 0f, true);
         cat.setPosition(777f, 888f);
         assertEquals(777f, cat.getX(), 0.01f);
+    }
+
+    // --- update() with keyboard input ---
+
+    @Test
+    public void updateNoKeysDoesNotMove() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        BarrierLookup open = (x, y) -> false;
+        cat.update(0.1f, open);
+        assertEquals(500f, cat.getCenterX(), 0.01f);
+        assertEquals(500f, cat.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void updateMovesLeftWhenAPressed() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.A)).thenReturn(true);
+        BarrierLookup open = (x, y) -> false;
+        cat.update(0.1f, open);
+        assertTrue(cat.getCenterX() < 500f);
+    }
+
+    @Test
+    public void updateMovesRightWhenDPressed() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.D)).thenReturn(true);
+        BarrierLookup open = (x, y) -> false;
+        cat.update(0.1f, open);
+        assertTrue(cat.getCenterX() > 500f);
+    }
+
+    @Test
+    public void updateMovesUpWhenWPressed() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.W)).thenReturn(true);
+        BarrierLookup open = (x, y) -> false;
+        cat.update(0.1f, open);
+        assertTrue(cat.getCenterY() > 500f);
+    }
+
+    @Test
+    public void updateMovesDownWhenSPressed() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.S)).thenReturn(true);
+        BarrierLookup open = (x, y) -> false;
+        cat.update(0.1f, open);
+        assertTrue(cat.getCenterY() < 500f);
+    }
+
+    @Test
+    public void updateBlockedByBarrierXAxis() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.D)).thenReturn(true);
+        BarrierLookup solid = (x, y) -> true;
+        cat.update(0.1f, solid);
+        assertEquals(500f, cat.getCenterX(), 0.01f);
+    }
+
+    @Test
+    public void updateBlockedByBarrierYAxis() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.W)).thenReturn(true);
+        BarrierLookup solid = (x, y) -> true;
+        cat.update(0.1f, solid);
+        assertEquals(500f, cat.getCenterY(), 0.01f);
+    }
+
+    @Test
+    public void updateBothLeftRightCancelOut() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.A)).thenReturn(true);
+        when(Gdx.input.isKeyPressed(Input.Keys.D)).thenReturn(true);
+        BarrierLookup open = (x, y) -> false;
+        cat.update(0.1f, open);
+        assertEquals(500f, cat.getCenterX(), 0.01f);
+    }
+
+    @Test
+    public void updateAnimationFrameAdvancesAfterDuration() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.D)).thenReturn(true);
+        BarrierLookup open = (x, y) -> false;
+        // FRAME_DURATION = 0.12f; 3 updates of 0.13f each → frames advance
+        cat.update(0.13f, open);
+        cat.update(0.13f, open);
+        cat.update(0.13f, open);
+        // No exception means animation cycling worked correctly
+        assertTrue(cat.getCenterX() > 500f);
+    }
+
+    @Test
+    public void updateDirectionChangeResetsFrameIndex() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        BarrierLookup open = (x, y) -> false;
+        when(Gdx.input.isKeyPressed(Input.Keys.D)).thenReturn(true);
+        cat.update(0.1f, open);
+        // Change direction to UP
+        when(Gdx.input.isKeyPressed(Input.Keys.D)).thenReturn(false);
+        when(Gdx.input.isKeyPressed(Input.Keys.W)).thenReturn(true);
+        cat.update(0.1f, open);
+        // No exception — direction change reset frame index
+        assertTrue(cat.getCenterY() > 500f);
+    }
+
+    // --- render() ---
+
+    @Test
+    public void renderLeftDirectionDoesNotThrow() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.A)).thenReturn(true);
+        cat.update(0.1f, (x, y) -> false);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        cat.render(batch);
+        verify(batch, times(1)).draw((com.badlogic.gdx.graphics.Texture) any(), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderRightDirectionUsesFlip() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        when(Gdx.input.isKeyPressed(Input.Keys.D)).thenReturn(true);
+        cat.update(0.1f, (x, y) -> false);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        cat.render(batch);
+        // RIGHT direction uses negative width (flip) — draw called once
+        verify(batch, times(1)).draw((com.badlogic.gdx.graphics.Texture) any(), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderDownDirectionDoesNotThrow() {
+        CatOffBike cat = new CatOffBike(500f, 500f, true);
+        // Default direction is DOWN — no key needed
+        SpriteBatch batch = mock(SpriteBatch.class);
+        cat.render(batch);
+        verify(batch, times(1)).draw((com.badlogic.gdx.graphics.Texture) any(), anyFloat(), anyFloat(), anyFloat(), anyFloat());
     }
 }

@@ -1,9 +1,13 @@
 package ca.sfu.spring2026team15;
 
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for Fish.
@@ -133,5 +137,35 @@ public class FishTest extends GdxTestSetup {
         f1.collect();
         assertTrue(f1.isCollected());
         assertTrue(f2.isCollected());
+    }
+
+    // --- render() ---
+
+    @Test
+    public void renderUncollectedFishCallsDraw() {
+        Fish fish = new Fish(100f, 100f, true);
+        SpriteBatch batch = mock(SpriteBatch.class);
+        fish.render(batch);
+        verify(batch, times(1)).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @Test
+    public void renderCollectedFishSkipsDraw() {
+        Fish fish = new Fish(100f, 100f, true);
+        fish.collect();
+        SpriteBatch batch = mock(SpriteBatch.class);
+        fish.render(batch);
+        verify(batch, never()).draw(nullable(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    // --- dispose() ---
+
+    @Test
+    public void disposeCallsTextureDispose() {
+        Fish fish = new Fish(0f, 0f, true);
+        Texture mockTex = mock(Texture.class);
+        setField(fish, "texture", mockTex);
+        fish.dispose();
+        verify(mockTex, times(1)).dispose();
     }
 }
