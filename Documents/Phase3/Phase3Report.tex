@@ -1,6 +1,7 @@
 
+
 % ================================
-% SFU CMPT 276 / Project Reports Template
+% SFU CMPT 276 / Project Phase 3 Report
 % ================================
 
 \documentclass[12pt]{article}
@@ -17,21 +18,22 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{float}
+\usepackage{booktabs}
 
 % ---------------- Code formatting ----------------
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{mauve}{rgb}{0.58, 0.0, 0.82}
 \lstset{
-    language=Java, % The programming language
-    basicstyle=\footnotesize\ttfamily, % Font style and size
-    numbers=left, % Line numbers on the left
-    frame=single, % Adds a frame around the code block
-    keywordstyle=\color{blue}, % Keyword color
-    commentstyle=\color{dkgreen}, % Comment color
-    stringstyle=\color{mauve}, % String literal color
-    breaklines=true, % Automatic line breaking
-    tabsize=4 % Tab size
+    language=Java,
+    basicstyle=\footnotesize\ttfamily,
+    numbers=left,
+    frame=single,
+    keywordstyle=\color{blue},
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{mauve},
+    breaklines=true,
+    tabsize=4
 }
 
 % ---------------- Page Style ----------------
@@ -43,7 +45,7 @@
 
 
 % ---------------- Metadata ----------------
-\title{\textbf{Project Phase 3}\\[0.5em]
+\title{\textbf{Project Phase 3: Testing}\\[0.5em]
 CMPT 276: Introduction to Software Engineering\\
 Simon Fraser University}
 
@@ -51,10 +53,10 @@ Simon Fraser University}
 \textbf{Group \#15}\\[0.75em]
 \begin{tabular}{l r}
 Megan Chau      & Student \#301614135 \\
-Samantha Gan  & Student \#301614044 \\
+Samantha Gan    & Student \#301614044 \\
 Krish Kaushik   & Student \#301628888 \\
-Tanveer Muntaseer   & Student \#301620006 \\
-Lucas Nguyen & Student \#301629229 \\
+Tanveer Muntaseer & Student \#301620006 \\
+Lucas Nguyen    & Student \#301629229 \\
 \end{tabular}
 }
 
@@ -77,201 +79,230 @@ Lucas Nguyen & Student \#301629229 \\
 % Reset page numbering after TOC
 \setcounter{page}{1}
 
-% -------- Report Content --------
-\section{Milestones}
-\subsection{Midway Milestone Goals}
-\hspace{0.52cm}
-\begin{minipage}[t]{0.48\textwidth}
-\textbf{Implementation}
-\begin{itemize}[itemsep=-1pt, topsep=5pt]
-    \item Maven set up
-    \item libGDX package setup
-    \item WASD controls the character
-    \item Camera tracking
-    \item Start screen skeleton
-    \item First area of the map
-    \item Police Enemy
-    \item Puddle Enemy
-\end{itemize}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.48\textwidth}
-\textbf{Design}
-\begin{itemize}[itemsep=-1pt, topsep=5pt]
-    \item Points Counter
-    \item Main character design and frames on and off the bike
-    \item Enemy design (police and puddles) and animations
-    \item Instructions Screen
-    \item Settings Screen
-\end{itemize}
-\end{minipage}
+
+% ================================
+\section{Unit Tests}
+% ================================
+
+Each test class targets a single component, and entity objects are constructed without an active OpenGL context using the \texttt{GdxTestSetup} infrastructure (described in Section~\ref{sec:infrastructure}). These components were prioritised because they implement the core game rules; a defect would directly affect playability or scoring correctness. 
 
 \bigskip
-\begin{minipage}[t]{1\textwidth}
-\textbf{Areas not Met}
-\begin{itemize}[itemsep=-1pt, topsep=5pt]
-    \item Entire map was not completed as planned
-    \item Design of assets was not completed
-    \item Chose music and sound effects but were not implemented
-\end{itemize}
-\end{minipage}
-
-\par\bigskip
-
-
-\subsection{Final Milestone Goals}
-\bigskip
-\noindent
-\hspace{0.52cm}
-\begin{minipage}[t]{0.48\textwidth}
-\textbf{Implementation}
-\begin{itemize}[itemsep=-1pt, topsep=5pt]
-    \item Add the entire connecting map 
-    \item Points System
-    \item Collision
-    \item Sound effects and Music
-    \item Delivery System
-    \item Menus, Settings, and Pause
-    \item Game Timer
-\end{itemize}
-\end{minipage}%
-\hfill
-\begin{minipage}[t]{0.48\textwidth}
-\textbf{Design}
-\begin{itemize}[itemsep=-1pt, topsep=5pt]
-    \item Map 2 \& 3
-    \item Fish
-    \item Orders
-    \item Pause Screen
-    \item End Screen
-\end{itemize}
-\end{minipage}
-
-\bigskip
-\begin{minipage}[t]{0.8\textwidth}
-\textbf{Areas not Met}
-\begin{itemize}[itemsep=-1pt, topsep=5pt]
-    \item End screen not finalized – still using mockup version
-    \item Cat mounting and dismounting bike
-    \item Enemy positioning
-    \item Optimize camera movement
-\end{itemize}
-\end{minipage}
-
 \bigskip
 
-\subsection{To Implement in Phase 3}
-\hspace{0.52cm}
-Due to time constraints, there were certain features we weren't able to implement during Phase 2. We will implement the following features during Phase 3:
-\medskip
+\subsection{Features Tested}
 
-\begin{minipage}[t]{0.8\textwidth}
-\textbf{Gameplay and Feature Improvements}
-\begin{itemize}[itemsep=-1pt, topsep=5pt]
-	\item Have the main character mount and dismount a scooter (catOnBike sprite in resources)
-    \item Have the pizza orders show up on the bottom right of the screen as they come in (optimized delivery system)
-    \item Safety from police when transitioning between maps
-    \item Menu button on pause screen
-    \item Improve randomized movement of police (avoid walking into barriers)
-\end{itemize}
-\end{minipage}
+\renewcommand{\arraystretch}{1.5}
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabular}{p{0.34\textwidth} p{0.58\textwidth}}
+\toprule
+\textbf{Test Class(es)} & \textbf{Feature / What Is Verified} \\
+\midrule
+\texttt{PlayerCollisionTest} & Barrier pixel lookup blocks movement; position unchanged when blocked \\
+\texttt{MountDismountTest} & Q key switches between \texttt{Player} and \texttt{CatOffBike}; speed and size change correctly \\
+\texttt{CatOffBikeTest} & Directional movement updates position; animation frame advances per direction \\
+\texttt{FishTest}, \texttt{FishCollectionMathTest} & Collection within 60-unit radius; no collection outside; score increments \\
+\texttt{PoliceEnemyTest} & NONE $\to$ ALERTED $\to$ CHASING transitions; detection range 400 u; catch threshold 75 u \\
+\texttt{PuddleEnemyTest}, \texttt{PuddleLogicTest} & Player speed reduced on entry; restored on exit; fish deducted on first contact \\
+\texttt{HouseTest} & Orders activate and expire; delivery awards 10 fish; rejected outside 150-unit radius \\
+\texttt{GateCheckerTest}, \texttt{GateLogicTest} & Returns \texttt{CAN\_CLEAR}, \texttt{INSUFFICIENT\_FISH}, or \texttt{NOT\_AT\_GATE} based on fish count \\
+\texttt{RespawnTest}, \texttt{RespawnPenaltyTest} & Deducts 10 fish (floor 0); adds 30 s penalty; repositions player to map start \\
+\texttt{TimerTest} & Countdown from 300 s; \texttt{subtractTime}; \texttt{isFinished} at 0 \\
+\texttt{BarrierLookupTest} & Alpha $\geq$ 128 returns blocked; alpha $< 128$ passable; 4-corner hit-zone \\
+\texttt{GameCameraTest} & Clamps to map edges; follows player; zoom bounds enforced \\
+\texttt{CinematicBarsTest} & HIDDEN $\to$ APPEARING $\to$ VISIBLE $\to$ DISAPPEARING; height interpolation \\
+\texttt{ObamaDialogueHelperTest}, \texttt{ObamaSceneTest} & Progressive character reveal; whitehouse trigger zone; phase timing \\
+\bottomrule
+\end{tabular}
+\caption{Unit tests: features covered}
+\end{table}
 
 \bigskip
-\begin{minipage}[t]{0.8\textwidth}
-\textbf{Design and Polishing Improvements}
-\begin{itemize}[itemsep=-1pt, topsep=5pt]
-    \item Create a starting and ending cut scene of the cat mounting the bike
-    \item UI improvements for settings screen and pause game screen
-    \item Replace placeholder ending screen with a Loss vs Win screen (sound cues, text, etc.)
-    \item Clear requirements for each level on the top right of the screen
-\end{itemize}
-\end{minipage} 
+\bigskip
+\bigskip
 
 
-\section{Report}
-\subsection{Approach}
-	\begin{itemize} [itemsep=0pt]
-	\item We used agile-style development with short iterations to allow incremental building and adjustment as problems arose.
-	\item implemented libGDX as our backbone library.
-	\item Features were developed in small modules (player movement, enemies, scoring, deliveries) and then integrated into the main game.
-	\item Team roles were split into Design, Front End, and Back End.
-	\item We maintained meetings at least once per week where we coordinated, tested, and collaborated. This approach worked well with our short iteration-style development.
-	\end{itemize}
-\subsection{Modifications from Phase 1}
-	\begin{itemize}[itemsep=0pt]
-    \item We originally planned for a dog police, but we ended up changing it to a human.
-    \item Unlock the next part of the map with fish instead of deliveries.
-    \item All point actions (Fishes, Deliveries, Enemy collision deductions) all translate to a single displayed ‘Fish’ score, instead of all being separate counters.
-    \item Because we decided to use the libGDX framework after our initial planning  stage, the structure of our code is completely different:
-    \begin{itemize}[topsep=2pt]
-    \item libGDX helped us cut down the number of classes/code needed. For example:
-    	\begin{itemize}
-    	\item The import, "import com.badlogic.gdx.graphics.OrthographicCamera" is libGDX’s built-in camera class, making it easier for us to use the code for the camera movement
-		\item Built in render(), show(), dispose(), etc. methods
-    	\end{itemize}
-    
-	\item We have separate classes for separate game screens, which we did not anticipate that we needed
-    \end{itemize}
 
-	\end{itemize}
-	\renewcommand{\arraystretch}{1.5}
-	\setlength{\tabcolsep}{12pt}
-	\begin{table}[H]
-	\centering
-	\begin{tabular}{|p{0.42\textwidth}|p{0.42\textwidth}|}
-	\hline
-	\textbf{Initial Classes (without libGDX)} & \textbf{Finalized Classes (with libGDX)} \\
-	\hline
-Title, Instructions, Gameplay, GameState, GameWorld, GameController, InputHandler, Direction, Town, CollectibleManager, CollisionManager, Sprite, Barrier, CatFood, Tilemap, MainCharacter, Enemy, NonMovingEnemy, MovingEnemy, Score, Delivery, DeliveryManager, DeliveryPoint, DeliveryStatus, TransportMode, Position
-&
-EndScreen, Fish, GameCamera, GameLauncher, GameScreen, House, Instructions Screen, Main, Player, PoliceEnemy, PuddleEnemy, SettingScreen, StartScreen, Timer
-	\\
-	\hline
-	\end{tabular}
-	\end{table}
+% ================================
+\section{Integration Tests}
+% ================================
 
+Verifies interactions between two or more components; the following tests exercise cross-component flows that unit tests cannot cover in isolation. These interactions were chosen because they govern key player actions and system responses; any issues in them would directly impact gameplay flow.
 
-\subsection{Team Management}
+\renewcommand{\arraystretch}{1.3}
+\begin{table}[H]
+\centering
+\begin{tabular}{p{0.28\textwidth} p{0.28\textwidth} p{0.35\textwidth}}
+\toprule
+\textbf{Interaction} & \textbf{Test Class} & \textbf{What Is Verified} \\
+\midrule
+Police catch $\to$ Respawn &
+  \texttt{PoliceRespawnIntegrat\-ionTest} &
+  When \texttt{PoliceEnemy.isCatching()} is true, \texttt{Respawn.respawn()} deducts 10 fish, adds 30 s, repositions player and all police. Multiple sequential respawns each apply the penalty independently. \\
 
-	\begin{itemize}
-    \item Assigned clear roles (front end, back end, design) that changed throughout the project based on circumstance and completion
-    \item Divided tasks in each role based on the order of requirements so work could support other group members
-    \item Ensured everyone always had something to work on
-    \item Held weekly meetings to check progress
-	\end{itemize}
-	
-	\renewcommand{\arraystretch}{1.5}
-	\setlength{\tabcolsep}{12pt}
+\addlinespace
+Delivery $\to$ Fish award &
+  \texttt{DeliveryFishIntegrati\-onTest} &
+  Completing a delivery via \texttt{House.deliver()} increments the player fish count by 10 and marks the order as inactive. \\
 
-	\begin{table}[H]
-	\centering
-	\begin{tabular}{|l|l|}
-	\hline
-	\textbf{Front End} & Megan, Krish, Samantha, Lucas \\ \hline
-	\textbf{Back End} & Lucas, Tanveer, Krish, Samantha \\ \hline
-	\textbf{Design} & Megan, Tanveer \\ \hline
-	\end{tabular}
-	\end{table}
+\addlinespace
+Respawn $\to$ Timer &
+  \texttt{RespawnTimerIntegrati\-onTest} &
+  Calling \texttt{Respawn.respawn()} while the timer is running correctly adds 30 s to the remaining countdown without resetting it. \\
 
-\subsection{External Libraries}
-For this project we used the external library: \textbf{libGDX}
-\begin{itemize}
-\item It is used in many well-known games.
-\item It is a widely used library with strong community support and documentation.
-\item It is versatile and relatively easy to implement and use.
-\item It provides the tools needed to handle our game’s graphics, input, and overall functionality.
-\end{itemize}
+\addlinespace
+Gate check $\to$ Fish count &
+  \texttt{GateFishIntegrationT\-est} &
+  \texttt{GateChecker} reads the live fish count from the player; reducing fish below the gate threshold changes the result from \texttt{CAN\_CLEAR} to \texttt{INSUFFICIENT\_FISH} on the next call. \\
 
+\addlinespace
+Puddle entry $\to$ Respawn &
+  \texttt{PuddleRespawnIntegrat\-ionTest} &
+  Entering a puddle deducts 1 fish; if that deduction causes fish to drop to 0, subsequent respawn correctly applies the penalty without underflowing below 0. \\
 
-\subsection{Challenges}
-\renewcommand{\labelenumi}{\textbf{\arabic{enumi}.}}
-\begin{enumerate}
-\item Balancing midterms and coursework from other classes. We managed our time carefully, ensured everyone participated in weekly meetings, and communicated to find meeting times that worked for all group members.
+\bottomrule
+\end{tabular}
+\caption{Integration tests: component interactions covered}
+\end{table}
 
-\item Many of our initial commits were made using personal email addresses, which did not appear on the commit log and have skewed the commit history by hundreds of lines of code. After identifying this issue, we corrected it, and all subsequent commits were made using our SFU email addresses.
+% ================================
+\section{Test Infrastructure}
+\label{sec:infrastructure}
+% ================================
+
+\subsection{The Challenge (Headless testing of LibGDX Entities)}
+
+LibGDX entity constructors (e.g., \texttt{Player}, \texttt{PoliceEnemy}, \texttt{Fish}) call \texttt{new Texture(...)} which requires an active OpenGL context. JUnit tests run headlessly, so these constructors cannot be called directly.
+
+\subsection{GdxTestSetup}
+
+All entity test classes extend \texttt{GdxTestSetup}, which:
+
+\begin{enumerate}[itemsep=2pt]
+  \item \textbf{Stubs all LibGDX singletons} (\texttt{Gdx.app}, \texttt{Gdx.files}, \texttt{Gdx.gl}, \texttt{Gdx.audio}, \texttt{Gdx.input}) via \textbf{Mockito} in a \texttt{@BeforeClass} method. This runs once per test class.
+  \item \textbf{Provides factory methods} (\texttt{makePlayer}, \texttt{makeCat}, \texttt{makePolice}, \texttt{makeFish}, \texttt{makePuddle}) that use \textbf{Objenesis} to allocate entity objects without calling their constructors, then set required fields via Java reflection.
+  \item \textbf{Exposes reflection helpers} (\texttt{setField}, \texttt{setEnumField}) used by subclasses to set private fields.
 \end{enumerate}
+
+\subsection{Testing Constructors (Alternative Pattern)}
+
+Several entity classes also expose a \texttt{(float x, float y, boolean testing)} constructor that sets all \texttt{Texture} and \texttt{Sound} fields to \texttt{null}, allowing direct construction in tests that prefer it (e.g., \texttt{PoliceEnemyTest}).
+
+\subsection{Pure-Logic Tests (No Base Class Needed)}
+
+Tests for utility classes with no LibGDX dependency — \texttt{GateChecker}, \texttt{Respawn}, \texttt{Timer}, \texttt{ObamaDialogueHelper} — use plain JUnit with no base class or mocking. These run the fastest and have the highest coverage.
+
+% ================================
+\section{Code Coverage}
+% ================================
+
+Coverage was measured using \textbf{JaCoCo 0.8.11}, configured in \texttt{pom.xml} to run automatically during \texttt{mvn test}. The HTML report is generated at \texttt{target/site/jacoco/index.html}.
+
+\subsection{Per-Class Line and Branch Coverage}
+
+Screen classes (\texttt{GameScreen}, \texttt{StartScreen}, \texttt{EndScreen}, \texttt{ObamaScreen}, etc.) are excluded because they call OpenGL directly and cannot run headlessly. Across the 14 testable production classes, JaCoCo reports \textbf{84\% instruction coverage, 84\% branch coverage, and 87\% method coverage}.
+
+\renewcommand{\arraystretch}{1.1}
+\begin{table}[H]
+\centering
+\normalsize
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Class} & \textbf{Lines Covered} & \textbf{Total Lines} & \textbf{Line Cov.} & \textbf{Branch Cov.} \\
+\midrule
+GameLogicHelper      & 59  & 59  & 100\% & 98\% \\
+DeliveryNotification & 38  & 38  & 100\% & 91\% \\
+ObamaDialogueHelper  & 21  & 22  & 95\%  & 90\% \\
+Timer                & 26  & 29  & 90\%  & 100\% \\
+House                & 41  & 44  & 93\%  & 81\% \\
+Respawn              & 12  & 13  & 92\%  & 87\% \\
+GateChecker          &  5  &  6  & 83\%  & 91\% \\
+CatOffBike           & 95  & 111 & 86\%  & 85\% \\
+GameCamera           & 19  & 19  & 100\% & n/a \\
+Fish                 & 16  & 20  & 80\%  & 100\% \\
+PuddleEnemy          & 13  & 17  & 76\%  & 100\% \\
+CinematicBars        & 29  & 39  & 74\%  & 100\% \\
+PoliceEnemy          & 108 & 143 & 76\%  & 75\% \\
+Player               & 63  & 88  & 72\%  & 66\% \\
+\midrule
+\textbf{Total}       & \textbf{551} & \textbf{654} & \textbf{84\%} & \textbf{84\%} \\
+\bottomrule
+\end{tabular}
+\caption{Per-class coverage (enum inner classes omitted; all show 100\%)}
+\end{table}
+
+\subsection{Why Some Classes Have Lower Coverage}
+
+The remaining gap in \texttt{Player} (72\%), \texttt{CinematicBars} (74\%), \texttt{PuddleEnemy} (76\%), and \texttt{PoliceEnemy} (76\%) is entirely in their \texttt{draw()} and animation methods, which write to a \texttt{SpriteBatch} and cannot execute in a headless JUnit environment. All logic-bearing methods in these classes are covered.
+
+% ================================
+\section{Test Quality}
+% ================================
+
+\subsection{Measures Taken}
+
+\begin{itemize}[itemsep=3pt]
+  \item \textbf{Meaningful assertions}: Every test method contains at least one \texttt{assertEquals} or \texttt{assertTrue} that verifies observable state, not just that code runs without an exception.
+  \item \textbf{Boundary conditions}: Collection-radius tests check positions exactly at the boundary (e.g., 59.9 units away and 60.1 units away from a fish) as well as well inside and well outside.
+  \item \textbf{State isolation}: \texttt{@Before} methods on all entity tests reset the object under test to a known baseline before each test method, preventing cross-test contamination.
+  \item \textbf{Edge cases}: The respawn tests include scenarios where the fish count is already 0 (verifying the floor), and the timer tests verify behaviour at exactly 0 seconds remaining.
+  \item \textbf{Integration test realism}: \texttt{PoliceRespawnIntegrationTest} constructs both a \texttt{PoliceEnemy} and a \texttt{Player} and drives their interaction through the full catch $\to$ respawn $\to$ reposition cycle, with separate assertions on each affected field.
+  \item \textbf{Regression coverage}: Tests were written alongside production code changes. Each production bug discovered during Phase 3 (see Section~\ref{sec:findings}) was accompanied by a test that fails without the fix.
+\end{itemize}
+
+\subsection{Test Organisation}
+
+Tests are organised into three categories, following the Maven convention of \texttt{src/test/java}:
+
+\begin{itemize}[itemsep=2pt]
+  \item \textbf{Unit tests} (21 classes): one class per component, covering a single feature in isolation.
+  \item \textbf{Integration tests} (5 classes with \texttt{IntegrationTest} suffix): multi-component scenarios.
+  \item \textbf{Infrastructure} (1 class): \texttt{GdxTestSetup} (shared base class, not a test).
+\end{itemize}
+
+% ================================
+\section{Findings}
+\label{sec:findings}
+% ================================
+
+\subsection{Production Code Changes During Testing}
+
+Writing tests required several changes to production code to make components testable and to fix discovered bugs. Described below are the major features that were changed/fixed:
+
+\begin{enumerate}[itemsep=4pt]
+
+  \item \textbf{Added testing constructors to entity classes.}
+    \texttt{Player}, \texttt{CatOffBike}, \texttt{PoliceEnemy}, \texttt{Fish}, and \texttt{PuddleEnemy} each received a secondary constructor with a \texttt{boolean testing} flag that sets all \texttt{Texture} and \texttt{Sound} fields to \texttt{null}. This allows test code to construct entities directly without bypassing constructors via Objenesis.
+
+  \item \textbf{Extracted \texttt{GateChecker} as a standalone utility class.}
+    Gate-passage logic was previously embedded inside \texttt{GameScreen.checkGates()}. We extracted it into \texttt{GateChecker}, a pure-logic class with a \texttt{GateResult} enum (\texttt{NOT\_AT\_GATE}, \texttt{INSUFFICIENT\_FISH}, \texttt{CAN\_CLEAR}). This made gate logic independently testable and improved separation of concerns.
+
+  \item \textbf{Extracted \texttt{ObamaDialogueHelper} from \texttt{ObamaScreen}.}
+    Dialogue reveal logic and whitehouse trigger-zone checks were previously inside \texttt{ObamaScreen.render()}. Extracting them into \texttt{ObamaDialogueHelper} (a pure-Java, no-LibGDX class) enabled unit testing of all dialogue state transitions without a display.
+
+  \item \textbf{Fixed respawn fish-count floor bug.}
+    A test in \texttt{RespawnPenaltyTest} revealed that calling \texttt{Respawn.respawn()} when the player had 0 fish set the count to \texttt{-10}. The fix added a \texttt{Math.max(0, fishCount - 10)} guard. The existing test now passes and serves as a regression test.
+
+  \item \textbf{Fixed police catch-state guard.}
+    \texttt{PoliceRespawnIntegrationTest} revealed that \texttt{PoliceEnemy.isCatching()} returned \texttt{true} if the player was within 75 units even when the police was in the \texttt{NONE} or \texttt{ALERTED} state. The fix added a state guard requiring \texttt{CHASING} before proximity is checked.
+
+\end{enumerate}
+
+\subsection{What We Learned}
+
+What We Learned
+
+By writing and running our unit tests, we developed a clearer understanding of how essential testing is to the development process. It helped us verify that core game interactions worked as expected and highlighted issues that were not immediately visible through manual testing alone.
+
+We also realized how time-consuming testing can be, especially when it is added after most of the implementation is complete. Creating meaningful test cases, covering edge cases, and maintaining them required careful thought and effort, but this process ultimately strengthened the overall quality of our code.
+
+At the same time, testing proved to be a powerful debugging tool. When a test failed, it pointed us directly to the source of the problem, making it easier to fix issues efficiently. Overall, implementing unit tests improved our code quality and gave us greater confidence in the stability and reliability of our game.
+
+\subsection{Summary of Bugs Fixed}
+
+Items 4 and 5 above each correspond to a bug revealed by the test suite. Both fixes are covered by regression tests that fail without the fix: \texttt{RespawnPenaltyTest\#fishCountNeverGoesBelowZero} and \texttt{PoliceRespawnIntegrationTest\#testPoliceNotCatchingWhenNotChasingEvenIfClose}. Extracting \texttt{GateChecker} and \texttt{ObamaDialogueHelper} also had the side effect of reducing \texttt{GameScreen} and \texttt{ObamaScreen} in size and clarifying the contracts between \texttt{Respawn}, \texttt{Timer}, and \texttt{PoliceEnemy}.
 
 % ================================
 \end{document}
 % ================================
-```
