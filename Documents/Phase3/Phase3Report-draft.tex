@@ -84,7 +84,7 @@ Lucas Nguyen    & Student \#301629229 \\
 \section{Unit Tests}
 % ================================
 
-Each test class targets a single component, and entity objects are constructed without an active OpenGL context using the \texttt{GdxTestSetup} infrastructure (described in Section~\ref{sec:infrastructure}).
+Each test class targets a single component, and entity objects are constructed without an active OpenGL context using the \texttt{GdxTestSetup} infrastructure (described in Section~\ref{sec:infrastructure}). These components were prioritised because they implement the core game rules; a defect would directly affect playability or scoring correctness. 
 
 \bigskip
 \bigskip
@@ -128,7 +128,7 @@ Each test class targets a single component, and entity objects are constructed w
 \section{Integration Tests}
 % ================================
 
-Verifies interactions between two or more components; the following tests exercise cross-component flows that unit tests cannot cover in isolation.
+Verifies interactions between two or more components; the following tests exercise cross-component flows that unit tests cannot cover in isolation. These interactions were chosen because they govern key player actions and system responses; any issues in them would directly impact gameplay flow.
 
 \renewcommand{\arraystretch}{1.3}
 \begin{table}[H]
@@ -268,7 +268,7 @@ Tests are organised into three categories, following the Maven convention of \te
 
 \subsection{Production Code Changes During Testing}
 
-Writing tests required several changes to production code to make components testable and to fix discovered bugs:
+Writing tests required several changes to production code to make components testable and to fix discovered bugs. Described below are the major features that were changed/fixed:
 
 \begin{enumerate}[itemsep=4pt]
 
@@ -288,6 +288,16 @@ Writing tests required several changes to production code to make components tes
     \texttt{PoliceRespawnIntegrationTest} revealed that \texttt{PoliceEnemy.isCatching()} returned \texttt{true} if the player was within 75 units even when the police was in the \texttt{NONE} or \texttt{ALERTED} state. The fix added a state guard requiring \texttt{CHASING} before proximity is checked.
 
 \end{enumerate}
+
+\subsection{What We Learned}
+
+What We Learned
+
+By writing and running our unit tests, we developed a clearer understanding of how essential testing is to the development process. It helped us verify that core game interactions worked as expected and highlighted issues that were not immediately visible through manual testing alone.
+
+We also realized how time-consuming testing can be, especially when it is added after most of the implementation is complete. Creating meaningful test cases, covering edge cases, and maintaining them required careful thought and effort, but this process ultimately strengthened the overall quality of our code.
+
+At the same time, testing proved to be a powerful debugging tool. When a test failed, it pointed us directly to the source of the problem, making it easier to fix issues efficiently. Overall, implementing unit tests improved our code quality and gave us greater confidence in the stability and reliability of our game.
 
 \subsection{Summary of Bugs Fixed}
 
