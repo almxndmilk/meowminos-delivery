@@ -1136,7 +1136,9 @@ public class GameScreen implements Screen {
             float dx = fish.getCenterX() - getActiveX();
             float dy = fish.getCenterY() - getActiveY();
             if (dx * dx + dy * dy < rSquared) {
-                fishSound.play(5.0f);
+                if (SettingsScreen.soundOn) {
+                    fishSound.play(5.0f);
+                }
                 fish.collect();
                 fishCollected++;
             }
