@@ -95,9 +95,13 @@ public class PoliceEnemy {
 
     public void update(float delta, float playerX, float playerY, BarrierLookup lookup) {
         float dist = Vector2.dst(position.x, position.y, playerX, playerY);
-        boolean inRange = dist <= DETECTION_RANGE;
+        updateAlertState(delta, dist);
+        updateMovement(delta, playerX, playerY, lookup);
+        updateAnimation(delta);
+    }
 
-        // state machine
+    private void updateAlertState(float delta, float dist) {
+        boolean inRange = dist <= DETECTION_RANGE;
         switch (alertState) {
             case NONE:
                 if (inRange) {
@@ -107,7 +111,6 @@ public class PoliceEnemy {
                 break;
             case ALERTED:
                 if (!inRange) {
-                    // player ran away before timer finished, reset
                     alertState = AlertState.NONE;
                     alertTimer = 0f;
                 } else {
@@ -127,15 +130,15 @@ public class PoliceEnemy {
                 }
                 break;
         }
+    }
 
-        // movement
+    private void updateMovement(float delta, float playerX, float playerY, BarrierLookup lookup) {
         if (alertState == AlertState.CHASING) {
             Vector2 dir = new Vector2(playerX - position.x, playerY - position.y).nor();
             float newX = position.x + dir.x * VAR_CHASE_SPEED * delta;
             float newY = position.y + dir.y * VAR_CHASE_SPEED * delta;
             applyBarrierCollision(newX, newY, lookup);
 
-            // still pick dominant axis for sprite direction
             float dx = playerX - position.x;
             float dy = playerY - position.y;
             if (Math.abs(dx) > Math.abs(dy)) {
@@ -143,9 +146,7 @@ public class PoliceEnemy {
             } else {
                 lastDirection = (dy > 0) ? Direction.UP : Direction.DOWN;
             }
-        }
-        else {
-            //wander
+        } else {
             wanderTimer -= delta;
             if (wanderTimer <= 0f) {
                 wanderTimer = WANDER_CHANGE_TIME;
@@ -163,9 +164,9 @@ public class PoliceEnemy {
             }
             applyBarrierCollision(newX, newY, lookup);
         }
+    }
 
-
-        //animation
+    private void updateAnimation(float delta) {
         animTimer += delta;
         if (animTimer >= FRAME_DURATION) {
             animTimer = 0f;
