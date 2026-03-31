@@ -309,7 +309,7 @@ public class GameScreen implements Screen {
         housesByMap.add(map1Houses);
 
 
-        // Map 2 houses (world Y 1804–2706) — positions are placeholders, tune against map art
+        // Map 3 houses (world Y 1804–2706) — positions are placeholders, tune against map art
         List<House> map2Houses = new ArrayList<>();
         map2Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
         whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG); // The whitehouse
@@ -318,8 +318,12 @@ public class GameScreen implements Screen {
         map2Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
         housesByMap.add(map2Houses);
 
-        // Map 3 house Array is empty -> the president level (no orders)
+        // Map 2 houses - yall there isnt a map 2 LOL
         List<House> map3Houses = new ArrayList<>();
+//        map2Houses.add(new House(2700f, 700f, orderIndicatorTextureBIG));
+//        map2Houses.add(new House(3000f, 700f, orderIndicatorTextureBIG));
+//        map2Houses.add(new House(3250f, 700f, orderIndicatorTextureBIG));
+//        map2Houses.add(new House(3500f, 700f, orderIndicatorTextureBIG));
         housesByMap.add(map3Houses);
 
         // Flat list for update/render loops
