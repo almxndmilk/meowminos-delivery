@@ -132,26 +132,8 @@ public class PoliceEnemy {
         if (alertState == AlertState.CHASING) {
             Vector2 dir = new Vector2(playerX - position.x, playerY - position.y).nor();
             float newX = position.x + dir.x * VAR_CHASE_SPEED * delta;
-            float newY =position.y + dir.y * VAR_CHASE_SPEED * delta;
-
-
-            // barrier movement — bottom 20% of sprite only
-            float hitW = SIZE * 0.3f;
-            float hitTop = SIZE * 0.3f;
-
-            boolean blockedX =
-                lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
-                lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
-                lookup.isBarrier(newX - hitW, position.y - hitTop) ||
-                lookup.isBarrier(newX + hitW, position.y - hitTop);
-            if (!blockedX) position.x = newX;
-
-            boolean blockedY =
-                lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
-                lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
-                lookup.isBarrier(position.x - hitW, newY - hitTop) ||
-                lookup.isBarrier(position.x + hitW, newY - hitTop);
-            if (!blockedY) position.y = newY;
+            float newY = position.y + dir.y * VAR_CHASE_SPEED * delta;
+            applyBarrierCollision(newX, newY, lookup);
 
             // still pick dominant axis for sprite direction
             float dx = playerX - position.x;
@@ -179,24 +161,7 @@ public class PoliceEnemy {
                 case UP: newY += VAR_WANDER_SPEED * delta; break;
                 case DOWN: newY -= VAR_WANDER_SPEED * delta; break;
             }
-
-            // wander with barrier — bottom 20% of sprite only
-            float hitW = SIZE * 0.3f;
-            float hitTop = SIZE * 0.3f;
-
-            boolean blockedX =
-                lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
-                lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
-                lookup.isBarrier(newX - hitW, position.y - hitTop) ||
-                lookup.isBarrier(newX + hitW, position.y - hitTop);
-            if (!blockedX) position.x = newX;
-
-            boolean blockedY =
-                lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
-                lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
-                lookup.isBarrier(position.x - hitW, newY - hitTop) ||
-                lookup.isBarrier(position.x + hitW, newY - hitTop);
-            if (!blockedY) position.y = newY;
+            applyBarrierCollision(newX, newY, lookup);
         }
 
 
@@ -218,6 +183,25 @@ public class PoliceEnemy {
                 currentFrame = (currentFrameIndex == 0) ? front1 : front2;
                 break;
         }
+    }
+
+    private void applyBarrierCollision(float newX, float newY, BarrierLookup lookup) {
+        float hitW = SIZE * 0.3f;
+        float hitTop = SIZE * 0.3f;
+
+        boolean blockedX =
+            lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
+            lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
+            lookup.isBarrier(newX - hitW, position.y - hitTop) ||
+            lookup.isBarrier(newX + hitW, position.y - hitTop);
+        if (!blockedX) position.x = newX;
+
+        boolean blockedY =
+            lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
+            lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
+            lookup.isBarrier(position.x - hitW, newY - hitTop) ||
+            lookup.isBarrier(position.x + hitW, newY - hitTop);
+        if (!blockedY) position.y = newY;
     }
 
     public void render(SpriteBatch batch) {
