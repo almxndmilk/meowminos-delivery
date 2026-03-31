@@ -119,7 +119,7 @@ public class EndScreen implements Screen {
         // Time: MM:SS (colon is baked into the background image)
         int mm = Math.min(time / 60, 99);
         int ss = time % 60;
-        int[] timeDigits = { mm / 10, mm % 10, ss / 10, ss % 10 };
+        int[] timeDigits = digitsOf(mm * 100 + ss, 4);
         for (int i = 0; i < 4; i++) {
             float offset = (i < 2) ? i * TIME_LAYOUT.gap : i * TIME_LAYOUT.gap + TIME_COLON_W;
             batch.draw(timeNumbers[timeDigits[i]],
@@ -148,7 +148,8 @@ public class EndScreen implements Screen {
         return p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2;
     }
 
-    // CODE DUPLICATION helper method, and reduced it to line 110
+    // CODE DUPLICATION helper method
+    // reduces repitiion in line 110 and line 122
     private int[] digitsOf(int value, int count) {
         int[] d = new int[count];
         for (int i = count - 1; i >= 0; i--) {
