@@ -206,6 +206,11 @@ public class PoliceEnemy {
     }
 
     public void render(SpriteBatch batch) {
+        renderSprite(batch);
+        renderAlertIndicator(batch);
+    }
+
+    private void renderSprite(SpriteBatch batch) {
         float x = position.x - SIZE / 2f;
         float y = position.y - SIZE / 2f;
 
@@ -214,8 +219,9 @@ public class PoliceEnemy {
         } else {
             batch.draw(currentFrame, x, y, SIZE, SIZE);
         }
+    }
 
-        // draw ? or ! above head depending on state
+    private void renderAlertIndicator(SpriteBatch batch) {
         if (alertState == AlertState.ALERTED) {
             batch.draw(question, position.x + 5, position.y + SIZE / 4f, 30f, 30f);
         } else if (alertState == AlertState.CHASING) {
