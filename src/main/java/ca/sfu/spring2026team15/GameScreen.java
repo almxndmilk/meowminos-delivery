@@ -1014,14 +1014,14 @@ public class GameScreen implements Screen {
             puddles.clear();
         }
 
-        if (index == 1 && police.size() < 3) {
+        if (index == 1) {
             police.add(new PoliceEnemy(2000f, mapYOffsets[1] + 1000f));
             police.add(new PoliceEnemy(3500f, mapYOffsets[1] + 1000f));
             puddles.add(new PuddleEnemy(2100f, mapYOffsets[1] + 950f));
             puddles.add(new PuddleEnemy(3000f, mapYOffsets[1] + 780f));
         }
 
-        if (index == 2 && police.size() < 16) {
+        if (index == 2) {
             police.add(new PoliceEnemy(500f, mapYOffsets[2] + 850f));
             police.add(new PoliceEnemy(1300f, mapYOffsets[2] + 1200f));
             police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1300f));
