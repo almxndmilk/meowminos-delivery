@@ -137,4 +137,60 @@ ones ever being freed. This is a resource leak. The fix is to call
 \texttt{toggleSound.dispose()} and \texttt{escSound.dispose()} inside each
 \texttt{dispose()} method.
 
+
+\bigskip
+\hrule
+\bigskip
+
+\section*{Refactoring Based on Peer Review of My Code}
+
+Tanveer Muntaseer reviewed my file \texttt{CinematicBars.java} on the
+\texttt{Assignment4} branch and identified five code smells. Below I describe
+each smell, the fix I made, and the corresponding commit.
+
+\section{Smell 1: Abbreviated Variable Name in Constructor \normalfont\small — commit \texttt{5e4f6bd}}
+
+The local variable holding the temporary pixel buffer was named \texttt{pm}.
+The name is a two-letter abbreviation with no clear meaning to a reader who is
+not already familiar with the LibGDX \texttt{Pixmap} API. I renamed it to
+\texttt{pixmap} so the constructor is self-explanatory.
+
+\section{Smell 2: Redundant \texttt{currentHeight} Field \normalfont\small — commit \texttt{26b007e}}
+
+The class stored \texttt{private float currentHeight} alongside
+\texttt{timer} and \texttt{state}, even though the height is completely
+determined by those two fields. Keeping it as separate state meant every
+transition had to update both \texttt{timer} and \texttt{currentHeight} in
+sync. I removed the field and replaced all reads of it with a private
+\texttt{computeHeight()} method that derives the value on demand, giving the
+class a single source of truth for the animation progress.
+
+\section{Smell 3: Missing Javadoc on Public Methods \normalfont\small — commit \texttt{9d90cf9}}
+
+None of the five public methods (\texttt{show}, \texttt{hide}, \texttt{update},
+\texttt{render}, \texttt{isFullyVisible}) had Javadoc. A caller looking only at
+the signatures would not know that \texttt{update()} must be called every frame,
+that \texttt{show()}/\texttt{hide()} handle mid-animation reversal, or that
+\texttt{render()} requires an already-open \texttt{SpriteBatch} using the HUD
+projection matrix. I added a Javadoc block to each method covering its purpose
+and any non-obvious usage requirements.
+
+\section{Smell 4: Implicit \texttt{else} in \texttt{update()} \normalfont\small — commit \texttt{d571704}}
+
+The second branch of the \texttt{if}/\texttt{else} in \texttt{update()} used a
+bare \texttt{else} that silently assumed the state was \texttt{DISAPPEARING}.
+If a new state were added to the enum later, the \texttt{else} body would run
+against it incorrectly with no warning. I changed it to
+\texttt{else if (state == State.DISAPPEARING)} so the assumption is explicit.
+
+\section{Smell 5: High Coupling to \texttt{GameScreen} Constants \normalfont\small — commit \texttt{1546474}}
+
+The constructor read \texttt{GameScreen.VIEW\_WIDTH} and
+\texttt{GameScreen.VIEW\_HEIGHT} directly, creating an unnecessary compile-time
+dependency on \texttt{GameScreen} and making the class impossible to reuse on
+any screen with different dimensions. I changed the constructor to accept
+\texttt{screenWidth} and \texttt{screenHeight} as parameters and updated the
+call site in \texttt{GameScreen.show()} to pass \texttt{VIEW\_WIDTH} and
+\texttt{VIEW\_HEIGHT} explicitly.
+
 \end{document}

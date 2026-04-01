@@ -73,6 +73,28 @@ public class GameScreen implements Screen {
     // Respawn Penalties
     private static final int RESPAWN_FISH_PENALTY = 10;
     private static final float RESPAWN_TIME_PENALTY = 30f;
+
+    private static final float[][] MAP2_POLICE_SPAWNS = {
+        {2000f, 1000f},
+        {3500f, 1000f}
+    };
+    private static final float[][] MAP2_PUDDLE_SPAWNS = {
+        {2100f, 950f},
+        {3000f, 780f}
+    };
+    private static final float[][] MAP3_POLICE_SPAWNS = {
+        { 500f,  850f}, {1300f, 1200f}, {2500f, 1300f}, { 800f, 1450f},
+        {1800f, 1600f}, {1380f,  800f}, {2700f, 1900f}, { 300f, 2300f},
+        {1600f, 2300f}, {2300f, 2150f}, {2200f,  700f}, { 600f, 2480f},
+        {1500f, 1300f}, { 400f, 1400f}, { 920f, 1650f}, {2000f, 1600f},
+        {1700f,  900f}, { 300f, 2000f}, {1600f, 2100f}, {1100f, 2250f}
+    };
+    private static final float[][] MAP3_PUDDLE_SPAWNS = {
+        { 550f,  800f}, {1500f, 1000f}, {2500f, 1200f}, { 900f, 1450f},
+        {2000f, 1500f}, {1200f, 1750f}, {2100f, 1900f}, { 400f, 2000f},
+        {1600f, 2200f}, {2300f, 2250f}, { 900f, 2200f}, { 600f, 2480f},
+        {2300f, 2480f}
+    };
     private int totalTimePenalties = 0;
 
     // Gate 1 obstacle — blocks top of map 1 until player has enough fish
@@ -240,7 +262,7 @@ public class GameScreen implements Screen {
         whiteTexture = new Texture(pixmap);
         pixmap.dispose();
 
-        cinematicBars = new CinematicBars();
+        cinematicBars = new CinematicBars(VIEW_WIDTH, VIEW_HEIGHT);
 
         // Camera bounds scoped to map 1; updated on each map transition (raw map edges, halfViewH applied internally).
         // X uses mapWidth - BARRIER_X_OFFSET because the map is drawn at worldX = -75, so the right world-edge is mapWidth - 75.
@@ -1010,48 +1032,21 @@ public class GameScreen implements Screen {
             puddles.clear();
         }
 
-        if (index == 1) {
-            police.add(new PoliceEnemy(2000f, mapYOffsets[1] + 1000f));
-            police.add(new PoliceEnemy(3500f, mapYOffsets[1] + 1000f));
-            puddles.add(new PuddleEnemy(2100f, mapYOffsets[1] + 950f));
-            puddles.add(new PuddleEnemy(3000f, mapYOffsets[1] + 780f));
+        if (index >= 1) {
+            spawnEnemiesForMap(index);
         }
+    }
 
-        if (index == 2) {
-            police.add(new PoliceEnemy(500f, mapYOffsets[2] + 850f));
-            police.add(new PoliceEnemy(1300f, mapYOffsets[2] + 1200f));
-            police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1300f));
-            police.add(new PoliceEnemy(800f, mapYOffsets[2] + 1450f));
-            police.add(new PoliceEnemy(1800f, mapYOffsets[2] + 1600f));
-            police.add(new PoliceEnemy(1380f, mapYOffsets[2] + 800f));
-            police.add(new PoliceEnemy(2700f, mapYOffsets[2] + 1900f));
-            police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2300f));
-            police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2300f));
-            police.add(new PoliceEnemy(2300f, mapYOffsets[2] + 2150f));
-            police.add(new PoliceEnemy(2200f, mapYOffsets[2] + 700f));
-            police.add(new PoliceEnemy(600f, mapYOffsets[2] + 2480f));
-            police.add(new PoliceEnemy(1500f, mapYOffsets[2] + 1300f));
-            police.add(new PoliceEnemy(400f, mapYOffsets[2] + 1400f));
-            police.add(new PoliceEnemy(920f, mapYOffsets[2] + 1650f));
-            police.add(new PoliceEnemy(2000f, mapYOffsets[2] + 1600f));
-            police.add(new PoliceEnemy(1700f, mapYOffsets[2] + 900f));
-            police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2000f));
-            police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2100f));
-            police.add(new PoliceEnemy(1100f, mapYOffsets[2] + 2250f));
+    private void spawnEnemiesForMap(int index) {
+        float[][] policeSpawns = (index == 1) ? MAP2_POLICE_SPAWNS : MAP3_POLICE_SPAWNS;
+        float[][] puddleSpawns = (index == 1) ? MAP2_PUDDLE_SPAWNS : MAP3_PUDDLE_SPAWNS;
+        float yOffset = mapYOffsets[index];
 
-            puddles.add(new PuddleEnemy(550f, mapYOffsets[2] + 800f));
-            puddles.add(new PuddleEnemy(1500f, mapYOffsets[2] + 1000f));
-            puddles.add(new PuddleEnemy(2500f, mapYOffsets[2] + 1200f));
-            puddles.add(new PuddleEnemy(900f, mapYOffsets[2] + 1450f));
-            puddles.add(new PuddleEnemy(2000f, mapYOffsets[2] + 1500f));
-            puddles.add(new PuddleEnemy(1200f, mapYOffsets[2] + 1750f));
-            puddles.add(new PuddleEnemy(2100f, mapYOffsets[2] + 1900f));
-            puddles.add(new PuddleEnemy(400f, mapYOffsets[2] + 2000f));
-            puddles.add(new PuddleEnemy(1600f, mapYOffsets[2] + 2200f));
-            puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2250f));
-            puddles.add(new PuddleEnemy(900f, mapYOffsets[2] + 2200f));
-            puddles.add(new PuddleEnemy(600f, mapYOffsets[2] + 2480f));
-            puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2480f));
+        for (float[] spawn : policeSpawns) {
+            police.add(new PoliceEnemy(spawn[0], yOffset + spawn[1]));
+        }
+        for (float[] spawn : puddleSpawns) {
+            puddles.add(new PuddleEnemy(spawn[0], yOffset + spawn[1]));
         }
     }
 

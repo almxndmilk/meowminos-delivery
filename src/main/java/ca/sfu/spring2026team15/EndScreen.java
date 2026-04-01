@@ -24,10 +24,16 @@ public class EndScreen implements Screen {
     private Texture[] digits; // digits[0] = 0.png, ..., digits[9] = 9.png
     private Texture[] timeNumbers;
 
-    // Score box: 4 large digits at the middle top part of the endScreen, to represent the score 
+    /** 
+     * Score box: 4 large digits at the middle top part of the endScreen, to represent the score 
+     * x = x-cor, y = y-cor, w = width, h = height, gap = spacing between digits 
+    */
     private static final DigitLayout SCORE_LAYOUT = new DigitLayout(348f, 460f, 150f, 140f, 139f);
 
-    // Time row: 4 smaller digits with different appearance for representation of time
+    /** 
+     * Time row: 4 smaller digits with different appearance for representation of time
+     * x = x-cor, y = y-cor, w = width, h = height, gap = spacing between digits 
+    */
     private static final DigitLayout TIME_LAYOUT  = new DigitLayout(450, 328,  50f,  50f,  35f);
 
     // For the time row colon in between the minute and seconds
