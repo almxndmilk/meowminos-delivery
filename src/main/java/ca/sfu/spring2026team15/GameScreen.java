@@ -1103,7 +1103,7 @@ public class GameScreen implements Screen {
         float px = getActiveX();
         float py = getActiveY();
         dispose();
-        game.setScreen(new ObamaScreen(game, elapsed, fishCollected, yOffset, height, px, py));
+        game.setScreen(new ObamaScreen(game, elapsed, fishCollected, yOffset, height, px, py, SettingsScreen.soundOn));
     }
 
     // method definition for updated player on and off bike

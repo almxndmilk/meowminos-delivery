@@ -1,5 +1,6 @@
 package ca.sfu.spring2026team15;
 
+import com.badlogic.gdx.math.Vector2;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -280,28 +281,30 @@ public class GameLogicHelperTest {
         assertFalse(GameLogicHelper.isInButtonBounds(535f, 185f, 540f, 135f, 730f, 235f));
     }
 
-    // --- getPlayerSpawnX ---
-    @Test public void spawnXMap0() { assertEquals(300f, GameLogicHelper.getPlayerSpawnX(0), DELTA); }
-    @Test public void spawnXMap1() { assertEquals(5600f, GameLogicHelper.getPlayerSpawnX(1), DELTA); }
-    @Test public void spawnXMap2() { assertEquals(1250f, GameLogicHelper.getPlayerSpawnX(2), DELTA); }
-    @Test public void spawnXDefault() { assertEquals(300f, GameLogicHelper.getPlayerSpawnX(99), DELTA); }
-
-    // --- getPlayerSpawnY ---
-    @Test public void spawnYMap0() {
+    // --- getPlayerSpawnPosition ---
+    @Test public void spawnPositionMap0() {
         float[] offsets = {0f, 902f, 1804f};
-        assertEquals(300f, GameLogicHelper.getPlayerSpawnY(0, offsets), DELTA);
+        Vector2 pos = GameLogicHelper.getPlayerSpawnPosition(0, offsets);
+        assertEquals(300f, pos.x, DELTA);
+        assertEquals(300f, pos.y, DELTA);
     }
-    @Test public void spawnYMap1() {
+    @Test public void spawnPositionMap1() {
         float[] offsets = {0f, 902f, 1804f};
-        assertEquals(1002f, GameLogicHelper.getPlayerSpawnY(1, offsets), DELTA);
+        Vector2 pos = GameLogicHelper.getPlayerSpawnPosition(1, offsets);
+        assertEquals(5600f, pos.x, DELTA);
+        assertEquals(1002f, pos.y, DELTA);
     }
-    @Test public void spawnYMap2() {
+    @Test public void spawnPositionMap2() {
         float[] offsets = {0f, 902f, 1804f};
-        assertEquals(1904f, GameLogicHelper.getPlayerSpawnY(2, offsets), DELTA);
+        Vector2 pos = GameLogicHelper.getPlayerSpawnPosition(2, offsets);
+        assertEquals(1250f, pos.x, DELTA);
+        assertEquals(1904f, pos.y, DELTA);
     }
-    @Test public void spawnYDefault() {
+    @Test public void spawnPositionDefault() {
         float[] offsets = {0f, 902f, 1804f};
-        assertEquals(300f, GameLogicHelper.getPlayerSpawnY(99, offsets), DELTA);
+        Vector2 pos = GameLogicHelper.getPlayerSpawnPosition(99, offsets);
+        assertEquals(300f, pos.x, DELTA);
+        assertEquals(300f, pos.y, DELTA);
     }
 
     // --- isRespawnGameOver ---
