@@ -137,4 +137,120 @@ ones ever being freed. This is a resource leak. The fix is to call
 \texttt{toggleSound.dispose()} and \texttt{escSound.dispose()} inside each
 \texttt{dispose()} method.
 
+
+\bigskip
+\hrule
+\bigskip
+
+\section*{Refactoring Based on Peer Review of My Code}
+
+Tanveer Muntaseer reviewed my file \texttt{CinematicBars.java} on the
+\texttt{Assignment4} branch and identified five code smells. Below I describe
+each smell, the steps I took to fix it, and the corresponding commit.
+
+\section{Smell 1: Abbreviated Variable Name in Constructor}
+
+\textbf{File:} \texttt{CinematicBars.java}, constructor \quad
+\textbf{Fix commit:} \texttt{5e4f6bd}
+
+The local variable used to build the one-pixel black texture was named
+\texttt{pm}:
+
+\begin{lstlisting}
+Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+pm.setColor(Color.BLACK);
+pm.fill();
+blackTexture = new Texture(pm);
+pm.dispose();
+\end{lstlisting}
+
+The name \texttt{pm} is a two-letter abbreviation that gives no clue about
+what the variable holds. A reader who does not already know the LibGDX API
+has to look it up to understand what is going on. I renamed it to
+\texttt{pixmap} so the code reads clearly without needing a comment.
+
+\section{Smell 2: Redundant \texttt{currentHeight} Field}
+
+\textbf{File:} \texttt{CinematicBars.java} \quad
+\textbf{Fix commit:} \texttt{26b007e}
+
+The class kept a \texttt{currentHeight} instance field that stored the bar
+height as state alongside the \texttt{timer} field:
+
+\begin{lstlisting}
+private float currentHeight = 0f;
+\end{lstlisting}
+
+The problem is that \texttt{currentHeight} is fully determined by
+\texttt{timer} and \texttt{state} at every point in time, so storing it
+separately creates two sources of truth that can get out of sync. For example,
+\texttt{show()} had to assign both \texttt{timer} and \texttt{currentHeight}
+to keep them consistent. I removed the field entirely and introduced a
+\texttt{computeHeight()} method that derives the height on demand from the
+current state and timer. The class now has a single source of truth for the
+animation progress.
+
+\section{Smell 3: Missing Javadoc on Public Methods}
+
+\textbf{File:} \texttt{CinematicBars.java} \quad
+\textbf{Fix commit:} \texttt{9d90cf9}
+
+The five public methods (\texttt{show}, \texttt{hide}, \texttt{update},
+\texttt{render}, \texttt{isFullyVisible}) had no Javadoc comments. A caller
+relying only on the method signatures would not know, for example, that
+\texttt{show()} handles the mid-animation reversal case, that \texttt{update()}
+must be called every frame, or that \texttt{render()} requires an
+already-open \texttt{SpriteBatch} using the HUD projection matrix. I added a
+Javadoc block to each public method describing its purpose, usage requirements,
+and any notable edge-case behaviour.
+
+\section{Smell 4: Implicit \texttt{else} Branch in \texttt{update()}}
+
+\textbf{File:} \texttt{CinematicBars.java}, \texttt{update()} method \quad
+\textbf{Fix commit:} \texttt{d571704}
+
+The \texttt{update()} method ended with a bare \texttt{else} block:
+
+\begin{lstlisting}
+if (state == State.APPEARING) {
+    ...
+} else {
+    if (timer >= ANIM_DURATION) {
+        state = State.HIDDEN;
+    }
+}
+\end{lstlisting}
+
+The \texttt{else} branch silently assumes the state is \texttt{DISAPPEARING},
+but this assumption is not stated in the code. If a new state were added to the
+enum in the future, the \texttt{else} block would execute against it incorrectly
+without any compiler or runtime warning. I changed it to an explicit
+\texttt{else if (state == State.DISAPPEARING)} so the intent is clear and a
+future state addition would not be silently mishandled.
+
+\section{Smell 5: High Coupling to \texttt{GameScreen} Constants}
+
+\textbf{File:} \texttt{CinematicBars.java}, constructor and \texttt{render()} \quad
+\textbf{Fix commit:} \texttt{1546474}
+
+The constructor and \texttt{render()} method referenced
+\texttt{GameScreen.VIEW\_WIDTH} and \texttt{GameScreen.VIEW\_HEIGHT} directly:
+
+\begin{lstlisting}
+public CinematicBars() {
+    this.screenWidth  = GameScreen.VIEW_WIDTH;
+    this.screenHeight = GameScreen.VIEW_HEIGHT;
+    ...
+}
+\end{lstlisting}
+
+This hard-wires \texttt{CinematicBars} to \texttt{GameScreen}, making it
+impossible to use the class on a screen with different dimensions without
+changing the source. It also creates an unnecessary compile-time dependency on
+\texttt{GameScreen}. I changed the constructor to accept
+\texttt{screenWidth} and \texttt{screenHeight} as parameters, and updated the
+call site in \texttt{GameScreen.show()} to pass \texttt{VIEW\_WIDTH} and
+\texttt{VIEW\_HEIGHT} explicitly. The class is now self-contained and can work
+at any resolution.
+
 \end{document}
