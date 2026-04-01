@@ -43,8 +43,13 @@ Duplicated \texttt{blockedX} and \texttt{blockedY} in alert/chasing state and th
 Lines 142 - 154 and Lines 187 - 199 are the same.
 
 \begin{lstlisting}
-boolean blockedX = ... if (!blockedX) position.x = newX;
-boolean blockedY = ... if (!blockedY) position.y = newY;
+boolean blockedX =
+            lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
+            lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
+            lookup.isBarrier(newX - hitW, position.y - hitTop) ||
+            lookup.isBarrier(newX + hitW, position.y - hitTop);
+        if (!blockedX) position.x = newX;
+boolean blockedY = ... if (!blockedY) position.y = newY; // Similar but Y
 \end{lstlisting}
 
 This can be fixed by putting the repeated code into a dedicated private method (eg. \texttt{applyBarrierCollision()}).
@@ -127,26 +132,29 @@ private static final float[][] MAP3_POLICE_SPAWNS = {
 \end{lstlisting}
 
 
-\section*{Refactoring}
+\section*{Refactoring 
+(Based on Megan's Review)}
 
-After receiving the review, I refactored each identified code smell as follows.
+After receiving Megan's code review, I refactored each identified code smell as follows:
 
-\textbf{Smell 1: Unnecessary Variable} \quad \textbf{Commit:} \texttt{YOUR\_COMMIT} \\
+\textbf{Smell 1: Unnecessary Variable} \quad \textbf{Commit:} \texttt{fd23f22} \\
 \texttt{bikeParked} was removed from \texttt{GameScreen.java}. All assignments 
 to \texttt{bikeParked} were deleted, and the one usage \texttt{if (bikeParked)} 
 in the render loop was replaced with \texttt{if (!isOnBike)}. The game was 
 rerun and bike parking, mounting, and dismounting all behaved correctly.
 
 \textbf{Smell 2: Data Clump} \quad \textbf{Commit:} \texttt{cc410b2} \\
-In \texttt{EndScreen.java}, the repetitive digit-rendering code was reduced 
-using static variables to eliminate redundancy. The end screen was tested and 
-displayed scores and times correctly after the change.
+In \texttt{EndScreen.java}, the \texttt{DIGIT\_} and \texttt{TIME\_} constants 
+were grouped into a \texttt{RenderLayout} structure so that related values 
+(position, size, gap) are encapsulated together rather than stored as separate 
+unrelated fields. The end screen was tested and displayed correctly after the change.
 
 \textbf{Smell 3: Code Duplication} \quad \textbf{Commit:} \texttt{7208b9f} \\
-In \texttt{EndScreen.java}, the repeated digit-extraction pattern used by both 
-\texttt{scoreDigits} and \texttt{timeDigits} was reduced by extracting the shared 
-logic. Both now use the same pattern, eliminating duplication. The end screen 
-was tested and displayed correct values.
+In \texttt{EndScreen.java}, the repeated digit-extraction pattern (\texttt{/10}, 
+\texttt{\%10}) shared by \texttt{scoreDigits} and \texttt{timeDigits} was 
+extracted into a private helper method. Both arrays now call the shared method 
+instead of repeating the arithmetic. The end screen was tested and displayed 
+correct score and time values.
 
 \textbf{Smell 4: Dead Code} \quad \textbf{Commit:} \texttt{9782963} \\
 In \texttt{House.java}, the unused import was removed. No behaviour changed 
