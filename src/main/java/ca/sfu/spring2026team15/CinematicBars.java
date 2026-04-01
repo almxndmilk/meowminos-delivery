@@ -31,6 +31,11 @@ public class CinematicBars implements Disposable {
         pixmap.dispose();
     }
 
+    /**
+     * Starts the bar-appearing animation. If called while disappearing,
+     * resumes smoothly from the current bar height instead of restarting.
+     * No effect if already appearing or fully visible.
+     */
     public void show() {
         if (state == State.HIDDEN || state == State.DISAPPEARING) {
             // Resume from current position so mid-reversal feels smooth
@@ -39,6 +44,11 @@ public class CinematicBars implements Disposable {
         }
     }
 
+    /**
+     * Starts the bar-disappearing animation. If called while appearing,
+     * reverses smoothly from the current bar height. No effect if already
+     * disappearing or fully hidden.
+     */
     public void hide() {
         if (state == State.VISIBLE || state == State.APPEARING) {
             timer = ANIM_DURATION * (1f - currentHeight / BAR_HEIGHT);
@@ -46,6 +56,13 @@ public class CinematicBars implements Disposable {
         }
     }
 
+    /**
+     * Advances the animation state machine by the given time step.
+     * Must be called once per frame. Has no effect when the state is
+     * HIDDEN or VISIBLE.
+     *
+     * @param delta elapsed time in seconds since the last frame
+     */
     public void update(float delta) {
         if (state == State.HIDDEN || state == State.VISIBLE) return;
 
@@ -76,10 +93,18 @@ public class CinematicBars implements Disposable {
         batch.setColor(Color.WHITE);
     }
 
+    /**
+     * Returns true only when the bars are fully extended and the animation
+     * has finished (state is VISIBLE).
+     */
     public boolean isFullyVisible() {
         return state == State.VISIBLE;
     }
 
+    /**
+     * Releases the black texture used to draw the bars.
+     * Must be called when the screen that owns this object is disposed.
+     */
     @Override
     public void dispose() {
         blackTexture.dispose();
