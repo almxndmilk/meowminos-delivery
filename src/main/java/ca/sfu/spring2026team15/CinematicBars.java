@@ -24,11 +24,11 @@ public class CinematicBars implements Disposable {
     private final Texture blackTexture;
 
     public CinematicBars() {
-        Pixmap pm = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        pm.setColor(Color.BLACK);
-        pm.fill();
-        blackTexture = new Texture(pm);
-        pm.dispose();
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.BLACK);
+        pixmap.fill();
+        blackTexture = new Texture(pixmap);
+        pixmap.dispose();
     }
 
     public void show() {
