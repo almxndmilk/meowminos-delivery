@@ -24,23 +24,29 @@ public class EndScreen implements Screen {
     private Texture[] digits; // digits[0] = 0.png, ..., digits[9] = 9.png
     private Texture[] timeNumbers;
 
-    // Score box: 5 large digits filling the empty white box at the top.
-    // Box interior world coords: x [242, 913], y [430, 629] (670x199 world units).
-    // 5 digits at DIGIT_W each + 4 gaps = 670, so gap = (670 - 5*115) / 4 = 24.
-    private static final float DIGIT_W   = 150f;
-    private static final float DIGIT_H   = 140f;
-    private static final float DIGIT_X   = 348f;  // x of first digit (left interior edge)
-    private static final float DIGIT_Y   = 460f;  // y bottom (interior bottom + 7 margin)
-    private static final float DIGIT_GAP = 139f;  // step = DIGIT_W + 24 gap
+    /** 
+     * Score box: 4 large digits at the middle top part of the endScreen, to represent the score 
+     * x = x-cor, y = y-cor, w = width, h = height, gap = spacing between digits 
+    */
+    private static final DigitLayout SCORE_LAYOUT = new DigitLayout(348f, 460f, 150f, 140f, 139f);
 
-    // Time row: 4 smaller digits overlaid on the baked-in "02:10" placeholder.
-    // endingScene.png has "Time : 02:10" pixel art at world y≈238-264; digits start at x≈437.
-    private static final float TIME_W        = 50f;
-    private static final float TIME_H        = 50f;
-    private static final float TIME_X        = 450f; // x of first time digit (M tens)
-    private static final float TIME_Y        = 328f; // y bottom, centres on time row
-    private static final float TIME_GAP      = 35f;  // step between digits within MM or SS
+    /** 
+     * Time row: 4 smaller digits with different appearance for representation of time
+     * x = x-cor, y = y-cor, w = width, h = height, gap = spacing between digits 
+    */
+    private static final DigitLayout TIME_LAYOUT  = new DigitLayout(450, 328,  50f,  50f,  35f);
+
+    // For the time row colon in between the minute and seconds
     private static final float TIME_COLON_W  = 25f;  // extra gap to skip the baked-in colon
+
+    // Method that helps reduces DATA CLUMP
+    private static class DigitLayout {
+        final float x, y, w, h, gap;
+        DigitLayout(float x, float y, float w, float h, float gap) {
+            this.x = x; this.y = y; this.w = w;
+            this.h = h; this.gap = gap;
+        }
+    }
 
     // Hit zones for buttons (world coords, origin = bottom-left)
     private static final float CONTINUE_X1 = 260f, CONTINUE_X2 = 475f;
@@ -104,23 +110,26 @@ public class EndScreen implements Screen {
 
         // Score: 5-digit zero-padded (capped at 99999 seconds)
         int s = Math.max(0, Math.min(score, 99999));
-        int[] scoreDigits = {
-            (s / 1000) % 10,
-            (s / 100)  % 10,
-            (s / 10)   % 10,
-             s         % 10
-        };
+        int[] scoreDigits =  digitsOf(s, 4);
         for (int i = 0; i < 4; i++) {
-            batch.draw(digits[scoreDigits[i]], DIGIT_X + i * DIGIT_GAP, DIGIT_Y, DIGIT_W, DIGIT_H);
+            batch.draw(digits[scoreDigits[i]],
+                    SCORE_LAYOUT.x + i * SCORE_LAYOUT.gap,
+                    SCORE_LAYOUT.y,
+                    SCORE_LAYOUT.w,
+                    SCORE_LAYOUT.h);
         }
 
         // Time: MM:SS (colon is baked into the background image)
         int mm = Math.min(time / 60, 99);
         int ss = time % 60;
-        int[] timeDigits = { mm / 10, mm % 10, ss / 10, ss % 10 };
+        int[] timeDigits = digitsOf(mm * 100 + ss, 4);
         for (int i = 0; i < 4; i++) {
-            float offset = (i < 2) ? i * TIME_GAP : i * TIME_GAP + TIME_COLON_W;
-            batch.draw(timeNumbers[timeDigits[i]], TIME_X + offset, TIME_Y, TIME_W, TIME_H);
+            float offset = (i < 2) ? i * TIME_LAYOUT.gap : i * TIME_LAYOUT.gap + TIME_COLON_W;
+            batch.draw(timeNumbers[timeDigits[i]],
+                    TIME_LAYOUT.x + offset,
+                    TIME_LAYOUT.y,
+                    TIME_LAYOUT.w,
+                    TIME_LAYOUT.h);
         }
 
         batch.end();
@@ -140,6 +149,17 @@ public class EndScreen implements Screen {
 
     private boolean inBounds(Vector2 p, float x1, float y1, float x2, float y2) {
         return p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2;
+    }
+
+    // CODE DUPLICATION helper method
+    // reduces repitiion in line 110 and line 122
+    private int[] digitsOf(int value, int count) {
+        int[] d = new int[count];
+        for (int i = count - 1; i >= 0; i--) {
+            d[i] = value % 10;
+            value /= 10;
+        }
+        return d;
     }
 
     @Override
