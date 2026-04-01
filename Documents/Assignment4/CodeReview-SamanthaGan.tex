@@ -33,7 +33,7 @@
 For Assignment 4, I have reviewed two classes that Krish has contributed to: \texttt{PoliceEnemy.java} and \texttt{GameScreen.java}. I have verified each section of code to be Krish's by reviewing commit history, and ensuring his name is on the blame. Through investigation, I have found 4 code smells for Krish to refactor.
 
 
-\section{Smell 1: Code Duplication}
+\section*{Smell 1: Code Duplication}
 
 \textbf{Files:} \texttt{PoliceEnemy.java} \quad
 \textbf{Lines:} \texttt{142-154 and 187-199} \quad
@@ -54,7 +54,7 @@ boolean blockedY = ... if (!blockedY) position.y = newY; // Similar but Y
 
 This can be fixed by putting the repeated code into a dedicated private method (eg. \texttt{applyBarrierCollision()}).
 
-\section{Smell 2: Method is too long}
+\section*{Smell 2: Method is too long}
 
 \textbf{Files:} \texttt{update()} method in \texttt{PoliceEnemy.java} \quad
 \textbf{Lines:} \texttt{96 - 221} \quad
@@ -65,7 +65,9 @@ The update() method in \texttt{PoliceEnemy.java} handles state, movement/collisi
 \begin{lstlisting}
 public void update(float delta, float playerX, float playerY, BarrierLookup lookup) {
         // state machine
-        // movement ...}
+        // movement 
+        // wander
+        // animation ...}
 \end{lstlisting}
 
 Having  helper functions for each task can increase readability. By calling each helper in the \texttt{update()} method, it reduces the amount of code inside the method, and breaking it up into 3 digestible, separate chunks. \texttt{update()} serves as a clean coordinator.
@@ -78,7 +80,7 @@ Separate into different methods:
 \end{itemize} 
 
 
-\section{Smell 3: Low Cohesion}
+\section*{Smell 3: Low Cohesion}
 
 \textbf{Files:} \texttt{render()} in \texttt{PoliceEnemy.java} \quad
 \textbf{Lines:} \texttt{223-239} \quad
@@ -90,8 +92,14 @@ to display.
 
 \begin{lstlisting}
 public void render(SpriteBatch batch) {
-	// sprite drawing
-    // draw ? or ! above head depending on state ...}
+        float x = position.x - SIZE / 2f;
+        float y = position.y - SIZE / 2f;
+        if (lastDirection == Direction.RIGHT) {...} 
+        else {...}
+        // draw ? or ! above head depending on state
+        if (alertState == AlertState.ALERTED) {...} 
+        else if (alertState == AlertState.CHASING) {...}
+}
 \end{lstlisting}
 
 A render method should only be presentational, and should not handle any logic (deciding what to display). These two should be separated into \texttt{renderSprite(SpriteBatch batch)} 
@@ -99,7 +107,7 @@ and \texttt{renderAlertIndicator(SpriteBatch batch)}, with \texttt{render()}
 calling both. It also makes each piece independently testable and readable.
 
 
-\section{Smell 4: Data Clump / Magic Numbers}
+\section*{Smell 4: Data Clump / Magic Numbers}
 
 \textbf{Files:} \texttt{activateMap()} in \texttt{GameScreen.java} \quad
 \textbf{Lines:} \texttt{1016-1060} \quad
@@ -131,9 +139,12 @@ private static final float[][] MAP3_POLICE_SPAWNS = {
 };
 \end{lstlisting}
 
+\medskip
+
 
 \section*{Refactoring 
 (Based on Megan's Review)}
+\smallskip
 
 After receiving Megan's code review, I refactored each identified code smell as follows:
 
@@ -141,23 +152,59 @@ After receiving Megan's code review, I refactored each identified code smell as 
 \texttt{bikeParked} was removed from \texttt{GameScreen.java}. All assignments 
 to \texttt{bikeParked} were deleted, and the one usage \texttt{if (bikeParked)} 
 in the render loop was replaced with \texttt{if (!isOnBike)}. The game was 
-rerun and bike parking, mounting, and dismounting all behaved correctly.
+rerun and bike parking, mounting, and dismounting all ran normally. All existing tests passed.
 
-\textbf{Smell 2: Data Clump} \quad \textbf{Commit:} \texttt{cc410b2} \\
+\begin{lstlisting}
+// Before
+bikeParked = true;
+isOnBike = false;
+// After
+isOnBike = false; // bikeParked removed; use !isOnBike instead
+\end{lstlisting}
+
+\smallskip
+
+\textbf{Smell 2: Data Clump} \quad \textbf{Commit:} \texttt{e0d5641} \\
 In \texttt{EndScreen.java}, the \texttt{DIGIT\_} and \texttt{TIME\_} constants 
-were grouped into a \texttt{RenderLayout} structure so that related values 
+were grouped into a \texttt{DigitLayout} structure so that related values 
 (position, size, gap) are encapsulated together rather than stored as separate 
-unrelated fields. The end screen was tested and displayed correctly after the change.
+unrelated fields. This also reduced the amount of similar code definitions in the beginning.  The end screen was tested and displayed correctly after the change. All existing tests passed.
 
-\textbf{Smell 3: Code Duplication} \quad \textbf{Commit:} \texttt{7208b9f} \\
+\begin{lstlisting}
+// Before
+private static final float DIGIT_X = 348f, DIGIT_Y = 460f;
+private static final float DIGIT_W = 150f, DIGIT_H = 140f, DIGIT_GAP = 139f; // ... repeat for all adjustments and TIME_ 
+// After
+private static final DigitLayout SCORE_LAYOUT = new DigitLayout(348f, 460f, 150f, 140f, 139f);
+private static final DigitLayout TIME_LAYOUT  = new DigitLayout(450f, 328f, 50f, 50f, 35f);
+\end{lstlisting}
+
+\smallskip
+
+\textbf{Smell 3: Code Duplication} \quad \textbf{Commit:} \texttt{b39dd53} \\
 In \texttt{EndScreen.java}, the repeated digit-extraction pattern (\texttt{/10}, 
 \texttt{\%10}) shared by \texttt{scoreDigits} and \texttt{timeDigits} was 
-extracted into a private helper method. Both arrays now call the shared method 
-instead of repeating the arithmetic. The end screen was tested and displayed 
+extracted into a private helper method \texttt{digitsOf()}. Both arrays now call the shared method 
+instead of repeating the same operations over and over. The end screen was tested and displayed 
 correct score and time values.
 
-\textbf{Smell 4: Dead Code} \quad \textbf{Commit:} \texttt{9782963} \\
-In \texttt{House.java}, the unused import was removed. No behaviour changed 
-as the import was never referenced. The project was rebuilt successfully.
+\begin{lstlisting}
+// Before: repeated in both scoreDigits and timeDigits
+(s / 1000) % 10, (s / 100) % 10, ...
+// After: shared helper
+private int[] digitsOf(int value, int count) {
+    int[] d = new int[count];
+    for (int i = count - 1; i >= 0; i--) {
+        d[i] = value % 10;
+        value /= 10;
+    } return d;
+}
+\end{lstlisting}
+
+\smallskip
+
+\textbf{Smell 4: Dead Code} \quad \textbf{Commit:} \texttt{26ee304} \\
+In \texttt{House.java}, the unused import, \texttt{import com.badlogic.gdx.Gdx}, was removed. No behaviour changed 
+as the import was never referenced. The project was rebuilt successfully, and all existing tests passed.
 
 \end{document}
