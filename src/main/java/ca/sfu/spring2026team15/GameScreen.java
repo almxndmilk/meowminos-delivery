@@ -430,11 +430,9 @@ public class GameScreen implements Screen {
                     if (isOnBike) {
                         parkedBikeX = player.getCenterX();
                         parkedBikeY = player.getCenterY();
-                        bikeParked = true;
                         catOffBike.setPosition(player.getCenterX(), player.getCenterY());
                     } else {
                         player.setPosition(catOffBike.getCenterX(), catOffBike.getCenterY());
-                        bikeParked = false;
                     }
                     isOnBike = !isOnBike;
                 }
@@ -541,7 +539,7 @@ public class GameScreen implements Screen {
             fish.render(batch);
         }
         // replaced player.render(batch)
-        if (bikeParked) {
+        if (!isOnBike) {
             float bikeSize = 110f;
             batch.draw(parkedBikeTexture,
                     parkedBikeX - bikeSize / 2f,
@@ -875,7 +873,6 @@ public class GameScreen implements Screen {
                 cam.update();
                 if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
                     isOnBike = true;
-                    bikeParked = false;
                     player.setPosition(INTRO_BIKE_X, INTRO_BIKE_Y);
                     showIntroMountPrompt = false;
                     introState = IntroState.MOUNT;
@@ -996,7 +993,6 @@ public class GameScreen implements Screen {
         // changed:
         player.setPosition(spawnX[index], spawnY[index]);
         catOffBike.setPosition(spawnX[index], spawnY[index]);
-        bikeParked = false;
         isOnBike = true;
         currentMapIndex = Math.max(currentMapIndex, index);
 
@@ -1165,7 +1161,6 @@ public class GameScreen implements Screen {
                         fishCollected, mapYOffsets, RESPAWN_FISH_PENALTY, RESPAWN_TIME_PENALTY);
                 totalTimePenalties += (int) RESPAWN_TIME_PENALTY;
                 catOffBike.setPosition(player.getCenterX(), player.getCenterY());
-                bikeParked = false;
                 isOnBike = true;
                 return true;
             }
