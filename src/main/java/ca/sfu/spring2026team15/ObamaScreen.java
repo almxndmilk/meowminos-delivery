@@ -79,6 +79,7 @@ public class ObamaScreen implements Screen {
     // Audio
     private Music obamaVoice;
     private boolean audioStarted = false;
+    private final boolean soundOn;
 
     // World-space rendering
     private SpriteBatch    batch;
@@ -115,8 +116,9 @@ public class ObamaScreen implements Screen {
      */
     public ObamaScreen(Main game, int elapsedSeconds, int fishCollected,
                        float map3YOffset, float map3Height,
-                       float playerCenterX, float playerCenterY) {
+                       float playerCenterX, float playerCenterY, boolean soundOn) {
         this.game           = game;
+        this.soundOn        = soundOn;
         this.elapsedSeconds = elapsedSeconds;
         this.fishCollected  = fishCollected;
         this.map3YOffset    = map3YOffset;
@@ -236,7 +238,7 @@ public class ObamaScreen implements Screen {
                     talkTimer = 0f;
                     audioFinished = false;
                     endDelayTimer = 0f;
-                    if (SettingsScreen.soundOn) {
+                    if (soundOn) {
                         obamaVoice.play();
                     }
                     break; // skip completion check this frame
@@ -247,7 +249,7 @@ public class ObamaScreen implements Screen {
 
                 // Sound on: completion listener sets audioFinished exactly at clip end.
                 // Sound off: use fallback duration so cutscene can still progress.
-                if (!audioFinished && !SettingsScreen.soundOn) {
+                if (!audioFinished && !soundOn) {
                     talkTimer += delta;
                     if (talkTimer >= TALK_FALLBACK_DURATION) {
                         audioFinished = true;
@@ -375,12 +377,9 @@ public class ObamaScreen implements Screen {
         // Split dialogue into words
         String[] words = DIALOGUE.split(" ");
         
-        // Calculate duration to use (prefer actual audio duration, fall back to constant)
         float totalDuration = TALK_FALLBACK_DURATION;
-        if (SettingsScreen.soundOn && obamaVoice != null) {
-            // Use fallback duration as approximation since LibGDX doesn't easily provide audio duration
-            totalDuration = TALK_FALLBACK_DURATION;
-        }
+        // LibGDX does not easily provide audio clip duration at runtime,
+        // so TALK_FALLBACK_DURATION is always used as the total duration.
         
         // Calculate how many words should be visible
         float wordsPerSecond = words.length / totalDuration;
