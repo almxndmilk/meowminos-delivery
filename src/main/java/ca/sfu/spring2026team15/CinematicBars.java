@@ -21,9 +21,13 @@ public class CinematicBars implements Disposable {
     private float timer = 0f;
     private float currentHeight = 0f;
 
+    private final float screenWidth;
+    private final float screenHeight;
     private final Texture blackTexture;
 
-    public CinematicBars() {
+    public CinematicBars(float screenWidth, float screenHeight) {
+        this.screenWidth = screenWidth;
+        this.screenHeight = screenHeight;
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.BLACK);
         pixmap.fill();
@@ -88,8 +92,8 @@ public class CinematicBars implements Disposable {
         if (state == State.HIDDEN || currentHeight <= 0f) return;
 
         batch.setColor(Color.BLACK);
-        batch.draw(blackTexture, 0, 0, GameScreen.VIEW_WIDTH, currentHeight);
-        batch.draw(blackTexture, 0, GameScreen.VIEW_HEIGHT - currentHeight, GameScreen.VIEW_WIDTH, currentHeight);
+        batch.draw(blackTexture, 0, 0, screenWidth, currentHeight);
+        batch.draw(blackTexture, 0, screenHeight - currentHeight, screenWidth, currentHeight);
         batch.setColor(Color.WHITE);
     }
 

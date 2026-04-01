@@ -35,6 +35,8 @@ public class CinematicBarsTest extends GdxTestSetup {
         setEnumField(bars, "state", "HIDDEN");
         setField(bars, "timer", 0f);
         setField(bars, "currentHeight", 0f);
+        setField(bars, "screenWidth", 1280f);
+        setField(bars, "screenHeight", 720f);
     }
 
     // ---- Reflection helpers ----

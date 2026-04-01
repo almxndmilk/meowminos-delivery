@@ -240,7 +240,7 @@ public class GameScreen implements Screen {
         whiteTexture = new Texture(pixmap);
         pixmap.dispose();
 
-        cinematicBars = new CinematicBars();
+        cinematicBars = new CinematicBars(VIEW_WIDTH, VIEW_HEIGHT);
 
         // Camera bounds scoped to map 1; updated on each map transition (raw map edges, halfViewH applied internally).
         // X uses mapWidth - BARRIER_X_OFFSET because the map is drawn at worldX = -75, so the right world-edge is mapWidth - 75.
