@@ -34,7 +34,6 @@ public class CinematicBarsTest extends GdxTestSetup {
         // Initialize private fields to known state
         setEnumField(bars, "state", "HIDDEN");
         setField(bars, "timer", 0f);
-        setField(bars, "currentHeight", 0f);
         setField(bars, "screenWidth", 1280f);
         setField(bars, "screenHeight", 720f);
     }
@@ -50,7 +49,15 @@ public class CinematicBarsTest extends GdxTestSetup {
     }
 
     private float getCurrentHeight(CinematicBars b) {
-        return (float) getField(b, "currentHeight");
+        String state = getState(b);
+        float timer = getTimer(b);
+        if (state.equals("VISIBLE"))  return BAR_HEIGHT;
+        if (state.equals("HIDDEN"))   return 0f;
+        if (state.equals("APPEARING")) {
+            return Math.min(BAR_HEIGHT, (timer / ANIM_DURATION) * BAR_HEIGHT);
+        }
+        // DISAPPEARING
+        return Math.max(0f, BAR_HEIGHT * (1f - timer / ANIM_DURATION));
     }
 
     private Object getField(Object obj, String name) {
@@ -109,7 +116,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void showOnDisappearingTransitionsToAppearing() {
         // Set up state as DISAPPEARING with partial height
         setEnumField(bars, "state", "DISAPPEARING");
-        setField(bars, "currentHeight", 50f);
         setField(bars, "timer", 0f);
 
         bars.show();
@@ -118,10 +124,9 @@ public class CinematicBarsTest extends GdxTestSetup {
 
     @Test
     public void showOnDisappearingResumesFromCurrentHeight() {
-        // At midway point of disappearing animation
+        // At midway point of disappearing animation (timer=0.25 gives height=50 for DISAPPEARING)
         setEnumField(bars, "state", "DISAPPEARING");
-        setField(bars, "currentHeight", 50f);
-        setField(bars, "timer", 0f);
+        setField(bars, "timer", 0.25f);
 
         bars.show();
         // timer should be set to resume from current height: (50 / 100) * 0.5 = 0.25
@@ -152,7 +157,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     @Test
     public void hideOnVisibleStartsDisappearing() {
         setEnumField(bars, "state", "VISIBLE");
-        setField(bars, "currentHeight", 100f);
 
         bars.hide();
         assertEquals("DISAPPEARING", getState(bars));
@@ -161,7 +165,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     @Test
     public void hideOnVisibleResetsTimer() {
         setEnumField(bars, "state", "VISIBLE");
-        setField(bars, "currentHeight", 100f);
         setField(bars, "timer", 0.5f);
 
         bars.hide();
@@ -172,7 +175,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     @Test
     public void hideOnAppearingStartsDisappearing() {
         setEnumField(bars, "state", "APPEARING");
-        setField(bars, "currentHeight", 50f);
         setField(bars, "timer", 0.25f);
 
         bars.hide();
@@ -181,8 +183,9 @@ public class CinematicBarsTest extends GdxTestSetup {
 
     @Test
     public void hideOnAppearingResumesFromCurrentHeight() {
+        // timer=0.25 gives height=50 for APPEARING state
         setEnumField(bars, "state", "APPEARING");
-        setField(bars, "currentHeight", 50f);
+        setField(bars, "timer", 0.25f);
 
         bars.hide();
         // timer = 0.5 * (1 - 50/100) = 0.25
@@ -213,7 +216,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateOnHiddenIsNoOp() {
         setEnumField(bars, "state", "HIDDEN");
         setField(bars, "timer", 0f);
-        setField(bars, "currentHeight", 0f);
 
         bars.update(0.1f);
         assertEquals("HIDDEN", getState(bars));
@@ -225,7 +227,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateOnVisibleIsNoOp() {
         setEnumField(bars, "state", "VISIBLE");
         setField(bars, "timer", 0.5f);
-        setField(bars, "currentHeight", 100f);
 
         bars.update(0.1f);
         assertEquals("VISIBLE", getState(bars));
@@ -237,7 +238,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateAppearingIncreasesHeight() {
         setEnumField(bars, "state", "APPEARING");
         setField(bars, "timer", 0f);
-        setField(bars, "currentHeight", 0f);
 
         bars.update(0.1f);
         // After 0.1s: timer = 0.1, currentHeight = (0.1 / 0.5) * 100 = 20
@@ -249,7 +249,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateAppearingMidway() {
         setEnumField(bars, "state", "APPEARING");
         setField(bars, "timer", 0f);
-        setField(bars, "currentHeight", 0f);
 
         bars.update(0.25f);
         // After 0.25s: timer = 0.25, currentHeight = (0.25 / 0.5) * 100 = 50
@@ -262,7 +261,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateAppearingCompletesAfterFullDuration() {
         setEnumField(bars, "state", "APPEARING");
         setField(bars, "timer", 0f);
-        setField(bars, "currentHeight", 0f);
 
         bars.update(0.6f);
         // After 0.6s: timer = 0.6 (exceeds 0.5), state = VISIBLE, currentHeight = 100
@@ -274,7 +272,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateAppearingStopsAtBarHeight() {
         setEnumField(bars, "state", "APPEARING");
         setField(bars, "timer", 0.4f);
-        setField(bars, "currentHeight", 80f);
 
         bars.update(0.15f); // Total timer = 0.55s, but clamped to BAR_HEIGHT
         assertEquals("VISIBLE", getState(bars));
@@ -285,7 +282,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateDisappearingDecreasesHeight() {
         setEnumField(bars, "state", "DISAPPEARING");
         setField(bars, "timer", 0f);
-        setField(bars, "currentHeight", 100f);
 
         bars.update(0.1f);
         // After 0.1s: timer = 0.1, currentHeight = 100 * (1 - 0.1/0.5) = 100 * 0.8 = 80
@@ -297,7 +293,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateDisappearingMidway() {
         setEnumField(bars, "state", "DISAPPEARING");
         setField(bars, "timer", 0f);
-        setField(bars, "currentHeight", 100f);
 
         bars.update(0.25f);
         // After 0.25s: timer = 0.25, currentHeight = 100 * (1 - 0.25/0.5) = 50
@@ -310,7 +305,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateDisappearingCompletesAfterFullDuration() {
         setEnumField(bars, "state", "DISAPPEARING");
         setField(bars, "timer", 0f);
-        setField(bars, "currentHeight", 100f);
 
         bars.update(0.6f);
         // After 0.6s: timer = 0.6 (exceeds 0.5), state = HIDDEN, currentHeight = 0
@@ -322,7 +316,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     public void updateDisappearingStopsAtZero() {
         setEnumField(bars, "state", "DISAPPEARING");
         setField(bars, "timer", 0.4f);
-        setField(bars, "currentHeight", 20f);
 
         bars.update(0.15f); // Total timer = 0.55s, but clamped to 0
         assertEquals("HIDDEN", getState(bars));
@@ -372,7 +365,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     @Test
     public void fullHideCycleUpdatesAllStates() {
         setEnumField(bars, "state", "VISIBLE");
-        setField(bars, "currentHeight", 100f);
 
         bars.hide();
         assertEquals("DISAPPEARING", getState(bars));
@@ -409,7 +401,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     @Test
     public void reversalFromMidwayDisappearingToAppearing() {
         setEnumField(bars, "state", "DISAPPEARING");
-        setField(bars, "currentHeight", 50f);
         setField(bars, "timer", 0f);
 
         bars.update(0.125f);
@@ -482,7 +473,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     @Test
     public void renderHiddenStateSkipsDraw() {
         setEnumField(bars, "state", "HIDDEN");
-        setField(bars, "currentHeight", 0f);
         SpriteBatch batch = mock(SpriteBatch.class);
         bars.render(batch);
         verify(batch, never()).draw(any(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
@@ -490,8 +480,9 @@ public class CinematicBarsTest extends GdxTestSetup {
 
     @Test
     public void renderAppearingStateDrawsTwoBars() {
+        // timer=0.25 gives height=50 for APPEARING state (height must be > 0 to draw)
         setEnumField(bars, "state", "APPEARING");
-        setField(bars, "currentHeight", 50f);
+        setField(bars, "timer", 0.25f);
         setField(bars, "blackTexture", mock(Texture.class));
         SpriteBatch batch = mock(SpriteBatch.class);
         bars.render(batch);
@@ -501,7 +492,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     @Test
     public void renderVisibleStateDrawsTwoBars() {
         setEnumField(bars, "state", "VISIBLE");
-        setField(bars, "currentHeight", 100f);
         setField(bars, "blackTexture", mock(Texture.class));
         SpriteBatch batch = mock(SpriteBatch.class);
         bars.render(batch);
@@ -511,7 +501,6 @@ public class CinematicBarsTest extends GdxTestSetup {
     @Test
     public void renderZeroHeightSkipsDraw() {
         setEnumField(bars, "state", "APPEARING");
-        setField(bars, "currentHeight", 0f);
         SpriteBatch batch = mock(SpriteBatch.class);
         bars.render(batch);
         verify(batch, never()).draw(any(Texture.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
