@@ -72,5 +72,7 @@ public class InstructionsScreen implements Screen {
     public void dispose() {
         background.dispose();
         batch.dispose();
+        toggleSound.dispose();
+        escSound.dispose();
     }
 }

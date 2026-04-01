@@ -1,0 +1,98 @@
+\documentclass[10pt]{article}
+\usepackage[margin=0.75in, top=0.65in, bottom=0.65in]{geometry}
+\usepackage[compact]{titlesec}
+\usepackage{parskip}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\parskip}{3pt}
+\titlespacing{\section}{0pt}{7pt}{3pt}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true,
+  aboveskip=4pt,
+  belowskip=4pt
+}
+
+\title{\textbf{Assignment 4 Report} \\[4pt]}
+\author{Reviewer: Megan Chau (mhc23) \quad Reviewee: Samantha Gan (ssg46) }
+\date{March 31, 2026}
+
+\begin{document}
+\maketitle
+
+In this report, I reviewed Samantha Gan’s implemented code. I looked through three files that she implemented: GameScreen.java, EndScreen.java, and House.java. Authorship was confirmed with git blame. The four code blames are identified below. 
+
+\section{Smell 1: Uneccessary or useless variables}
+
+\textbf{Files:} \texttt{GameScreen.java, lines 1003 to 1004}  \quad
+\textbf{Commit:} \texttt{b3df3c0}
+
+\begin{lstlisting}
+bikeParked = true;
+isOnBike = false;
+\end{lstlisting}
+
+bikeParked is always !isOnBike. These two booleans track the same fact from two different angles, and they can diverge. For example, activateMap() sets bikeParked = false; isOnBike = true; correctly, but any future path that forgets to synchronize will cause an issue. Replace both with a single isOnBike; bikeParked becomes if !isOnBike.
+
+\section{Smell 2: Data Clumps}
+
+\textbf{File:} \texttt{EndScreen.java, lines 30 to 43} \quad
+\textbf{Commit:} \texttt{50d9c58}
+
+\begin{lstlisting}
+private static final float DIGIT_W   = 150f;
+private static final float DIGIT_H   = 140f;
+private static final float DIGIT_X   = 348f; 
+private static final float DIGIT_Y   = 460f; 
+private static final float DIGIT_GAP = 139f;  
+
+private static final float TIME_W        = 50f;
+private static final float TIME_H        = 50f;
+private static final float TIME_X        = 450f; 
+private static final float TIME_Y        = 328f; 
+private static final float TIME_GAP      = 35f; 
+\end{lstlisting}
+
+The file includes a lot of float literals assigned to constant names. Taken together, the constants DIGIT\_X, DIGIT\_Y, DIGIT\_W, DIGIT\_H, DIGIT\_GAP and their TIME\_ counterparts form a data clump. They are used together, and describe the same concept but are stored as separate unrelated fields. 
+
+\section{Smell 3: Code Duplication}
+
+\textbf{File:} \texttt{EndScreen.java}, lines 106 to 124 (unrelated comments and code removed for simplicity)\quad \textbf{Commit:} \texttt{50d9c58}
+
+\begin{lstlisting}
+int[] scoreDigits = {
+    (s / 1000) % 10,
+    (s / 100)  % 10,
+    (s / 10)   % 10,
+     s         % 10
+};
+for (int i = 0; i < 4; i++) {
+    batch.draw(digits[scoreDigits[i]], DIGIT_X + i * DIGIT_GAP, DIGIT_Y, DIGIT_W, DIGIT_H);
+}
+int ss = time % 60;
+int[] timeDigits = { mm / 10, mm % 10, ss / 10, ss % 10 };
+for (int i = 0; i < 4; i++) {
+    float offset = (i < 2) ? i * TIME_GAP : i * TIME_GAP + TIME_COLON_W;
+    batch.draw(timeNumbers[timeDigits[i]], TIME_X + offset, TIME_Y, TIME_W, TIME_H);
+}
+\end{lstlisting}
+
+The score-digit array and the time-digit array are both computed inside render() using identical arithmetic operations (/ 10000, \% 10, etc.). This pattern should be a shared helper.
+
+\section{Smell 4: Dead Code}
+
+\textbf{Files:} \texttt{House.java}, line 3\quad
+\textbf{Commit:} \texttt{50d9c58}
+
+\begin{lstlisting}
+import com.badlogic.gdx.Gdx;
+\end{lstlisting}
+
+Methods from this import are never used. Unnecessary imports can cause confusion and should be cleaned up. 
+\end{document}
