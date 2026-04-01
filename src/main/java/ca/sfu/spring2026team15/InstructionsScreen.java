@@ -23,7 +23,6 @@ public class InstructionsScreen implements Screen {
     private Sound toggleSound;
 
 
-
     public InstructionsScreen(Main game) {
         this.game = game;
         batch    = new SpriteBatch();
@@ -33,11 +32,8 @@ public class InstructionsScreen implements Screen {
     @Override
     public void show() {
         background = new Texture(Gdx.files.internal("StartScreen/instructions.png"));
-        escSound = Gdx.audio.newSound(Gdx.files.internal("audio/escSound.mp3"));
-        toggleSound = Gdx.audio.newSound(Gdx.files.internal("audio/toggleSound.mp3"));                
-        if (SettingsScreen.soundOn) {
-            toggleSound.play(0.8f);
-        }
+        toggleSound = ScreenAudioHelper.loadAndPlayEntrySound("audio/toggleSound.mp3");
+        escSound    = ScreenAudioHelper.load("audio/escSound.mp3");              
     }
 
     @Override
@@ -50,9 +46,7 @@ public class InstructionsScreen implements Screen {
         batch.end();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            if (SettingsScreen.soundOn) {
-                escSound.play(0.8f);
-            }
+            ScreenAudioHelper.playIfEnabled(escSound);
             goBack();
         }
     }
@@ -73,6 +67,5 @@ public class InstructionsScreen implements Screen {
         background.dispose();
         batch.dispose();
         toggleSound.dispose();
-        escSound.dispose();
     }
 }
