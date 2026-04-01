@@ -57,7 +57,7 @@ public class CinematicBars implements Disposable {
                 currentHeight = BAR_HEIGHT;
                 state = State.VISIBLE;
             }
-        } else { // DISAPPEARING
+        } else if (state == State.DISAPPEARING) {
             currentHeight = Math.max(0f, BAR_HEIGHT * (1f - timer / ANIM_DURATION));
             if (timer >= ANIM_DURATION) {
                 currentHeight = 0f;
