@@ -88,6 +88,8 @@ public class SettingsScreen implements Screen {
     public void dispose() {
         settingsOnTexture.dispose();
         settingsOffTexture.dispose();
+        toggleSound.dispose();
+        escSound.dispose();
         batch.dispose();
     }
 }
