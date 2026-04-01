@@ -230,41 +230,7 @@ public class ObamaScreen implements Screen {
                 updatePlayerWalk(delta);
                 break;
             case TALK:
-                // Start audio once on the first frame of TALK; only check completion
-                // on subsequent frames so isPlaying() has time to return true.
-                if (!audioStarted) {
-                    audioStarted = true;
-                    dialogueTimer = 0f; // reset dialogue timer when audio starts
-                    talkTimer = 0f;
-                    audioFinished = false;
-                    endDelayTimer = 0f;
-                    if (soundOn) {
-                        obamaVoice.play();
-                    }
-                    break; // skip completion check this frame
-                }
-
-                // Update dialogue timer for progressive text reveal
-                dialogueTimer += delta;
-
-                // Sound on: completion listener sets audioFinished exactly at clip end.
-                // Sound off: use fallback duration so cutscene can still progress.
-                if (!audioFinished && !soundOn) {
-                    talkTimer += delta;
-                    if (talkTimer >= TALK_FALLBACK_DURATION) {
-                        audioFinished = true;
-                        endDelayTimer = 0f;
-                    }
-                }
-
-                // After audio finishes, wait for END_DELAY before transitioning
-                if (audioFinished) {
-                    endDelayTimer += delta;
-                    if (endDelayTimer >= END_DELAY) {
-                        transitionToEnd();
-                        return;
-                    }
-                }
+                updateTalkPhase(delta);
                 break;
         }
 
@@ -316,6 +282,43 @@ public class ObamaScreen implements Screen {
         float dy = playerTargetY - playerY;
         if (Math.abs(dy) > 1f) {
             playerY += Math.signum(dy) * PLAYER_WALK_SPEED * delta;
+        }
+    }
+
+    private void updateTalkPhase(float delta) {
+        // Start audio once on the first frame of TALK; only check completion
+        // on subsequent frames so isPlaying() has time to return true.
+        if (!audioStarted) {
+            audioStarted = true;
+            dialogueTimer = 0f;
+            talkTimer = 0f;
+            audioFinished = false;
+            endDelayTimer = 0f;
+            if (soundOn) {
+                obamaVoice.play();
+            }
+            return; // skip completion check this frame
+        }
+
+        // Update dialogue timer for progressive text reveal
+        dialogueTimer += delta;
+
+        // Sound on: completion listener sets audioFinished exactly at clip end.
+        // Sound off: use fallback duration so cutscene can still progress.
+        if (!audioFinished && !soundOn) {
+            talkTimer += delta;
+            if (talkTimer >= TALK_FALLBACK_DURATION) {
+                audioFinished = true;
+                endDelayTimer = 0f;
+            }
+        }
+
+        // After audio finishes, wait for END_DELAY before transitioning
+        if (audioFinished) {
+            endDelayTimer += delta;
+            if (endDelayTimer >= END_DELAY) {
+                transitionToEnd();
+            }
         }
     }
 
