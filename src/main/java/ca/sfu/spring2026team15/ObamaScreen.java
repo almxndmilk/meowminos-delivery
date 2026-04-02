@@ -68,6 +68,8 @@ public class ObamaScreen implements Screen {
     private final float playerTargetY;
     private final boolean playerFacingRight;
 
+    private boolean transitioning = false;
+
     // Timers / animation
     private float animTimer  = 0f;
     private boolean showFrame1 = true;
@@ -79,6 +81,7 @@ public class ObamaScreen implements Screen {
     // Audio
     private Music obamaVoice;
     private boolean audioStarted = false;
+    private final boolean soundOn;
 
     // World-space rendering
     private SpriteBatch    batch;
@@ -115,8 +118,9 @@ public class ObamaScreen implements Screen {
      */
     public ObamaScreen(Main game, int elapsedSeconds, int fishCollected,
                        float map3YOffset, float map3Height,
-                       float playerCenterX, float playerCenterY) {
+                       float playerCenterX, float playerCenterY, boolean soundOn) {
         this.game           = game;
+        this.soundOn        = soundOn;
         this.elapsedSeconds = elapsedSeconds;
         this.fishCollected  = fishCollected;
         this.map3YOffset    = map3YOffset;
@@ -228,43 +232,11 @@ public class ObamaScreen implements Screen {
                 updatePlayerWalk(delta);
                 break;
             case TALK:
-                // Start audio once on the first frame of TALK; only check completion
-                // on subsequent frames so isPlaying() has time to return true.
-                if (!audioStarted) {
-                    audioStarted = true;
-                    dialogueTimer = 0f; // reset dialogue timer when audio starts
-                    talkTimer = 0f;
-                    audioFinished = false;
-                    endDelayTimer = 0f;
-                    if (SettingsScreen.soundOn) {
-                        obamaVoice.play();
-                    }
-                    break; // skip completion check this frame
-                }
-
-                // Update dialogue timer for progressive text reveal
-                dialogueTimer += delta;
-
-                // Sound on: completion listener sets audioFinished exactly at clip end.
-                // Sound off: use fallback duration so cutscene can still progress.
-                if (!audioFinished && !SettingsScreen.soundOn) {
-                    talkTimer += delta;
-                    if (talkTimer >= TALK_FALLBACK_DURATION) {
-                        audioFinished = true;
-                        endDelayTimer = 0f;
-                    }
-                }
-
-                // After audio finishes, wait for END_DELAY before transitioning
-                if (audioFinished) {
-                    endDelayTimer += delta;
-                    if (endDelayTimer >= END_DELAY) {
-                        transitionToEnd();
-                        return;
-                    }
-                }
+                updateTalkPhase(delta);
                 break;
         }
+
+        if (transitioning) return;
 
         drawScene();
 
@@ -314,6 +286,43 @@ public class ObamaScreen implements Screen {
         float dy = playerTargetY - playerY;
         if (Math.abs(dy) > 1f) {
             playerY += Math.signum(dy) * PLAYER_WALK_SPEED * delta;
+        }
+    }
+
+    private void updateTalkPhase(float delta) {
+        // Start audio once on the first frame of TALK; only check completion
+        // on subsequent frames so isPlaying() has time to return true.
+        if (!audioStarted) {
+            audioStarted = true;
+            dialogueTimer = 0f;
+            talkTimer = 0f;
+            audioFinished = false;
+            endDelayTimer = 0f;
+            if (soundOn) {
+                obamaVoice.play();
+            }
+            return; // skip completion check this frame
+        }
+
+        // Update dialogue timer for progressive text reveal
+        dialogueTimer += delta;
+
+        // Sound on: completion listener sets audioFinished exactly at clip end.
+        // Sound off: use fallback duration so cutscene can still progress.
+        if (!audioFinished && !soundOn) {
+            talkTimer += delta;
+            if (talkTimer >= TALK_FALLBACK_DURATION) {
+                audioFinished = true;
+                endDelayTimer = 0f;
+            }
+        }
+
+        // After audio finishes, wait for END_DELAY before transitioning
+        if (audioFinished) {
+            endDelayTimer += delta;
+            if (endDelayTimer >= END_DELAY) {
+                transitionToEnd();
+            }
         }
     }
 
@@ -375,12 +384,9 @@ public class ObamaScreen implements Screen {
         // Split dialogue into words
         String[] words = DIALOGUE.split(" ");
         
-        // Calculate duration to use (prefer actual audio duration, fall back to constant)
         float totalDuration = TALK_FALLBACK_DURATION;
-        if (SettingsScreen.soundOn && obamaVoice != null) {
-            // Use fallback duration as approximation since LibGDX doesn't easily provide audio duration
-            totalDuration = TALK_FALLBACK_DURATION;
-        }
+        // LibGDX does not easily provide audio clip duration at runtime,
+        // so TALK_FALLBACK_DURATION is always used as the total duration.
         
         // Calculate how many words should be visible
         float wordsPerSecond = words.length / totalDuration;
@@ -408,6 +414,8 @@ public class ObamaScreen implements Screen {
     }
 
     private void transitionToEnd() {
+        if (transitioning) return;
+        transitioning = true;
         dispose();
         game.setScreen(new EndScreen(game, fishCollected, elapsedSeconds, true)); // true = came from ObamaScreen
     }

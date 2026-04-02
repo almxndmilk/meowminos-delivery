@@ -1,5 +1,6 @@
 package ca.sfu.spring2026team15;
 
+import com.badlogic.gdx.math.Vector2;
 import java.util.List;
 
 /**
@@ -175,23 +176,12 @@ public class GameLogicHelper {
 
     // --- Spawn positions ---
 
-    /** Get player spawn X for a given map index. */
-    public static float getPlayerSpawnX(int mapIndex) {
+    /** Get player spawn position for a given map index as a single Vector2. */
+    public static Vector2 getPlayerSpawnPosition(int mapIndex, float[] mapYOffsets) {
         switch (mapIndex) {
-            case 0: return 300f;
-            case 1: return 5600f;
-            case 2: return 1250f;
-            default: return 300f;
-        }
-    }
-
-    /** Get player spawn Y for a given map index. */
-    public static float getPlayerSpawnY(int mapIndex, float[] mapYOffsets) {
-        switch (mapIndex) {
-            case 0: return 300f;
-            case 1: return mapYOffsets[1] + 100f;
-            case 2: return mapYOffsets[2] + 100f;
-            default: return 300f;
+            case 1: return new Vector2(5600f, mapYOffsets[1] + 100f);
+            case 2: return new Vector2(1250f, mapYOffsets[2] + 100f);
+            default: return new Vector2(300f, 300f);
         }
     }
 

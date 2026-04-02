@@ -95,9 +95,13 @@ public class PoliceEnemy {
 
     public void update(float delta, float playerX, float playerY, BarrierLookup lookup) {
         float dist = Vector2.dst(position.x, position.y, playerX, playerY);
-        boolean inRange = dist <= DETECTION_RANGE;
+        updateAlertState(delta, dist);
+        updateMovement(delta, playerX, playerY, lookup);
+        updateAnimation(delta);
+    }
 
-        // state machine
+    private void updateAlertState(float delta, float dist) {
+        boolean inRange = dist <= DETECTION_RANGE;
         switch (alertState) {
             case NONE:
                 if (inRange) {
@@ -107,7 +111,6 @@ public class PoliceEnemy {
                 break;
             case ALERTED:
                 if (!inRange) {
-                    // player ran away before timer finished, reset
                     alertState = AlertState.NONE;
                     alertTimer = 0f;
                 } else {
@@ -127,33 +130,15 @@ public class PoliceEnemy {
                 }
                 break;
         }
+    }
 
-        // movement
+    private void updateMovement(float delta, float playerX, float playerY, BarrierLookup lookup) {
         if (alertState == AlertState.CHASING) {
             Vector2 dir = new Vector2(playerX - position.x, playerY - position.y).nor();
             float newX = position.x + dir.x * VAR_CHASE_SPEED * delta;
-            float newY =position.y + dir.y * VAR_CHASE_SPEED * delta;
+            float newY = position.y + dir.y * VAR_CHASE_SPEED * delta;
+            applyBarrierCollision(newX, newY, lookup);
 
-
-            // barrier movement — bottom 20% of sprite only
-            float hitW = SIZE * 0.3f;
-            float hitTop = SIZE * 0.3f;
-
-            boolean blockedX =
-                lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
-                lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
-                lookup.isBarrier(newX - hitW, position.y - hitTop) ||
-                lookup.isBarrier(newX + hitW, position.y - hitTop);
-            if (!blockedX) position.x = newX;
-
-            boolean blockedY =
-                lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
-                lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
-                lookup.isBarrier(position.x - hitW, newY - hitTop) ||
-                lookup.isBarrier(position.x + hitW, newY - hitTop);
-            if (!blockedY) position.y = newY;
-
-            // still pick dominant axis for sprite direction
             float dx = playerX - position.x;
             float dy = playerY - position.y;
             if (Math.abs(dx) > Math.abs(dy)) {
@@ -161,9 +146,7 @@ public class PoliceEnemy {
             } else {
                 lastDirection = (dy > 0) ? Direction.UP : Direction.DOWN;
             }
-        }
-        else {
-            //wander
+        } else {
             wanderTimer -= delta;
             if (wanderTimer <= 0f) {
                 wanderTimer = WANDER_CHANGE_TIME;
@@ -179,28 +162,11 @@ public class PoliceEnemy {
                 case UP: newY += VAR_WANDER_SPEED * delta; break;
                 case DOWN: newY -= VAR_WANDER_SPEED * delta; break;
             }
-
-            // wander with barrier — bottom 20% of sprite only
-            float hitW = SIZE * 0.3f;
-            float hitTop = SIZE * 0.3f;
-
-            boolean blockedX =
-                lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
-                lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
-                lookup.isBarrier(newX - hitW, position.y - hitTop) ||
-                lookup.isBarrier(newX + hitW, position.y - hitTop);
-            if (!blockedX) position.x = newX;
-
-            boolean blockedY =
-                lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
-                lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
-                lookup.isBarrier(position.x - hitW, newY - hitTop) ||
-                lookup.isBarrier(position.x + hitW, newY - hitTop);
-            if (!blockedY) position.y = newY;
+            applyBarrierCollision(newX, newY, lookup);
         }
+    }
 
-
-        //animation
+    private void updateAnimation(float delta) {
         animTimer += delta;
         if (animTimer >= FRAME_DURATION) {
             animTimer = 0f;
@@ -220,7 +186,31 @@ public class PoliceEnemy {
         }
     }
 
+    private void applyBarrierCollision(float newX, float newY, BarrierLookup lookup) {
+        float hitW = SIZE * 0.3f;
+        float hitTop = SIZE * 0.3f;
+
+        boolean blockedX =
+            lookup.isBarrier(newX - hitW, position.y - SIZE / 2f) ||
+            lookup.isBarrier(newX + hitW, position.y - SIZE / 2f) ||
+            lookup.isBarrier(newX - hitW, position.y - hitTop) ||
+            lookup.isBarrier(newX + hitW, position.y - hitTop);
+        if (!blockedX) position.x = newX;
+
+        boolean blockedY =
+            lookup.isBarrier(position.x - hitW, newY - SIZE / 2f) ||
+            lookup.isBarrier(position.x + hitW, newY - SIZE / 2f) ||
+            lookup.isBarrier(position.x - hitW, newY - hitTop) ||
+            lookup.isBarrier(position.x + hitW, newY - hitTop);
+        if (!blockedY) position.y = newY;
+    }
+
     public void render(SpriteBatch batch) {
+        renderSprite(batch);
+        renderAlertIndicator(batch);
+    }
+
+    private void renderSprite(SpriteBatch batch) {
         float x = position.x - SIZE / 2f;
         float y = position.y - SIZE / 2f;
 
@@ -229,8 +219,9 @@ public class PoliceEnemy {
         } else {
             batch.draw(currentFrame, x, y, SIZE, SIZE);
         }
+    }
 
-        // draw ? or ! above head depending on state
+    private void renderAlertIndicator(SpriteBatch batch) {
         if (alertState == AlertState.ALERTED) {
             batch.draw(question, position.x + 5, position.y + SIZE / 4f, 30f, 30f);
         } else if (alertState == AlertState.CHASING) {
