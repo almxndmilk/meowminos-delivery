@@ -98,8 +98,12 @@ public class Player {
                 currentFrameIndex = (currentFrameIndex + 1) % frameCount;
             }
         } else {
-            currentFrameIndex = 0;
-            animTimer = 0f;
+            // Idle animation
+            animTimer += delta;
+            if (animTimer >= FRAME_DURATION) {
+                animTimer = 0f;
+                currentFrameIndex = (currentFrameIndex + 1) % 2; // cycle through 2 idle frames)
+            }
         }
         prevDirection = lastDirection;
 
