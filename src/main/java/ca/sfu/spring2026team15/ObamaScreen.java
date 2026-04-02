@@ -68,6 +68,8 @@ public class ObamaScreen implements Screen {
     private final float playerTargetY;
     private final boolean playerFacingRight;
 
+    private boolean transitioning = false;
+
     // Timers / animation
     private float animTimer  = 0f;
     private boolean showFrame1 = true;
@@ -233,6 +235,8 @@ public class ObamaScreen implements Screen {
                 updateTalkPhase(delta);
                 break;
         }
+
+        if (transitioning) return;
 
         drawScene();
 
@@ -410,6 +414,8 @@ public class ObamaScreen implements Screen {
     }
 
     private void transitionToEnd() {
+        if (transitioning) return;
+        transitioning = true;
         dispose();
         game.setScreen(new EndScreen(game, fishCollected, elapsedSeconds, true)); // true = came from ObamaScreen
     }
