@@ -190,9 +190,8 @@ public class GameScreen implements Screen {
     private static final float RESTART_X1 = 520f, RESTART_X2 = 750f, RESTART_Y1 = 240f, RESTART_Y2 = 340f;
     private static final float QUIT_X1    = 540f, QUIT_X2    = 730f, QUIT_Y1    = 135f, QUIT_Y2    = 235f;
 
-    // Orders — per-map house lists for gate checking, flat list for update/render
+    // Orders — per-map house lists for gate checking, update/render, and delivery notifications
     private final List<List<House>> housesByMap = new ArrayList<>();
-    private List<House> houses; // flat view used in update/render loops
     private Texture orderIndicatorTexture; // small house
     private Texture orderIndicatorTextureBIG;
     private Texture orderIndicatorTextureBIG2;
@@ -344,10 +343,6 @@ public class GameScreen implements Screen {
         List<House> map3Houses = new ArrayList<>();
         housesByMap.add(map3Houses);
 
-        // Flat list for update/render loops
-        houses = new ArrayList<>();
-        for (List<House> perMap : housesByMap) houses.addAll(perMap);
-
         spawnFish();
 
         if (SettingsScreen.soundOn) {
@@ -497,26 +492,28 @@ public class GameScreen implements Screen {
                     && checkFishCollection()) return;
             gateMessageTimer -= delta;
 
-            updateDeliveryNotifications(delta);
+            if (introState == IntroState.DONE) updateDeliveryNotifications(delta);
         }
 
-        // Delivery prompt + interaction — house timers tick always, but interaction blocked during cinematic
+        // Delivery prompt + interaction — only tick current-map houses after intro is done and while not paused
         showDeliverPrompt = false;
-        for (House house : houses) {
-            house.update(delta);
-            if (cinematicState == CinematicState.NONE
-                    && house.hasOrder()
-                    && house.isPlayerInRange(getActiveX(), getActiveY())) {
-                showDeliverPrompt = true;
-                if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                    if (!isOnBike) {
-                        if (SettingsScreen.soundOn) {
-                            deliveredSound.play(1.0f);
+        if (!isPaused && introState == IntroState.DONE) {
+            for (House house : housesByMap.get(currentMapIndex)) {
+                house.update(delta);
+                if (cinematicState == CinematicState.NONE
+                        && house.hasOrder()
+                        && house.isPlayerInRange(getActiveX(), getActiveY())) {
+                    showDeliverPrompt = true;
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                        if (!isOnBike) {
+                            if (SettingsScreen.soundOn) {
+                                deliveredSound.play(1.0f);
+                            }
+                            if (house.tryDeliver(getActiveX(), getActiveY())) {
+                                fishCollected += 10;
+                            }
                         }
-                        if (house.tryDeliver(getActiveX(), getActiveY())) {
-                            fishCollected += 10;
-                        }
-                       }
+                    }
                 }
             }
         }
@@ -536,7 +533,7 @@ public class GameScreen implements Screen {
             batch.draw(gate2ObstacleTexture, gate2ObstacleX, gate2ObstacleY, gate2DrawWidth, gate2DrawHeight);
         }
 
-        for (House house : houses) {
+        for (House house : housesByMap.get(currentMapIndex)) {
             house.render(batch);
         }
 
