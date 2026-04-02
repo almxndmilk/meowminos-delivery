@@ -1,7 +1,10 @@
 package ca.sfu.spring2026team15;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Tests for GameLogicHelper — pure logic extracted from GameScreen and EndScreen.
@@ -197,25 +200,25 @@ public class GameLogicHelperTest {
 
     // --- isNearWhitehouse ---
     @Test public void nearWhitehouseCorrectPosition() {
-        assertTrue(GameLogicHelper.isNearWhitehouse(1400f, 1804f + 902f - 900f, 2, 1804f, 902f));
+        assertTrue(GameLogicHelper.isNearWhitehouse(1400f, 2000f, 2, 1200f, 1900f, 1600f, 2100f));
     }
     @Test public void nearWhitehouseWrongMap() {
-        assertFalse(GameLogicHelper.isNearWhitehouse(1400f, 1804f + 902f - 900f, 1, 1804f, 902f));
+        assertFalse(GameLogicHelper.isNearWhitehouse(1400f, 2000f, 1, 1200f, 1900f, 1600f, 2100f));
     }
     @Test public void nearWhitehouseMap0() {
-        assertFalse(GameLogicHelper.isNearWhitehouse(1400f, 1804f + 902f - 900f, 0, 1804f, 902f));
+        assertFalse(GameLogicHelper.isNearWhitehouse(1400f, 2000f, 0, 1200f, 1900f, 1600f, 2100f));
     }
     @Test public void nearWhitehouseTooFarLeft() {
-        assertFalse(GameLogicHelper.isNearWhitehouse(1000f, 1804f + 902f - 900f, 2, 1804f, 902f));
+        assertFalse(GameLogicHelper.isNearWhitehouse(1000f, 2000f, 2, 1200f, 1900f, 1600f, 2100f));
     }
     @Test public void nearWhitehouseTooFarRight() {
-        assertFalse(GameLogicHelper.isNearWhitehouse(1800f, 1804f + 902f - 900f, 2, 1804f, 902f));
+        assertFalse(GameLogicHelper.isNearWhitehouse(1700f, 2000f, 2, 1200f, 1900f, 1600f, 2100f));
     }
     @Test public void nearWhitehouseTooHigh() {
-        assertFalse(GameLogicHelper.isNearWhitehouse(1400f, 1804f + 902f - 800f, 2, 1804f, 902f));
+        assertFalse(GameLogicHelper.isNearWhitehouse(1400f, 2200f, 2, 1200f, 1900f, 1600f, 2100f));
     }
     @Test public void nearWhitehouseTooLow() {
-        assertFalse(GameLogicHelper.isNearWhitehouse(1400f, 1804f + 902f - 950f, 2, 1804f, 902f));
+        assertFalse(GameLogicHelper.isNearWhitehouse(1400f, 1800f, 2, 1200f, 1900f, 1600f, 2100f));
     }
 
     // --- isAtIntroTarget ---

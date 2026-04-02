@@ -134,14 +134,21 @@ public class GameLogicHelper {
 
     // --- Whitehouse proximity check ---
 
-    /** Check if player is in the whitehouse trigger zone on map 3. */
+    /**
+     * Check if player is in the whitehouse trigger rectangle on map 3.
+     * The rectangle is defined by any two opposite corners.
+     */
     public static boolean isNearWhitehouse(float playerX, float playerY,
                                             int currentMapIndex,
-                                            float map3YOffset, float map3Height) {
+                                            float corner1X, float corner1Y,
+                                            float corner2X, float corner2Y) {
+        float minX = Math.min(corner1X, corner2X);
+        float maxX = Math.max(corner1X, corner2X);
+        float minY = Math.min(corner1Y, corner2Y);
+        float maxY = Math.max(corner1Y, corner2Y);
         return currentMapIndex == 2
-            && playerX >= 1080f && playerX <= 1775f
-            && playerY >= map3YOffset + map3Height - 940f
-            && playerY <= map3YOffset + map3Height - 860f;
+            && playerX >= minX && playerX <= maxX
+            && playerY >= minY && playerY <= maxY;
     }
 
     // --- Intro cutscene helpers ---

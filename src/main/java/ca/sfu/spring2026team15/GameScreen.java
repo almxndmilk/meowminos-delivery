@@ -1098,9 +1098,12 @@ public class GameScreen implements Screen {
     }
 
     private boolean isPlayerNearWhitehouse() {
+        // X: image pixel coords minus BARRIER_X_OFFSET (75) because map is drawn at x=-75
+        // Y: mapYOffset + mapHeight - imagePixelY (image Y=0 is top, world Y=0 is bottom)
         return GameLogicHelper.isNearWhitehouse(
             getActiveX(), getActiveY(), currentMapIndex,
-            mapYOffsets[2], mapHeights[2]);
+            1080f - BARRIER_X_OFFSET, mapYOffsets[2] + mapHeights[2] - 940f,
+            1775f - BARRIER_X_OFFSET, mapYOffsets[2] + mapHeights[2] - 940f + 150f);
     }
 
     private void triggerObamaScene() {
