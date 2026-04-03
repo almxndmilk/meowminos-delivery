@@ -390,7 +390,10 @@ public class GameScreen implements Screen {
         while (spawned < TARGET_FISH_COUNT && attempts < 10000) {
             attempts++;
             float worldX = 50f + (float) Math.random() * (mapW - 100f);
-            float localY = 50f + (float) Math.random() * (imgH - 100f);
+            // Map 3 has tree borders at edges — use tighter margins to avoid unreachable spawns
+            float minLocalY = (mapIndex == 2) ? 150f : 50f;
+            float maxLocalY = (mapIndex == 2) ? imgH - 200f : imgH - 50f;
+            float localY = minLocalY + (float) Math.random() * (maxLocalY - minLocalY);
 
             int pixelX = (int)(worldX + BARRIER_X_OFFSET);
             int pixelY = imgH - 1 - (int)localY;
@@ -399,11 +402,28 @@ public class GameScreen implements Screen {
 
             int pixel = pm.getPixel(pixelX, pixelY);
             boolean isRoad = (pixel & 0xFF) < 128;
-            if (isRoad) {
+            if (isRoad && hasRoadMargin(pm, pixelX, pixelY, imgH, 50)) {
                 fishList.add(new Fish(worldX, localY+ yOffset + 10f));
                 spawned++;
             }
         }
+    }
+
+    /**
+     * Returns true if all 8 sampled points at {@code radius} pixels distance
+     * (cardinal + diagonal) around (cx, cy) are road tiles (alpha < 128).
+     * Points outside pixmap bounds are treated as barriers.
+     */
+    private boolean hasRoadMargin(Pixmap pm, int cx, int cy, int imgH, int radius) {
+        int[] dx = {radius, -radius, 0,      0,       radius,  -radius,  radius, -radius};
+        int[] dy = {0,       0,      radius, -radius,  radius,  -radius, -radius,  radius};
+        for (int i = 0; i < dx.length; i++) {
+            int nx = cx + dx[i];
+            int ny = cy + dy[i];
+            if (nx < 0 || nx >= pm.getWidth() || ny < 0 || ny >= imgH) return false;
+            if ((pm.getPixel(nx, ny) & 0xFF) >= 128) return false;
+        }
+        return true;
     }
 
     @Override

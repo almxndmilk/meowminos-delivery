@@ -211,12 +211,6 @@ public class ObamaScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        // Skip cutscene on any input
-        if (Gdx.input.justTouched() || anyKeyJustPressed()) {
-            transitionToEnd();
-            return;
-        }
-
         // Advance animation frame timer (shared for both Obama and player)
         animTimer += delta;
         if (animTimer >= FRAME_DURATION) {
