@@ -192,10 +192,8 @@ public class GameScreen implements Screen {
 
     // Orders — per-map house lists for gate checking, update/render, and delivery notifications
     private final List<List<House>> housesByMap = new ArrayList<>();
-    private Texture orderIndicatorTexture; // small house
-    private Texture orderIndicatorTextureBIG;
-    private Texture orderIndicatorTextureBIG2;
-    private Texture orderIndicatorTextureBIGpick;
+    private Texture ticketYellow, ticketBlue, ticketPink;                       // map 1 small houses
+    private Texture ticketBigBlue, ticketBigBlack, ticketBigRed, ticketBigBrown; // map 2 big houses
     private boolean showDeliverPrompt = false;
     private List<DeliveryNotification> activeNotifications;
     private Sound deliveryAlertSound;
@@ -317,26 +315,30 @@ public class GameScreen implements Screen {
         timer = new Timer();
         timer.start();
 
-        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket.png"));
-        orderIndicatorTextureBIG = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse.png"));
-        orderIndicatorTextureBIG2 = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse2.png"));
+        ticketYellow   = new Texture(Gdx.files.internal("orderTickets/ticketSmallHouseYellow.png"));
+        ticketBlue     = new Texture(Gdx.files.internal("orderTickets/ticketSmallHouseBlue.png"));
+        ticketPink     = new Texture(Gdx.files.internal("orderTickets/ticketSmallHousePink.png"));
+        ticketBigBlue  = new Texture(Gdx.files.internal("orderTickets/ticketBigHouseBlue.png"));
+        ticketBigBlack = new Texture(Gdx.files.internal("orderTickets/ticketBigHouseBlack.png"));
+        ticketBigRed   = new Texture(Gdx.files.internal("orderTickets/ticketBigHouseRed.png"));
+        ticketBigBrown = new Texture(Gdx.files.internal("orderTickets/ticketBigHouseBrown.png"));
 
 
         // Map 1 houses (world Y 0–902)
         List<House> map1Houses = new ArrayList<>();
-        map1Houses.add(new House(1700f, 275f, orderIndicatorTexture));
-        map1Houses.add(new House(2630f, 275f, orderIndicatorTexture));
-        map1Houses.add(new House(4755f, 275f, orderIndicatorTexture));
+        map1Houses.add(new House(1700f, 300f, ticketYellow));
+        map1Houses.add(new House(2630f, 300f, ticketBlue));
+        map1Houses.add(new House(4755f, 300f, ticketPink));
         housesByMap.add(map1Houses);
 
 
         // Map 2 houses (world Y 1804–2706) — positions are placeholders, tune against map art
         List<House> map2Houses = new ArrayList<>();
-        map2Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
-        whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG); // The whitehouse
+        map2Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 310f, ticketBigBrown));
+        whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 310f, ticketBigRed); // The whitehouse
         map2Houses.add(whitehouse);
-        map2Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
-        map2Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        map2Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 310f, ticketBigBlack));
+        map2Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 310f, ticketBigBlue));
         housesByMap.add(map2Houses);
 
         // Map 3 house Array is empty -> the president level (no orders)
@@ -644,7 +646,7 @@ public class GameScreen implements Screen {
 
                 if (!hasNotification) {
                     DeliveryNotification newNotif = new DeliveryNotification(
-                            house, orderIndicatorTexture, activeNotifications.size());
+                            house, house.getOrderIndicator(), activeNotifications.size());
                     activeNotifications.add(newNotif);
 
                     // Play alert sound
@@ -1275,7 +1277,13 @@ public class GameScreen implements Screen {
         for (PoliceEnemy enemy : police) enemy.dispose();
         for (PuddleEnemy puddle : puddles) puddle.dispose();
         for (Fish fish : fishList) fish.dispose();
-        orderIndicatorTexture.dispose();
+        if (ticketYellow   != null) ticketYellow.dispose();
+        if (ticketBlue     != null) ticketBlue.dispose();
+        if (ticketPink     != null) ticketPink.dispose();
+        if (ticketBigBlue  != null) ticketBigBlue.dispose();
+        if (ticketBigBlack != null) ticketBigBlack.dispose();
+        if (ticketBigRed   != null) ticketBigRed.dispose();
+        if (ticketBigBrown != null) ticketBigBrown.dispose();
         if (gate1ObstacleTexture != null) gate1ObstacleTexture.dispose();
         if (gate2ObstacleTexture != null) gate2ObstacleTexture.dispose();
         shapeRenderer.dispose();
