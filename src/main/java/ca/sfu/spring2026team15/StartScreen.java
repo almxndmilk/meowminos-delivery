@@ -15,6 +15,14 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 
+/**
+ * The main-menu screen for "Meowmino's Delivery".
+ *
+ * <p>Displays the title card, a Play button, and icon buttons for Instructions and Settings.
+ * Clicking Play triggers an iris-wipe closing animation (using the OpenGL stencil buffer)
+ * before transitioning to {@link GameScreen}.
+ * Background music plays while this screen is active (respecting the global sound toggle).
+ */
 public class StartScreen implements Screen {
 
     private final Main game;
@@ -48,6 +56,12 @@ public class StartScreen implements Screen {
     private float transitionTimer = 0f;
     private static final float TRANSITION_DURATION = 1.2f;
 
+    /**
+     * Creates the start screen. Initialises the {@link SpriteBatch} and viewport;
+     * heavy asset loading is deferred to {@link #show()}.
+     *
+     * @param game the application controller used to switch screens
+     */
     public StartScreen(Main game) {
         this.game = game;
         batch = new SpriteBatch();
@@ -55,6 +69,14 @@ public class StartScreen implements Screen {
         viewport = new ExtendViewport(1280f, 720f);
     }
 
+    /**
+     * Draws the menu and handles button input each frame.
+     * During an active transition, advances the iris-wipe timer and switches to
+     * {@link GameScreen} once the iris closes fully.
+     * Touch coordinates are unprojected from screen space to world space before hit-testing.
+     *
+     * @param delta time in seconds since the last frame
+     */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(Color.BLACK);
@@ -123,6 +145,14 @@ public class StartScreen implements Screen {
         }
     }
 
+    /**
+     * Renders the iris-wipe effect using the OpenGL stencil buffer.
+     * The circle shrinks from full-screen to zero as the transition progresses,
+     * creating the classic iris-close look used to enter the game.
+     *
+     * @param irisRadius radius of the transparent circle in world/screen units;
+     *                   0 = fully black, &ge; half-diagonal = fully open
+     */
     private void renderIris(float irisRadius) {
         float w = viewport.getWorldWidth();
         float h = viewport.getWorldHeight();
@@ -157,9 +187,19 @@ public class StartScreen implements Screen {
     }
 
     // Screen interface required implementations
+    /**
+     * Called by LibGDX when the window is resized. Updates the viewport.
+     * @param width  new screen width in pixels
+     * @param height new screen height in pixels
+     */
     @Override public void resize(int width, int height) {
         viewport.update(width, height, true);
     }
+    /**
+     * Called by LibGDX when this screen becomes active.
+     * Loads all textures, starts background music, creates the shape renderer and
+     * 1×1 black texture required for the iris-wipe effect.
+     */
     @Override public void show() {
         startTexture          = new Texture(Gdx.files.internal("StartScreen/startScreenBackground.png"));
         buttonTexture         = new Texture(Gdx.files.internal("StartScreen/playButton.PNG"));
@@ -186,6 +226,7 @@ public class StartScreen implements Screen {
     @Override public void resume() {}
     @Override public void hide() {}
 
+    /** Releases all textures, audio, shape renderer, and batch owned by this screen. */
     @Override
     public void dispose() {
         startTexture.dispose();

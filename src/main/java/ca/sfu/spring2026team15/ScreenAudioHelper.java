@@ -7,7 +7,7 @@ import com.badlogic.gdx.audio.Sound;
  * Shared audio utilities for Screen classes.
  *
  * Centralises the repeated audio-setup pattern that previously existed in both SettingsScreen 
- *  & InstructionsScreen, so that volume values and file paths only need to be maintained in one place
+ *  and InstructionsScreen, so that volume values and file paths only need to be maintained in one place
  */
 public final class ScreenAudioHelper {
 

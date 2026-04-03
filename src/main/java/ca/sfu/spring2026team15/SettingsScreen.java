@@ -12,6 +12,13 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.audio.Sound;
 
 
+/**
+ * Screen that lets the player toggle game audio on or off.
+ *
+ * <p>The toggle state is stored in the {@code static} field {@link #soundOn}, which persists
+ * across screen visits and is read by all other screens to decide whether to play audio.
+ * Pressing the toggle zone flips the state; pressing Escape returns to {@link StartScreen}.
+ */
 public class SettingsScreen implements Screen {
 
     private final Main game;
@@ -29,12 +36,17 @@ public class SettingsScreen implements Screen {
     private Sound toggleSound;
     private Sound escSound;
 
+    /**
+     * Creates the settings screen with a viewport sized to 1280×720.
+     * @param game the application controller used to switch back to {@link StartScreen}
+     */
     public SettingsScreen(Main game) {
         this.game = game;
         batch    = new SpriteBatch();
         viewport = new ExtendViewport(1280f, 720f);
     }
 
+    /** Loads the sound-on and sound-off background textures and audio clips. */
     @Override
     public void show() {
         settingsOnTexture  = new Texture(Gdx.files.internal("StartScreen/settings_on.png"));
@@ -43,6 +55,12 @@ public class SettingsScreen implements Screen {
         escSound = ScreenAudioHelper.load("audio/escSound.mp3");
     }
 
+    /**
+     * Draws the settings screen (showing on or off state) and handles input.
+     * Touching the toggle zone flips {@link #soundOn}; Escape returns to the start screen.
+     *
+     * @param delta time in seconds since the last frame (unused)
+     */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(Color.BLACK);
@@ -65,16 +83,19 @@ public class SettingsScreen implements Screen {
         }
     }
 
+    /** Disposes this screen and returns to {@link StartScreen}. */
     private void goBack() {
         dispose();
         game.setScreen(new StartScreen(game));
     }
 
+    /** @param width new width; @param height new height — updates viewport dimensions */
     @Override public void resize(int width, int height) { viewport.update(width, height, true); }
     @Override public void pause()  {}
     @Override public void resume() {}
     @Override public void hide()   {}
 
+    /** Releases textures, audio, and the sprite batch. */
     @Override
     public void dispose() {
         settingsOnTexture.dispose();

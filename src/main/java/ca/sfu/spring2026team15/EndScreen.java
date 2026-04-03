@@ -10,6 +10,15 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
+/**
+ * The end-of-game screen displaying the player's final score (fish collected) and time.
+ *
+ * <p>Score is rendered as 4 large digit sprites; time is rendered as MM:SS using smaller
+ * digit sprites with the colon baked into the background image. Two buttons allow the
+ * player to return to {@link StartScreen} or quit the application.
+ * Plays a win sound ("yipee") when reached from the {@link ObamaScreen} cutscene,
+ * or a loss sound otherwise.
+ */
 public class EndScreen implements Screen {
 
     private final Main game;
@@ -40,6 +49,9 @@ public class EndScreen implements Screen {
     private static final float TIME_COLON_W  = 25f;  // extra gap to skip the baked-in colon
 
     // Method that helps reduces DATA CLUMP
+    /**
+     * Holds layout parameters for a row of digit sprites, avoiding repeated constants.
+     */
     private static class DigitLayout {
         final float x, y, w, h, gap;
         DigitLayout(float x, float y, float w, float h, float gap) {
@@ -59,6 +71,15 @@ public class EndScreen implements Screen {
     private Music yipeeSound;
     private Music doowopSound;
 
+    /**
+     * Creates the end screen.
+     *
+     * @param game           the application controller used to switch screens
+     * @param score          number of fish collected (displayed as the score)
+     * @param time           total elapsed time in seconds (displayed as MM:SS)
+     * @param fromObamaScene {@code true} when reached via the Obama win cutscene;
+     *                       affects which end sound is played
+     */
     public EndScreen(Main game, int score, int time, boolean fromObamaScene) {
         this.game  = game;
         this.score = score;
@@ -68,6 +89,11 @@ public class EndScreen implements Screen {
         viewport   = new ExtendViewport(1280f, 720f);
     }
 
+    /**
+     * Called by LibGDX when this screen becomes active.
+     * Loads the background texture, all digit textures (0–9) for both score and time,
+     * and starts the appropriate end music based on {@code fromObamaScene}.
+     */
     @Override
     public void show() {
         background = new Texture(Gdx.files.internal("End/endingScene2.png"));
@@ -97,6 +123,13 @@ public class EndScreen implements Screen {
         }
     }
 
+    /**
+     * Draws the end screen and handles Continue / Exit button input.
+     * Score and time digits are drawn using {@link #digitsOf} to decompose the values
+     * into individual digit indices. Touch coordinates are unprojected before hit-testing.
+     *
+     * @param delta time in seconds since the last frame
+     */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(Color.BLACK);
@@ -147,12 +180,31 @@ public class EndScreen implements Screen {
         }
     }
 
+    /**
+     * Returns {@code true} if the point {@code p} lies within the axis-aligned rectangle
+     * defined by {@code (x1,y1)} (bottom-left) and {@code (x2,y2)} (top-right).
+     *
+     * @param p  point to test (world coordinates)
+     * @param x1 left bound
+     * @param y1 bottom bound
+     * @param x2 right bound
+     * @param y2 top bound
+     * @return {@code true} if the point is inside the rectangle
+     */
     private boolean inBounds(Vector2 p, float x1, float y1, float x2, float y2) {
         return p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2;
     }
 
     // CODE DUPLICATION helper method
     // reduces repitiion in line 110 and line 122
+    /**
+     * Decomposes an integer into its individual decimal digits, zero-padded to {@code count} digits.
+     * The most-significant digit is at index 0.
+     *
+     * @param value the non-negative integer to decompose
+     * @param count the number of digits to return (excess leading digits are truncated)
+     * @return array of {@code count} digit values in [0, 9]
+     */
     private int[] digitsOf(int value, int count) {
         int[] d = new int[count];
         for (int i = count - 1; i >= 0; i--) {
@@ -162,6 +214,11 @@ public class EndScreen implements Screen {
         return d;
     }
 
+    /**
+     * Called by LibGDX when the window is resized. Updates the viewport.
+     * @param width  new screen width in pixels
+     * @param height new screen height in pixels
+     */
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
@@ -175,6 +232,7 @@ public class EndScreen implements Screen {
         if (doowopSound != null) doowopSound.stop();
     }
 
+    /** Releases all textures and audio resources owned by this screen. */
     @Override
     public void dispose() {
         background.dispose();
