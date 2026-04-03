@@ -1,6 +1,7 @@
 package ca.sfu.spring2026team15;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
@@ -211,6 +212,12 @@ public class ObamaScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        // Skip cutscene on Space
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            transitionToEnd();
+            return;
+        }
+
         // Advance animation frame timer (shared for both Obama and player)
         animTimer += delta;
         if (animTimer >= FRAME_DURATION) {
@@ -398,13 +405,6 @@ public class ObamaScreen implements Screen {
         }
         
         return result.toString();
-    }
-
-    private boolean anyKeyJustPressed() {
-        for (int key = 0; key < 256; key++) {
-            if (Gdx.input.isKeyJustPressed(key)) return true;
-        }
-        return false;
     }
 
     private void transitionToEnd() {
