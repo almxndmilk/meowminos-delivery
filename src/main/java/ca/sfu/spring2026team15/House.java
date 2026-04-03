@@ -74,7 +74,7 @@ public class House {
 
     public void render(SpriteBatch batch) {
         if (hasOrder) {
-            batch.draw(orderIndicator, x - 10f, y + SIZE, 70f, 70f);
+            batch.draw(orderIndicator, x - 10f, y + SIZE - 30, 70f, 70f);
         }
     }
 
@@ -82,5 +82,6 @@ public class House {
     public boolean wasDelivered() { return everDelivered; }
     public float getX() { return x; }
     public float getY() { return y; }
+    public Texture getOrderIndicator() { return orderIndicator; }
 
 }

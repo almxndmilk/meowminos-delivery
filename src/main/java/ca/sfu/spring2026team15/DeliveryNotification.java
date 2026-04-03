@@ -12,7 +12,7 @@ public class DeliveryNotification {
     private int slotIndex; //0=right,1=mid,2=left
 
     private static final float SLIDE_SPEED = 3.5f;
-    private static final float TICKET_WIDTH = 100f;
+    private static final float TICKET_WIDTH = 120f;
     private static final float TICKET_HEIGHT = 100f;
     private static final float TICKET_SPACING = 10f;
     private static final float SCREEN_RIGHT_MARGIN = 20f;
