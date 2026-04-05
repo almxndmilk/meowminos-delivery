@@ -14,6 +14,24 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
+/**
+ * Cutscene screen that plays after the player triggers the Obama Whitehouse delivery.
+ *
+ * <p>The sequence runs through three phases:
+ * <ol>
+ *   <li><b>OBAMA_WALK</b> — Obama walks out of the Whitehouse door toward the player;
+ *       the camera slowly pans toward the door</li>
+ *   <li><b>PLAYER_WALK</b> — the cat walks toward Obama and stops beside him</li>
+ *   <li><b>TALK</b> — Obama's voice clip plays while subtitles are progressively revealed;
+ *       a fallback timer is used when sound is off</li>
+ * </ol>
+ * Any key press or touch skips the cutscene immediately.
+ * After the talk phase ends (audio + {@value #END_DELAY}s delay) the screen transitions to
+ * {@link EndScreen} with the win flag set.
+ *
+ * <p>Coordinate conversion used throughout (image pixel → world):
+ * <pre>worldX = imgX − 75,  worldY = map3YOffset + (map3Height − imgY)</pre>
+ */
 public class ObamaScreen implements Screen {
 
     private static final float MAP_DRAW_X        = -75f;
@@ -105,17 +123,21 @@ public class ObamaScreen implements Screen {
     private Texture playerFrame2;
 
     /**
-     * @param map3YOffset    mapYOffsets[2] — world Y of map 3's bottom edge
-     * @param map3Height     mapHeights[2]  — actual pixel height of map part3.png
-     * @param playerCenterX  player's center X when the scene was triggered
-     * @param playerCenterY  player's center Y when the scene was triggered
+     * Constructs the Obama cutscene screen and pre-computes all world-space positions.
      *
-     * Coordinate conversion (image pixel → world):
-     *   worldX = imgX − 75
-     *   worldY = map3YOffset + (map3Height − imgY)
+     * <p>Obama's starting position is derived from the Whitehouse door image coordinates
+     * {@code (1465–1500, 810)} and his target from {@code (1475, 885)}.
+     * The player is placed to the left or right of Obama depending on which side
+     * {@code playerCenterX} falls, and walks to stand beside him during PLAYER_WALK.
      *
-     * Door image coords:   (1465,745)→(1500,810)  → Obama starts at worldX≈1407, worldY=map3YOffset+map3Height−810
-     * Target image coords: (1475,885)              → worldX=1400, worldY=map3YOffset+map3Height−885
+     * @param game           the application controller used to switch screens
+     * @param elapsedSeconds total game time in seconds (passed through to {@link EndScreen})
+     * @param fishCollected  fish count at time of trigger (passed through to {@link EndScreen})
+     * @param map3YOffset    world Y of map 3's bottom edge ({@code mapYOffsets[2]})
+     * @param map3Height     pixel height of map part3.png ({@code mapHeights[2]})
+     * @param playerCenterX  player's world-center X when the cutscene was triggered
+     * @param playerCenterY  player's world-center Y when the cutscene was triggered
+     * @param soundOn        whether game audio is enabled (mirrors {@link SettingsScreen#soundOn})
      */
     public ObamaScreen(Main game, int elapsedSeconds, int fishCollected,
                        float map3YOffset, float map3Height,
@@ -178,6 +200,12 @@ public class ObamaScreen implements Screen {
         this.endDelayTimer = 0f;
     }
 
+    /**
+     * Called by LibGDX when this screen becomes active.
+     * Loads all textures (map, Obama walk/talk frames, player frames),
+     * sets up the Obama voice audio with a completion listener, and initialises
+     * the HUD batch, camera, font, and black-pixel texture for subtitle rendering.
+     */
     @Override
     public void show() {
         mapTexture   = new Texture(Gdx.files.internal("map/map part3.png"));
@@ -210,6 +238,14 @@ public class ObamaScreen implements Screen {
         pm.dispose();
     }
 
+    /**
+     * Called by LibGDX every frame to advance the cutscene and draw everything.
+     * Any touch or key press immediately skips to {@link EndScreen}.
+     * Advances the shared animation frame timer, delegates to the current phase
+     * update method, then draws the world scene and (during TALK) the subtitle banner.
+     *
+     * @param delta time in seconds since the last frame
+     */
     @Override
     public void render(float delta) {
         // Skip cutscene on Space
@@ -246,6 +282,13 @@ public class ObamaScreen implements Screen {
         }
     }
 
+    /**
+     * Advances the OBAMA_WALK phase: moves Obama downward (and slightly horizontally) toward
+     * his target position while slowly panning the camera upward toward the Whitehouse door.
+     * Transitions to PLAYER_WALK when Obama reaches his target.
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updateObamaWalk(float delta) {
         // Walk Obama downward toward target
         obamaY -= OBAMA_WALK_SPEED * delta;
@@ -272,6 +315,12 @@ public class ObamaScreen implements Screen {
         }
     }
 
+    /**
+     * Advances the PLAYER_WALK phase: slides the player sprite toward Obama's side.
+     * Transitions to TALK once the player is within 5 pixels of their target position.
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updatePlayerWalk(float delta) {
         float dx = playerTargetX - playerX;
         if (Math.abs(dx) <= 5f) {
@@ -290,6 +339,14 @@ public class ObamaScreen implements Screen {
         }
     }
 
+    /**
+     * Advances the TALK phase: starts the Obama voice clip on the first frame, ticks the
+     * dialogue reveal timer, and (when sound is off) uses {@link #TALK_FALLBACK_DURATION}
+     * as a stand-in for the audio length. Calls {@link #transitionToEnd()} after the audio
+     * finishes plus a {@link #END_DELAY} second buffer.
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updateTalkPhase(float delta) {
         // Start audio once on the first frame of TALK; only check completion
         // on subsequent frames so isPlaying() has time to return true.
@@ -327,6 +384,10 @@ public class ObamaScreen implements Screen {
         }
     }
 
+    /**
+     * Renders the world-space cutscene: the map-3 tile, Obama's current animation frame,
+     * and the player sprite (mirrored horizontally if the player is facing right).
+     */
     private void drawScene() {
         ScreenUtils.clear(Color.BLACK);
         viewport.apply();
@@ -359,7 +420,11 @@ public class ObamaScreen implements Screen {
         batch.end();
     }
 
-    /** Renders the dialogue subtitle banner in screen-space, matching GameScreen's HUD style. */
+    /**
+     * Renders the dialogue subtitle banner in screen-space over the world scene.
+     * Draws a semi-transparent black strip at the bottom of the viewport and overlays
+     * the progressively revealed {@link #DIALOGUE} text using {@link #getProgressiveDialogue()}.
+     */
     private void drawDialogue() {
         float bannerH = 220f;
         float margin  = 90f;
@@ -380,7 +445,12 @@ public class ObamaScreen implements Screen {
         hudBatch.end();
     }
 
-    /** Returns the portion of dialogue that should be visible based on elapsed time */
+    /**
+     * Returns the portion of {@link #DIALOGUE} that should be visible based on elapsed time.
+     * Words are revealed at a rate of {@code wordCount / TALK_FALLBACK_DURATION} words per second.
+     *
+     * @return the substring of dialogue visible at the current {@code dialogueTimer} value
+     */
     private String getProgressiveDialogue() {
         // Split dialogue into words
         String[] words = DIALOGUE.split(" ");
@@ -407,6 +477,10 @@ public class ObamaScreen implements Screen {
         return result.toString();
     }
 
+    /**
+     * Disposes this screen and transitions to {@link EndScreen} with the win flag set.
+     * Guard-flag prevents double-transition if called more than once in a frame.
+     */
     private void transitionToEnd() {
         if (transitioning) return;
         transitioning = true;
@@ -414,6 +488,14 @@ public class ObamaScreen implements Screen {
         game.setScreen(new EndScreen(game, fishCollected, elapsedSeconds, true)); // true = came from ObamaScreen
     }
 
+    /**
+     * Called by LibGDX when the window is resized.
+     * Updates the viewport and restores the camera's zoom and position since
+     * {@code ExtendViewport.update} resets the camera to the viewport centre.
+     *
+     * @param width  new screen width in pixels
+     * @param height new screen height in pixels
+     */
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
@@ -427,6 +509,11 @@ public class ObamaScreen implements Screen {
     @Override public void resume() {}
     @Override public void hide()   {}
 
+    /**
+     * Releases all OpenGL and audio resources owned by this screen.
+     * Each disposable is null-checked before disposing and set to {@code null} afterwards
+     * to prevent double-dispose if called more than once.
+     */
     @Override
     public void dispose() {
         if (obamaVoice  != null) { obamaVoice.stop(); obamaVoice.dispose();  obamaVoice  = null; }
