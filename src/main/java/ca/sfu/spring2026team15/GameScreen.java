@@ -129,7 +129,7 @@ public class GameScreen implements Screen {
 
     // Fish quotas
     private static final int FISH_QUOTA_GATE1 = 30; // map 1 → map 2
-    private static final int FISH_QUOTA_GATE2 = 20; // map 2 → map 3
+    private static final int FISH_QUOTA_GATE2 = 70; // map 2 → map 3
 
     // Gate 1 obstacle clear: fade screen to black, then back, removing the obstacle
     private enum Gate1FadeState { NONE, FADE_OUT, FADE_IN }
