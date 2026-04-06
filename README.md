@@ -7,10 +7,13 @@ Kaushik, Krish,	kka182@sfu.ca
 Muntaseer, Tanveer,	tma123@sfu.ca  
 Nguyen, Lucas,	qdn@sfu.ca  
 
+---
+## Tutorial Video
+[Click Here!](https://youtu.be/gFfb3DsHz78?si=UlMbHLLywqt6zSot)
+
+
 
 ---
-
-
 ## Prerequisites
 
 Make sure you have the following installed before building or running the game:
