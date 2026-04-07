@@ -1,7 +1,22 @@
 package ca.sfu.spring2026team15;
 
+/**
+ * Utility class that evaluates whether the player can pass through a gate.
+ *
+ * <p>Returns a {@link GateResult} enum indicating whether the player is not near the gate,
+ * near but lacks the required fish, or near and eligible to clear it.
+ * All logic is in the static {@link #check} method; the class is not instantiated.
+ */
 public class GateChecker {
 
+    /**
+     * Result of a gate check.
+     * <ul>
+     *   <li>{@code NOT_AT_GATE} — player is not near the gate</li>
+     *   <li>{@code INSUFFICIENT_FISH} — player is at the gate but lacks the required fish</li>
+     *   <li>{@code CAN_CLEAR} — player is at the gate and has enough fish to clear it</li>
+     * </ul>
+     */
     public enum GateResult { NOT_AT_GATE, INSUFFICIENT_FISH, CAN_CLEAR }
 
     /**

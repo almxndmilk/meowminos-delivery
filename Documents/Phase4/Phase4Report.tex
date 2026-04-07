@@ -1,0 +1,189 @@
+
+% ================================
+% SFU CMPT 276 / Project Phase 4 Report
+% ================================
+
+\documentclass[12pt]{article}
+
+% ---------------- Packages ----------------
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+
+% ---------------- Page Style ----------------
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{CMPT 276 -- Project Phase 4}
+\rhead{Group \#15}
+\cfoot{Page \thepage\ of \pageref{LastPage}}
+
+% ---------------- Metadata ----------------
+\title{\textbf{Project Phase 4: Final Report}\\[0.5em]
+CMPT 276: Introduction to Software Engineering\\
+Simon Fraser University}
+
+\author{
+\textbf{Group \#15}\\[0.75em]
+\begin{tabular}{l r}
+Megan Chau        & Student \#301614135 \\
+Samantha Gan      & Student \#301614044 \\
+Krish Kaushik     & Student \#301628888 \\
+Tanveer Muntaseer & Student \#301620006 \\
+Lucas Nguyen      & Student \#301629229 \\
+\end{tabular}
+}
+
+\date{April 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{fancy}
+
+% ============================================================
+\section{The Game}
+% ============================================================
+
+\subsection{Game Description}
+
+\textit{Meowmino's Delivery} is a 2D tile-based side-scrolling delivery game built with LibGDX (LWJGL3 desktop backend). The player controls a cat riding a delivery bike across three connected maps. The core gameplay loop is: collect fish scattered on road tiles, watch for timed delivery orders from houses, dismount the bike to walk up to a house and deliver, then remount and continue --- all before a 5-minute countdown expires. Two hazard types oppose the player: \textbf{police enemies} that patrol the maps and give chase on sight (respawning the player with a fish and time penalty if caught), and \textbf{puddle hazards} that slow movement and continuously drain collected fish while the player overlaps them. Progress through the three maps is locked behind gates: Gate~1 requires 30 fish; Gate~2 requires at least one delivery to every house on Map~2. A special ending triggers on Map~3 when the player reaches the White House landmark with 90 or more fish, playing a full animated cutscene.
+
+\subsection{Fidelity to Original Plan}
+
+The following core features from the Phase~1 plan were delivered as designed:
+
+\begin{itemize}[noitemsep]
+    \item Three-map tile world (5446\,$\times$\,2706\,px total) with pixel-accurate barrier-based collision
+    \item Cat-on-bike player character with WASD movement and directional animation
+    \item Fish collectibles (20 per map, 60 total) randomly spawned on road tiles
+    \item Police enemies with configurable detection radius and state-machine chase AI
+    \item Delivery houses with timed orders and fish rewards (+10 per delivery)
+    \item Gate-based map progression gated by fish quota (Gate~1) and delivery history (Gate~2)
+    \item Five-minute countdown timer ending the game on expiry
+    \item EndScreen displaying a zero-padded score and elapsed time using digit sprites
+    \item Pause overlay with Resume, Restart, and Quit options
+    \item Settings screen with persistent sound on/off toggle
+\end{itemize}
+
+\subsection{Changes from the Original Plan}
+
+Several features were added or modified during development. The table below summarises each change and its justification.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{>{\raggedright}p{5.2cm} p{1.2cm} >{\raggedright\arraybackslash}p{6.8cm}}
+\toprule
+\textbf{Feature} & \textbf{Status} & \textbf{Justification} \\
+\midrule
+Mount/dismount mechanic (Q key; \texttt{CatOffBike} entity) & Added & Adds strategic depth: the player must physically walk to a door, creating risk vs.\ speed trade-offs \\
+Off-bike requirement for delivery & Added & Natural complement to mount/dismount; incentivises route planning \\
+Obama / White House cutscene ending & Added & Narrative payoff for completing all three maps with 90+ fish; rewards thorough play \\
+\texttt{DeliveryNotification} ticket UI (slide-in tickets, timer bar, 3 slots) & Added & Phase~1 showed a basic indicator; the full ticket system gives clear, real-time order feedback \\
+Iris wipe transition + cinematic letterbox bars & Added & Polish: smooth map transitions and framed cutscenes improve perceived game quality \\
+Map~3 camera pan cinematic on entry & Added & Previews house locations before gameplay resumes, reducing navigation confusion \\
+Gate~2 condition changed to ``all houses delivered'' & Changed & Fish quota alone gave no delivery incentive on Map~2; requiring deliveries ties gate logic to the game's core mechanic \\
+Puddle fish-drain effect (in addition to slow) & Added & A single slow effect felt minor; ongoing fish drain makes puddles a meaningful hazard \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Lessons Learned}
+
+\textbf{Testing LibGDX entities requires upfront infrastructure planning.}
+Entity constructors load textures and audio, requiring an active OpenGL context. We solved this with Objenesis (to instantiate entities without calling constructors) and Mockito (to stub LibGDX singletons such as \texttt{Gdx.graphics} and \texttt{Gdx.audio}), but building this infrastructure mid-project was costly. Future projects should design and validate the test harness before writing entity code.
+
+\textbf{Separating pure logic from rendering pays dividends throughout development.}
+Helper classes \texttt{GameLogicHelper}, \texttt{ObamaDialogueHelper}, \texttt{GateChecker}, and \texttt{Respawn} contain no LibGDX dependencies and are trivially unit-testable. Identifying and extracting this logic early would have saved significant refactoring effort that was instead performed after the fact during the testing phase.
+
+\textbf{Peer code review reveals blind spots that self-review misses.}
+Assignment~4 code reviews identified concrete smells: duplicated barrier-collision logic in \texttt{PoliceEnemy}, data clumps for spawn coordinates in \texttt{GameScreen}, an unnecessary \texttt{bikeParked} variable mirroring \texttt{isOnBike}, and dead code. Addressing this feedback improved both readability and test reliability.
+
+\textbf{Post-implementation testing is significantly more expensive than TDD.}
+Most tests were written after features were implemented. Retrofitting testing constructors, extracting helpers, and writing meaningful assertions took as long as the tests themselves. The lesson is clear: design for testability from day one.
+
+% ============================================================
+\section{Tutorial / Demo}
+% ============================================================
+
+\subsection{Video Demonstration}
+
+A full gameplay demonstration is available at:\\
+\textbf{\url{[VIDEO LINK HERE]}}\\
+The video covers all major mechanics: fish collection, delivery orders, police and puddle hazards, gate progression through all three maps, and the special Obama ending cutscene.
+
+\subsection{How to Play}
+
+\textbf{Controls}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Key} & \textbf{Action} \\
+\midrule
+W / A / S / D & Move up / left / down / right \\
+Q             & Mount or dismount the bike \\
+E             & Deliver an order (off-bike, within 150\,px of a house with an active order) \\
+ESC           & Pause / unpause \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Objective.}
+Collect fish on road tiles, fulfil delivery orders from houses, and advance through three maps before the 5-minute timer reaches zero. Reaching the White House on Map~3 with 90 or more fish triggers the special ending.
+
+\textbf{Fish Collection.}
+Fish icons are scattered across the road. Walk (or ride) over a fish to collect it. Each fish increments the counter shown in the HUD. Deliveries award a bonus of +10 fish per completed order.
+
+\textbf{Delivery System.}
+When a house has an active order, a delivery ticket slides onto the screen showing the house and a countdown timer. Dismount the bike with Q, walk to the house, and press E to deliver. Orders expire after 10 seconds. Up to three orders can be active simultaneously.
+
+\textbf{Hazards.}
+\textit{Police enemies} patrol each map. When a police officer spots the player (within 400\,px), a question mark appears above their head followed by a chase. Being caught respawns the player at the map start with $-10$ fish and $-30$ seconds.
+\textit{Puddles} slow movement speed from 400\,px/s to 70\,px/s and drain 1 fish per frame while the player overlaps them. Avoid or cross quickly.
+
+\textbf{Gate Progression.}
+Gate~1 (Map~1 $\to$ Map~2): collect 30 or more fish.
+Gate~2 (Map~2 $\to$ Map~3): deliver to every house on Map~2 at least once.
+
+\textbf{Special Ending.}
+On Map~3, navigate to the White House landmark with 90 or more fish collected to trigger the Obama cutscene and complete the game.
+
+% ============================================================
+\section{Build Automation}
+% ============================================================
+
+All build, test, and artifact tasks are driven by Apache Maven~3.6+ with Java~11. No additional IDE or toolchain setup is required.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{ll}
+\toprule
+\textbf{Task} & \textbf{Command} \\
+\midrule
+Compile sources                        & \texttt{mvn clean compile} \\
+Run the game                           & \texttt{mvn clean compile exec:exec} \\
+Run all tests                          & \texttt{mvn test} \\
+Run tests + JaCoCo coverage report     & \texttt{mvn test jacoco:report} \\
+Package executable shaded JAR          & \texttt{mvn clean package} \\
+Run the shaded JAR                     & \texttt{java -jar target/java-game-1.0-SNAPSHOT-shaded.jar} \\
+Generate Javadoc                       & \texttt{mvn javadoc:javadoc} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Coverage reports are written to \texttt{target/site/jacoco/index.html}. Javadoc output is written to the \texttt{javadoc/} directory at the project root.
+
+\medskip
+\noindent\textbf{macOS note:} the shaded JAR requires an extra JVM flag due to LWJGL3:
+\begin{center}
+\texttt{java -XstartOnFirstThread -jar target/java-game-1.0-SNAPSHOT-shaded.jar}
+\end{center}
+
+\end{document}

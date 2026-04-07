@@ -22,6 +22,22 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
+/**
+ * Primary game screen that runs the main gameplay loop for "Meowmino's Delivery".
+ *
+ * <p>Manages three sequential map sections (map1 → map2 → map3), each gated behind
+ * a fish-collection quota. Responsibilities include:
+ * <ul>
+ *   <li>Rendering tile maps, entities (player, police, fish, houses, puddles), and HUD</li>
+ *   <li>Player input: WASD movement, bike mount/dismount (Q), delivery/interaction (E), pause (ESC)</li>
+ *   <li>Gate progression: obstacle barriers cleared after collecting enough fish</li>
+ *   <li>Iris-wipe transitions between map sections using OpenGL stencil buffer</li>
+ *   <li>Intro cutscene (cat walks from door to bike) and map-3 cinematic pan</li>
+ *   <li>Delivery order system with per-house timers and HUD notifications</li>
+ *   <li>Obama Whitehouse trigger that ends the game with a cutscene</li>
+ *   <li>Respawn mechanic: police catch deducts fish and adds time penalty</li>
+ * </ul>
+ */
 public class GameScreen implements Screen {
     // World constants
     static final float MAP_WIDTH           = 5446f;
@@ -73,6 +89,28 @@ public class GameScreen implements Screen {
     // Respawn Penalties
     private static final int RESPAWN_FISH_PENALTY = 10;
     private static final float RESPAWN_TIME_PENALTY = 30f;
+
+    private static final float[][] MAP2_POLICE_SPAWNS = {
+        {2000f, 1000f},
+        {3500f, 1000f}
+    };
+    private static final float[][] MAP2_PUDDLE_SPAWNS = {
+        {2100f, 950f},
+        {3000f, 780f}
+    };
+    private static final float[][] MAP3_POLICE_SPAWNS = {
+        { 500f,  850f}, {1300f, 1200f}, {2500f, 1300f}, { 800f, 1450f},
+        {1800f, 1600f}, {1380f,  800f}, {2700f, 1900f}, { 300f, 2300f},
+        {1600f, 2300f}, {2300f, 2150f}, {2200f,  700f}, { 600f, 2480f},
+        {1500f, 1300f}, { 400f, 1400f}, { 920f, 1650f}, {2000f, 1600f},
+        {1700f,  900f}, { 300f, 2000f}, {1600f, 2100f}, {1100f, 2250f}
+    };
+    private static final float[][] MAP3_PUDDLE_SPAWNS = {
+        { 550f,  800f}, {1500f, 1000f}, {2500f, 1200f}, { 900f, 1450f},
+        {2000f, 1500f}, {1200f, 1750f}, {2100f, 1900f}, { 400f, 2000f},
+        {1600f, 2200f}, {2300f, 2250f}, { 900f, 2200f}, { 600f, 2480f},
+        {2300f, 2480f}
+    };
     private int totalTimePenalties = 0;
 
     // Gate 1 obstacle — blocks top of map 1 until player has enough fish
@@ -91,7 +129,7 @@ public class GameScreen implements Screen {
 
     // Fish quotas
     private static final int FISH_QUOTA_GATE1 = 30; // map 1 → map 2
-    private static final int FISH_QUOTA_GATE2 = 20; // map 2 → map 3
+    private static final int FISH_QUOTA_GATE2 = 70; // map 2 → map 3
 
     // Gate 1 obstacle clear: fade screen to black, then back, removing the obstacle
     private enum Gate1FadeState { NONE, FADE_OUT, FADE_IN }
@@ -168,13 +206,10 @@ public class GameScreen implements Screen {
     private static final float RESTART_X1 = 520f, RESTART_X2 = 750f, RESTART_Y1 = 240f, RESTART_Y2 = 340f;
     private static final float QUIT_X1    = 540f, QUIT_X2    = 730f, QUIT_Y1    = 135f, QUIT_Y2    = 235f;
 
-    // Orders — per-map house lists for gate checking, flat list for update/render
+    // Orders — per-map house lists for gate checking, update/render, and delivery notifications
     private final List<List<House>> housesByMap = new ArrayList<>();
-    private List<House> houses; // flat view used in update/render loops
-    private Texture orderIndicatorTexture; // small house
-    private Texture orderIndicatorTextureBIG;
-    private Texture orderIndicatorTextureBIG2;
-    private Texture orderIndicatorTextureBIGpick;
+    private Texture ticketYellow, ticketBlue, ticketPink;                       // map 1 small houses
+    private Texture ticketBigBlue, ticketBigBlack, ticketBigRed, ticketBigBrown; // map 2 big houses
     private boolean showDeliverPrompt = false;
     private List<DeliveryNotification> activeNotifications;
     private Sound deliveryAlertSound;
@@ -189,10 +224,31 @@ public class GameScreen implements Screen {
     private boolean obamaTriggered = false;
     private House whitehouse = null; // Reference to the whitehouse on map 3
 
+    /**
+     * Creates a new GameScreen bound to the given application controller.
+     * Heavy initialization (asset loading, entity creation) is deferred to {@link #show()}.
+     *
+     * @param game the LibGDX {@link Main} instance used to switch screens
+     */
     public GameScreen(Main game) {
         this.game = game;
     }
 
+    /**
+     * Called by LibGDX when this screen becomes active. Loads all assets, constructs
+     * entities, configures the camera, and starts the intro cutscene iris-wipe.
+     *
+     * <p>Specifically this method:
+     * <ul>
+     *   <li>Loads map textures and barrier pixmaps for all three map sections</li>
+     *   <li>Builds a {@link BarrierLookup} from the barrier pixmaps for pixel-perfect collision</li>
+     *   <li>Creates the player, off-bike cat, police enemies, puddles, gate obstacle textures,
+     *       and house delivery targets for each map</li>
+     *   <li>Calls {@link #spawnFish()} to randomly place fish on road tiles</li>
+     *   <li>Starts background music (respecting the global sound toggle) and loads SFX</li>
+     *   <li>Begins the opening iris-wipe (FADE_IN) and zooms the camera in for the intro cutscene</li>
+     * </ul>
+     */
     @Override
     public void show() {
         // Load all three map textures and barrier pixmaps
@@ -240,7 +296,7 @@ public class GameScreen implements Screen {
         whiteTexture = new Texture(pixmap);
         pixmap.dispose();
 
-        cinematicBars = new CinematicBars();
+        cinematicBars = new CinematicBars(VIEW_WIDTH, VIEW_HEIGHT);
 
         // Camera bounds scoped to map 1; updated on each map transition (raw map edges, halfViewH applied internally).
         // X uses mapWidth - BARRIER_X_OFFSET because the map is drawn at worldX = -75, so the right world-edge is mapWidth - 75.
@@ -296,39 +352,35 @@ public class GameScreen implements Screen {
         timer = new Timer();
         timer.start();
 
-        orderIndicatorTexture = new Texture(Gdx.files.internal("orderTickets/ticket.png"));
-        orderIndicatorTextureBIG = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse.png"));
-        orderIndicatorTextureBIG2 = new Texture(Gdx.files.internal("orderTickets/ticket bigHouse2.png"));
+        ticketYellow   = new Texture(Gdx.files.internal("orderTickets/ticketSmallHouseYellow.png"));
+        ticketBlue     = new Texture(Gdx.files.internal("orderTickets/ticketSmallHouseBlue.png"));
+        ticketPink     = new Texture(Gdx.files.internal("orderTickets/ticketSmallHousePink.png"));
+        ticketBigBlue  = new Texture(Gdx.files.internal("orderTickets/ticketBigHouseBlue.png"));
+        ticketBigBlack = new Texture(Gdx.files.internal("orderTickets/ticketBigHouseBlack.png"));
+        ticketBigRed   = new Texture(Gdx.files.internal("orderTickets/ticketBigHouseRed.png"));
+        ticketBigBrown = new Texture(Gdx.files.internal("orderTickets/ticketBigHouseBrown.png"));
 
 
         // Map 1 houses (world Y 0–902)
         List<House> map1Houses = new ArrayList<>();
-        map1Houses.add(new House(1700f, 275f, orderIndicatorTexture));
-        map1Houses.add(new House(2630f, 275f, orderIndicatorTexture));
-        map1Houses.add(new House(4755f, 275f, orderIndicatorTexture));
+        map1Houses.add(new House(1700f, 300f, ticketYellow));
+        map1Houses.add(new House(2630f, 300f, ticketBlue));
+        map1Houses.add(new House(4755f, 300f, ticketPink));
         housesByMap.add(map1Houses);
 
 
-        // Map 3 houses (world Y 1804–2706) — positions are placeholders, tune against map art
+        // Map 2 houses (world Y 1804–2706) — positions are placeholders, tune against map art
         List<House> map2Houses = new ArrayList<>();
-        map2Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
-        whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG); // The whitehouse
+        map2Houses.add(new House(1699f, MAP_HEIGHT_PER_PART * 2 + 310f, ticketBigBrown));
+        whitehouse = new House(2845f, MAP_HEIGHT_PER_PART * 2 + 310f, ticketBigRed); // The whitehouse
         map2Houses.add(whitehouse);
-        map2Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
-        map2Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 280f, orderIndicatorTextureBIG));
+        map2Houses.add(new House(3808f, MAP_HEIGHT_PER_PART * 2 + 310f, ticketBigBlack));
+        map2Houses.add(new House(4870f, MAP_HEIGHT_PER_PART * 2 + 310f, ticketBigBlue));
         housesByMap.add(map2Houses);
 
-        // Map 2 houses - yall there isnt a map 2 LOL
+        // Map 3 house Array is empty -> the president level (no orders)
         List<House> map3Houses = new ArrayList<>();
-//        map2Houses.add(new House(2700f, 700f, orderIndicatorTextureBIG));
-//        map2Houses.add(new House(3000f, 700f, orderIndicatorTextureBIG));
-//        map2Houses.add(new House(3250f, 700f, orderIndicatorTextureBIG));
-//        map2Houses.add(new House(3500f, 700f, orderIndicatorTextureBIG));
         housesByMap.add(map3Houses);
-
-        // Flat list for update/render loops
-        houses = new ArrayList<>();
-        for (List<House> perMap : housesByMap) houses.addAll(perMap);
 
         spawnFish();
 
@@ -358,7 +410,10 @@ public class GameScreen implements Screen {
         gameCamera.update(INTRO_DOOR_X, INTRO_DOOR_Y);
     }
 
-    /** Spawns fish on drivable road tiles across all three maps. */
+    /**
+     * Spawns {@value #TARGET_FISH_COUNT} fish per map section on drivable road tiles.
+     * Reads each map's barrier pixmap to reject positions that fall on non-road pixels.
+     */
     private void spawnFish() {
         fishList = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
@@ -366,6 +421,13 @@ public class GameScreen implements Screen {
         }
     }
 
+    /**
+     * Randomly places up to {@value #TARGET_FISH_COUNT} fish on road tiles for one map section.
+     * Uses the barrier pixmap: pixels with alpha &lt; 128 are considered road.
+     * Retries up to 10,000 times before giving up if road tiles are scarce.
+     *
+     * @param mapIndex the map section index (0 = map1, 1 = map2, 2 = map3)
+     */
     private void spawnFishForMap(int mapIndex) {
         float yOffset = mapYOffsets[mapIndex]; // use actual stacked Y, not assumed-uniform height
         Pixmap pm = barrierPixmaps[mapIndex];
@@ -377,7 +439,10 @@ public class GameScreen implements Screen {
         while (spawned < TARGET_FISH_COUNT && attempts < 10000) {
             attempts++;
             float worldX = 50f + (float) Math.random() * (mapW - 100f);
-            float localY = 50f + (float) Math.random() * (imgH - 100f);
+            // Map 3 has tree borders at edges — use tighter margins to avoid unreachable spawns
+            float minLocalY = (mapIndex == 2) ? 150f : 50f;
+            float maxLocalY = (mapIndex == 2) ? imgH - 200f : imgH - 50f;
+            float localY = minLocalY + (float) Math.random() * (maxLocalY - minLocalY);
 
             int pixelX = (int)(worldX + BARRIER_X_OFFSET);
             int pixelY = imgH - 1 - (int)localY;
@@ -386,19 +451,65 @@ public class GameScreen implements Screen {
 
             int pixel = pm.getPixel(pixelX, pixelY);
             boolean isRoad = (pixel & 0xFF) < 128;
-            if (isRoad) {
+            if (isRoad && hasRoadMargin(pm, pixelX, pixelY, imgH, 50)) {
                 fishList.add(new Fish(worldX, localY+ yOffset + 10f));
                 spawned++;
             }
         }
     }
 
+    /**
+     * Returns true if all 8 sampled points at {@code radius} pixels distance
+     * (cardinal + diagonal) around (cx, cy) are road tiles (alpha &lt; 128).
+     * Points outside pixmap bounds are treated as barriers.
+     */
+    private boolean hasRoadMargin(Pixmap pm, int cx, int cy, int imgH, int radius) {
+        int[] dx = {radius, -radius, 0,      0,       radius,  -radius,  radius, -radius};
+        int[] dy = {0,       0,      radius, -radius,  radius,  -radius, -radius,  radius};
+        for (int i = 0; i < dx.length; i++) {
+            int nx = cx + dx[i];
+            int ny = cy + dy[i];
+            if (nx < 0 || nx >= pm.getWidth() || ny < 0 || ny >= imgH) return false;
+            if ((pm.getPixel(nx, ny) & 0xFF) >= 128) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Called by LibGDX when the window is resized. Updates both the game world viewport
+     * and the pause overlay viewport to match the new screen dimensions.
+     *
+     * @param width  the new screen width in pixels
+     * @param height the new screen height in pixels
+     */
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height);
         pauseViewport.update(width, height, true);
     }
 
+    /**
+     * Called by LibGDX every frame to update game state and draw everything.
+     *
+     * <p>Update phase (when not paused):
+     * <ul>
+     *   <li>Handles ESC to toggle pause</li>
+     *   <li>Ticks the timer; transitions to {@link EndScreen} on timeout</li>
+     *   <li>Processes bike mount/dismount input and WASD movement</li>
+     *   <li>Runs gate checks, map transitions, gate-fade animations, the intro cutscene,
+     *       cinematic pan, and delivery order updates</li>
+     *   <li>Checks for the Obama Whitehouse trigger and fish collection / police respawn</li>
+     * </ul>
+     *
+     * <p>Render phase:
+     * <ul>
+     *   <li>Draws the current map, gate obstacles, houses, puddles, fish, player, and police</li>
+     *   <li>Renders the HUD (fish count, timer, prompts), delivery notifications, gate-fade
+     *       overlays, iris-wipe effect, and pause screen as needed</li>
+     * </ul>
+     *
+     * @param delta time in seconds since the last frame
+     */
     @Override
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && cinematicState == CinematicState.NONE && introState == IntroState.DONE) {
@@ -434,11 +545,9 @@ public class GameScreen implements Screen {
                     if (isOnBike) {
                         parkedBikeX = player.getCenterX();
                         parkedBikeY = player.getCenterY();
-                        bikeParked = true;
                         catOffBike.setPosition(player.getCenterX(), player.getCenterY());
                     } else {
                         player.setPosition(catOffBike.getCenterX(), catOffBike.getCenterY());
-                        bikeParked = false;
                     }
                     isOnBike = !isOnBike;
                 }
@@ -481,26 +590,28 @@ public class GameScreen implements Screen {
                     && checkFishCollection()) return;
             gateMessageTimer -= delta;
 
-            updateDeliveryNotifications(delta);
+            if (introState == IntroState.DONE) updateDeliveryNotifications(delta);
         }
 
-        // Delivery prompt + interaction — house timers tick always, but interaction blocked during cinematic
+        // Delivery prompt + interaction — only tick current-map houses after intro is done and while not paused
         showDeliverPrompt = false;
-        for (House house : houses) {
-            house.update(delta);
-            if (cinematicState == CinematicState.NONE
-                    && house.hasOrder()
-                    && house.isPlayerInRange(getActiveX(), getActiveY())) {
-                showDeliverPrompt = true;
-                if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                    if (!isOnBike) {
-                        if (SettingsScreen.soundOn) {
-                            deliveredSound.play(1.0f);
+        if (!isPaused && introState == IntroState.DONE) {
+            for (House house : housesByMap.get(currentMapIndex)) {
+                house.update(delta);
+                if (cinematicState == CinematicState.NONE
+                        && house.hasOrder()
+                        && house.isPlayerInRange(getActiveX(), getActiveY())) {
+                    showDeliverPrompt = true;
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                        if (!isOnBike) {
+                            if (SettingsScreen.soundOn) {
+                                deliveredSound.play(1.0f);
+                            }
+                            if (house.tryDeliver(getActiveX(), getActiveY())) {
+                                fishCollected += 10;
+                            }
                         }
-                        if (house.tryDeliver(getActiveX(), getActiveY())) {
-                            fishCollected += 10;
-                        }
-                       }
+                    }
                 }
             }
         }
@@ -520,7 +631,7 @@ public class GameScreen implements Screen {
             batch.draw(gate2ObstacleTexture, gate2ObstacleX, gate2ObstacleY, gate2DrawWidth, gate2DrawHeight);
         }
 
-        for (House house : houses) {
+        for (House house : housesByMap.get(currentMapIndex)) {
             house.render(batch);
         }
 
@@ -545,7 +656,7 @@ public class GameScreen implements Screen {
             fish.render(batch);
         }
         // replaced player.render(batch)
-        if (bikeParked) {
+        if (!isOnBike) {
             float bikeSize = 110f;
             batch.draw(parkedBikeTexture,
                     parkedBikeX - bikeSize / 2f,
@@ -596,6 +707,14 @@ public class GameScreen implements Screen {
     }
 
 
+    /**
+     * Synchronises on-screen delivery notification panels with the active house orders.
+     * Creates a new {@link DeliveryNotification} when a house gains an order that has no
+     * panel yet, plays the alert sound, ticks existing panels, and removes expired ones
+     * while compacting the remaining slot indices.
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updateDeliveryNotifications(float delta) {
         List<House> currentMapHouses = housesByMap.get(activeDeliveryMap);
 
@@ -611,7 +730,7 @@ public class GameScreen implements Screen {
 
                 if (!hasNotification) {
                     DeliveryNotification newNotif = new DeliveryNotification(
-                            house, orderIndicatorTexture, activeNotifications.size());
+                            house, house.getOrderIndicator(), activeNotifications.size());
                     activeNotifications.add(newNotif);
 
                     // Play alert sound
@@ -637,6 +756,10 @@ public class GameScreen implements Screen {
         }
     }
 
+    /**
+     * Draws all active delivery notification panels to the HUD using the HUD batch
+     * and camera so they appear in screen space regardless of world camera position.
+     */
     private void renderDeliveryNotifications() {
         hudBatch.setProjectionMatrix(hudCamera.combined);
         hudBatch.begin();
@@ -646,7 +769,13 @@ public class GameScreen implements Screen {
         hudBatch.end();
     }
 
-    /** Check gate triggers — no delta needed; called only when transition is inactive. */
+    /**
+     * Checks whether the player is near a gate obstacle and handles interaction.
+     * If the player has collected enough fish and presses E, the gate obstacle is cleared
+     * and the iris-wipe transition to the next map is queued.
+     * If the player lacks fish, a message is shown and their position is clamped behind the gate.
+     * Called only while no map transition or fade is in progress.
+     */
     private void checkGates() {
         float px = getActiveX();
         float py = getActiveY();
@@ -734,6 +863,14 @@ public class GameScreen implements Screen {
         }
     }
 
+    /**
+     * Advances the iris-wipe transition timer each frame.
+     * When FADE_OUT completes, sets a one-frame deferred flag so the screen renders
+     * fully black before {@link #activateMap(int)} is called and FADE_IN begins.
+     * When FADE_IN completes, starts the map-3 cinematic if transitioning to map 3.
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updateTransition(float delta) {
         if (transitionState == TransitionState.NONE) return;
 
@@ -761,6 +898,13 @@ public class GameScreen implements Screen {
         }
     }
 
+    /**
+     * Advances the gate-1 black-fade animation used to visually remove the gate-1 obstacle.
+     * Transitions through FADE_OUT (screen goes black) → removes obstacle → FADE_IN
+     * (screen returns to normal), then sets {@code gate1Cleared} so the top-edge trigger fires.
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updateGate1Fade(float delta) {
         if (gate1FadeState == Gate1FadeState.NONE) return;
         gate1FadeTimer += delta;
@@ -790,6 +934,12 @@ public class GameScreen implements Screen {
         hudBatch.end();
     }
 
+    /**
+     * Advances the gate-2 black-fade animation used to visually remove the gate-2 obstacle.
+     * Mirrors the gate-1 logic: FADE_OUT → obstacle removed → FADE_IN → {@code gate2Cleared} set.
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updateGate2Fade(float delta) {
         if (gate2FadeState == Gate2FadeState.NONE) return;
         gate2FadeTimer += delta;
@@ -818,6 +968,12 @@ public class GameScreen implements Screen {
         hudBatch.end();
     }
 
+    /**
+     * Begins the map-3 intro cinematic pan.
+     * Records the camera's current position and zoom as the pan start point,
+     * resets the cinematic timer, sets the state to PAN_TO_HOUSES, and shows
+     * the letterbox bars.
+     */
     private void startMap3Cinematic() {
         OrthographicCamera cam = gameCamera.getCamera();
         panStartX    = cam.position.x;
@@ -828,6 +984,21 @@ public class GameScreen implements Screen {
         cinematicBars.show();
     }
 
+    /**
+     * Drives the opening intro cutscene state machine each frame.
+     *
+     * <p>States in order:
+     * <ol>
+     *   <li>FADE_WAIT — holds the camera zoomed in on the door while the iris wipe plays</li>
+     *   <li>DOOR_DELAY — brief pause at the door before the cat starts walking</li>
+     *   <li>WALK_TO_BIKE — the off-bike cat walks toward the bike; camera follows zoomed in</li>
+     *   <li>WAIT_MOUNT — cat stands at the bike, prompting the player to press Q</li>
+     *   <li>MOUNT — player presses Q; camera smoothly zooms out to normal play zoom</li>
+     *   <li>DONE — cutscene complete; normal gameplay resumes</li>
+     * </ol>
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updateIntro(float delta) {
         OrthographicCamera cam = gameCamera.getCamera();
         switch (introState) {
@@ -879,7 +1050,6 @@ public class GameScreen implements Screen {
                 cam.update();
                 if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
                     isOnBike = true;
-                    bikeParked = false;
                     player.setPosition(INTRO_BIKE_X, INTRO_BIKE_Y);
                     showIntroMountPrompt = false;
                     introState = IntroState.MOUNT;
@@ -903,6 +1073,20 @@ public class GameScreen implements Screen {
         }
     }
 
+    /**
+     * Drives the map-3 intro cinematic pan each frame.
+     *
+     * <p>States in order:
+     * <ol>
+     *   <li>PAN_TO_HOUSES — smoothly pans and zooms to show the full map-3 width</li>
+     *   <li>HOLD — holds on the overview; hides letterbox bars when hold time elapses</li>
+     *   <li>PAN_BACK — smoothly pans and zooms back to the player's position at zoom 1</li>
+     * </ol>
+     * All panning uses smoothstep easing. After PAN_BACK completes, the state returns to
+     * NONE and normal camera tracking resumes.
+     *
+     * @param delta time in seconds since the last frame
+     */
     private void updateCinematic(float delta) {
         if (cinematicState == CinematicState.NONE) return;
         cinematicTimer += delta;
@@ -987,6 +1171,13 @@ public class GameScreen implements Screen {
         return GameLogicHelper.smoothStep(t);
     }
 
+    /**
+     * Switches the active map to the given index mid-transition (called at full-black frame).
+     * Repositions the player and off-bike cat at the new map's spawn point, updates camera
+     * bounds, clears delivery notifications, and spawns enemies for maps 2 and 3.
+     *
+     * @param index the map index to activate (0 = map1, 1 = map2, 2 = map3)
+     */
     private void activateMap(int index) {
         // Calculate spawn positions dynamically based on actual map offsets
         float[] spawnX = {300f, 5600f, 1250f};
@@ -1000,7 +1191,6 @@ public class GameScreen implements Screen {
         // changed:
         player.setPosition(spawnX[index], spawnY[index]);
         catOffBike.setPosition(spawnX[index], spawnY[index]);
-        bikeParked = false;
         isOnBike = true;
         currentMapIndex = Math.max(currentMapIndex, index);
 
@@ -1018,51 +1208,40 @@ public class GameScreen implements Screen {
             puddles.clear();
         }
 
-        if (index == 1 && police.size() < 3) {
-            police.add(new PoliceEnemy(2000f, mapYOffsets[1] + 1000f));
-            police.add(new PoliceEnemy(3500f, mapYOffsets[1] + 1000f));
-            puddles.add(new PuddleEnemy(2100f, mapYOffsets[1] + 950f));
-            puddles.add(new PuddleEnemy(3000f, mapYOffsets[1] + 780f));
-        }
-
-        if (index == 2 && police.size() < 16) {
-            police.add(new PoliceEnemy(500f, mapYOffsets[2] + 850f));
-            police.add(new PoliceEnemy(1300f, mapYOffsets[2] + 1200f));
-            police.add(new PoliceEnemy(2500f, mapYOffsets[2] + 1300f));
-            police.add(new PoliceEnemy(800f, mapYOffsets[2] + 1450f));
-            police.add(new PoliceEnemy(1800f, mapYOffsets[2] + 1600f));
-            police.add(new PoliceEnemy(1380f, mapYOffsets[2] + 800f));
-            police.add(new PoliceEnemy(2700f, mapYOffsets[2] + 1900f));
-            police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2300f));
-            police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2300f));
-            police.add(new PoliceEnemy(2300f, mapYOffsets[2] + 2150f));
-            police.add(new PoliceEnemy(2200f, mapYOffsets[2] + 700f));
-            police.add(new PoliceEnemy(600f, mapYOffsets[2] + 2480f));
-            police.add(new PoliceEnemy(1500f, mapYOffsets[2] + 1300f));
-            police.add(new PoliceEnemy(400f, mapYOffsets[2] + 1400f));
-            police.add(new PoliceEnemy(920f, mapYOffsets[2] + 1650f));
-            police.add(new PoliceEnemy(2000f, mapYOffsets[2] + 1600f));
-            police.add(new PoliceEnemy(1700f, mapYOffsets[2] + 900f));
-            police.add(new PoliceEnemy(300f, mapYOffsets[2] + 2000f));
-            police.add(new PoliceEnemy(1600f, mapYOffsets[2] + 2100f));
-            police.add(new PoliceEnemy(1100f, mapYOffsets[2] + 2250f));
-
-            puddles.add(new PuddleEnemy(550f, mapYOffsets[2] + 800f));
-            puddles.add(new PuddleEnemy(1500f, mapYOffsets[2] + 1000f));
-            puddles.add(new PuddleEnemy(2500f, mapYOffsets[2] + 1200f));
-            puddles.add(new PuddleEnemy(900f, mapYOffsets[2] + 1450f));
-            puddles.add(new PuddleEnemy(2000f, mapYOffsets[2] + 1500f));
-            puddles.add(new PuddleEnemy(1200f, mapYOffsets[2] + 1750f));
-            puddles.add(new PuddleEnemy(2100f, mapYOffsets[2] + 1900f));
-            puddles.add(new PuddleEnemy(400f, mapYOffsets[2] + 2000f));
-            puddles.add(new PuddleEnemy(1600f, mapYOffsets[2] + 2200f));
-            puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2250f));
-            puddles.add(new PuddleEnemy(900f, mapYOffsets[2] + 2200f));
-            puddles.add(new PuddleEnemy(600f, mapYOffsets[2] + 2480f));
-            puddles.add(new PuddleEnemy(2300f, mapYOffsets[2] + 2480f));
+        if (index >= 1) {
+            spawnEnemiesForMap(index);
         }
     }
 
+    /**
+     * Populates the police and puddle enemy lists from the hard-coded spawn-coordinate arrays
+     * for the given map. Spawns are offset by the map's world-Y origin so coordinates in the
+     * arrays are relative to the local map bottom.
+     *
+     * @param index the map index (1 = map2, 2 = map3); map1 enemies are created in {@link #show()}
+     */
+    private void spawnEnemiesForMap(int index) {
+        float[][] policeSpawns = (index == 1) ? MAP2_POLICE_SPAWNS : MAP3_POLICE_SPAWNS;
+        float[][] puddleSpawns = (index == 1) ? MAP2_PUDDLE_SPAWNS : MAP3_PUDDLE_SPAWNS;
+        float yOffset = mapYOffsets[index];
+
+        for (float[] spawn : policeSpawns) {
+            police.add(new PoliceEnemy(spawn[0], yOffset + spawn[1]));
+        }
+        for (float[] spawn : puddleSpawns) {
+            puddles.add(new PuddleEnemy(spawn[0], yOffset + spawn[1]));
+        }
+    }
+
+    /**
+     * Renders the iris-wipe effect using the OpenGL stencil buffer.
+     * Draws a filled circle of the given radius into the stencil buffer (no colour output),
+     * then covers every pixel outside the circle with solid black, creating the classic
+     * iris-wipe look used for map transitions and game open/close.
+     *
+     * @param irisRadius radius of the transparent "open" circle in HUD/screen pixels;
+     *                   0 = fully black, &ge; half-diagonal = fully visible
+     */
     private void renderIris(float irisRadius) {
         // Step 1: write iris circle into stencil only (no color output)
         Gdx.gl.glClear(GL20.GL_STENCIL_BUFFER_BIT);
@@ -1093,16 +1272,36 @@ public class GameScreen implements Screen {
         Gdx.gl.glDisable(GL20.GL_STENCIL_TEST);
     }
 
+    /**
+     * Returns the number of house deliveries still pending on the specified map.
+     *
+     * @param mapIndex the map index to query
+     * @return number of houses on that map that still have an active order
+     */
     private int deliveriesNeeded(int mapIndex) {
         return GameLogicHelper.deliveriesNeeded(housesByMap.get(mapIndex));
     }
 
+    /**
+     * Returns {@code true} when the player is within the Obama Whitehouse trigger zone
+     * on map 3, as determined by {@link GameLogicHelper#isNearWhitehouse}.
+     *
+     * @return {@code true} if the Obama cutscene prompt should be shown
+     */
     private boolean isPlayerNearWhitehouse() {
+        // X: image pixel coords minus BARRIER_X_OFFSET (75) because map is drawn at x=-75
+        // Y: mapYOffset + mapHeight - imagePixelY (image Y=0 is top, world Y=0 is bottom)
         return GameLogicHelper.isNearWhitehouse(
             getActiveX(), getActiveY(), currentMapIndex,
-            mapYOffsets[2], mapHeights[2]);
+            1080f - BARRIER_X_OFFSET, mapYOffsets[2] + mapHeights[2] - 940f,
+            1775f - BARRIER_X_OFFSET, mapYOffsets[2] + mapHeights[2] - 940f + 150f);
     }
 
+    /**
+     * Stops the timer and music, disposes this screen's resources, and transitions
+     * to the {@link ObamaScreen} cutscene, passing elapsed time, fish count, and the
+     * player's current world position so the cutscene can start with the correct layout.
+     */
     private void triggerObamaScene() {
         timer.stop();
         if (backgroundMusic != null) {
@@ -1116,18 +1315,43 @@ public class GameScreen implements Screen {
         float px = getActiveX();
         float py = getActiveY();
         dispose();
-        game.setScreen(new ObamaScreen(game, elapsed, fishCollected, yOffset, height, px, py));
+        game.setScreen(new ObamaScreen(game, elapsed, fishCollected, yOffset, height, px, py, SettingsScreen.soundOn));
     }
 
-    // method definition for updated player on and off bike
+    /** @return the X centre of whichever entity is currently active (on-bike player or off-bike cat) */
     private float getActiveX() { return isOnBike ? player.getCenterX() : catOffBike.getCenterX(); }
+
+    /** @return the Y centre of whichever entity is currently active (on-bike player or off-bike cat) */
     private float getActiveY() { return isOnBike ? player.getCenterY() : catOffBike.getCenterY(); }
 
+    /**
+     * Sets a temporary HUD message shown near a gate obstacle for {@code 0.1} seconds.
+     * Subsequent calls within that window reset the timer, keeping the message visible.
+     *
+     * @param msg the text to display (e.g. "Need 5 more fish!" or "Press E to clear!")
+     */
     private void setGateMessage(String msg) {
         gateMessage = msg;
         gateMessageTimer = 0.1f;
     }
 
+    /**
+     * Collects nearby fish and checks loss/respawn conditions each frame.
+     *
+     * <ul>
+     *   <li>Collects any uncollected fish within {@code collectRadius} pixels of the active entity</li>
+     *   <li>If total fish drop below 0, transitions immediately to {@link EndScreen} (loss)</li>
+     *   <li>If a police enemy is catching the player:
+     *     <ul>
+     *       <li>If deducting the fish penalty would drop below 0 → EndScreen (loss)</li>
+     *       <li>Otherwise, calls {@link Respawn#respawn} to reposition, deduct fish, and
+     *           add a time penalty, then returns {@code true} to skip the rest of this frame</li>
+     *     </ul>
+     *   </li>
+     * </ul>
+     *
+     * @return {@code true} if a screen transition or respawn occurred and the caller should return early
+     */
     private boolean checkFishCollection() {
         float collectRadius = 60f;
         float rSquared = collectRadius * collectRadius;
@@ -1169,7 +1393,6 @@ public class GameScreen implements Screen {
                         fishCollected, mapYOffsets, RESPAWN_FISH_PENALTY, RESPAWN_TIME_PENALTY);
                 totalTimePenalties += (int) RESPAWN_TIME_PENALTY;
                 catOffBike.setPosition(player.getCenterX(), player.getCenterY());
-                bikeParked = false;
                 isOnBike = true;
                 return true;
             }
@@ -1178,6 +1401,11 @@ public class GameScreen implements Screen {
     }
 
 
+    /**
+     * Draws the heads-up display in screen space using the HUD batch and orthographic camera.
+     * Renders the fish-count icon and number, the countdown timer, contextual prompts
+     * (deliver, mount bike, Obama, gate messages), and the cinematic letterbox bars.
+     */
     private void renderHud() {
         hudBatch.setProjectionMatrix(hudCamera.combined);
         hudBatch.begin();
@@ -1228,6 +1456,11 @@ public class GameScreen implements Screen {
         hudBatch.end();
     }
 
+    /**
+     * Renders the pause overlay and handles button clicks (Resume, Restart, Quit).
+     * Uses a separate viewport so the overlay always fills the screen regardless of zoom.
+     * Unprojects touch coordinates to check which button region was tapped.
+     */
     private void renderPause() {
         pauseViewport.apply();
         pauseBatch.setProjectionMatrix(pauseViewport.getCamera().combined);
@@ -1255,6 +1488,11 @@ public class GameScreen implements Screen {
     @Override public void resume() {}
     @Override public void hide() {}
 
+    /**
+     * Releases all OpenGL and audio resources owned by this screen.
+     * Safe to call multiple times; null-checks guard every disposable before disposing.
+     * Sets music and sound references to null after disposal to prevent double-dispose.
+     */
     @Override
     public void dispose() {
         for (Texture t : mapTextures) if (t != null) t.dispose();
@@ -1269,7 +1507,13 @@ public class GameScreen implements Screen {
         for (PoliceEnemy enemy : police) enemy.dispose();
         for (PuddleEnemy puddle : puddles) puddle.dispose();
         for (Fish fish : fishList) fish.dispose();
-        orderIndicatorTexture.dispose();
+        if (ticketYellow   != null) ticketYellow.dispose();
+        if (ticketBlue     != null) ticketBlue.dispose();
+        if (ticketPink     != null) ticketPink.dispose();
+        if (ticketBigBlue  != null) ticketBigBlue.dispose();
+        if (ticketBigBlack != null) ticketBigBlack.dispose();
+        if (ticketBigRed   != null) ticketBigRed.dispose();
+        if (ticketBigBrown != null) ticketBigBrown.dispose();
         if (gate1ObstacleTexture != null) gate1ObstacleTexture.dispose();
         if (gate2ObstacleTexture != null) gate2ObstacleTexture.dispose();
         shapeRenderer.dispose();
