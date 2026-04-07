@@ -324,14 +324,14 @@ public class GameScreen implements Screen {
         puddles.add(new PuddleEnemy(3950f, 650f));
 
 
-        gate1ObstacleTexture = new Texture(Gdx.files.internal("small assets/obstacle 30 fish.png"));
+        gate1ObstacleTexture = new Texture(Gdx.files.internal("small assets/obstacle 20 fish.png"));
         // Render at fixed 500px wide, height scaled proportionally; centred at X=3832, top flush with map 1 top
         gate1DrawWidth  = 500f;
         gate1DrawHeight = gate1DrawWidth / gate1ObstacleTexture.getWidth() * gate1ObstacleTexture.getHeight();
         gate1ObstacleX = 3766f - gate1DrawWidth / 2f;
         gate1ObstacleY = MAP_HEIGHT_PER_PART - gate1DrawHeight;
 
-        gate2ObstacleTexture = new Texture(Gdx.files.internal("small assets/obstacle 70 fish.png"));
+        gate2ObstacleTexture = new Texture(Gdx.files.internal("small assets/obstacle 40 fish.png"));
         // 500px wide, proportional height; centred at X=550, top flush with map 2 top
         gate2DrawWidth  = 500f;
         gate2DrawHeight = gate2DrawWidth / gate2ObstacleTexture.getWidth() * gate2ObstacleTexture.getHeight();
