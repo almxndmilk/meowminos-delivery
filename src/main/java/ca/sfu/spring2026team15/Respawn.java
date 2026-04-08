@@ -8,6 +8,9 @@ import java.util.List;
  */
 public class Respawn {
 
+    /** Utility class; do not instantiate. */
+    private Respawn() {}
+
     /**
      * Respawns the player at the current map's starting position, deducts fish and time
      * penalties, and resets all police enemies to their spawn points.

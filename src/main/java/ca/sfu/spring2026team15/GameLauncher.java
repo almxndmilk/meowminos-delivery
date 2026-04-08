@@ -15,6 +15,9 @@ import ca.sfu.spring2026team15.Main;
  * always use {@code mvn exec:exec} rather than {@code mvn exec:java} on macOS.
  */
 public class GameLauncher {
+    /** Utility class; do not instantiate. */
+    private GameLauncher() {}
+
     /**
      * Application entry point. Delegates immediately to {@link #createApplication()}.
      * @param args command-line arguments (ignored)

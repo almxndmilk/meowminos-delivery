@@ -135,19 +135,34 @@ public class House {
         }
     }
 
-    /** @return {@code true} if this house currently has an active order */
+    /**
+     * Returns whether this house currently has an active order.
+     * @return {@code true} if this house currently has an active order
+     */
     public boolean hasOrder() { return hasOrder; }
 
-    /** @return {@code true} if at least one delivery has ever been completed to this house */
+    /**
+     * Returns whether at least one delivery has ever been completed to this house.
+     * @return {@code true} if at least one delivery has ever been completed to this house
+     */
     public boolean wasDelivered() { return everDelivered; }
 
-    /** @return world X of this house's bottom-left corner */
+    /**
+     * Returns the world X of this house's bottom-left corner.
+     * @return world X of this house's bottom-left corner
+     */
     public float getX() { return x; }
 
-    /** @return world Y of this house's bottom-left corner */
+    /**
+     * Returns the world Y of this house's bottom-left corner.
+     * @return world Y of this house's bottom-left corner
+     */
     public float getY() { return y; }
 
-    /** @return the order indicator texture used by {@link DeliveryNotification} */
+    /**
+     * Returns the order indicator texture used by {@link DeliveryNotification}.
+     * @return the order indicator texture
+     */
     public Texture getOrderIndicator() { return orderIndicator; }
 
 }

@@ -7,6 +7,9 @@ package ca.sfu.spring2026team15;
  */
 public class ObamaDialogueHelper {
 
+    /** Utility class; do not instantiate. */
+    private ObamaDialogueHelper() {}
+
     /** The full dialogue spoken by Obama during the cutscene. */
     public static final String DIALOGUE =
             "Thank you for the pizza kind, citizen. You are doing a great job with "

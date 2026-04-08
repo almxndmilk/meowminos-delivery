@@ -48,16 +48,25 @@ public class Fish {
         batch.draw(texture, drawX, drawY, SIZE, SIZE);
     }
 
-    /** @return {@code true} if this fish has already been collected */
+    /**
+     * Returns whether this fish has already been collected.
+     * @return {@code true} if this fish has already been collected
+     */
     public boolean isCollected() { return collected; }
 
     /** Marks this fish as collected; it will no longer render or be collected again. */
     public void collect() { collected = true; }
 
-    /** @return world-centre X of this fish */
+    /**
+     * Returns the world-centre X of this fish.
+     * @return world-centre X
+     */
     public float getCenterX() { return position.x; }
 
-    /** @return world-centre Y of this fish */
+    /**
+     * Returns the world-centre Y of this fish.
+     * @return world-centre Y
+     */
     public float getCenterY() { return position.y; }
 
     /** Releases the fish texture if one was loaded. */

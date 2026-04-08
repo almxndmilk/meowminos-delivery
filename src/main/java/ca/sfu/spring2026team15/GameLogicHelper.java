@@ -138,9 +138,18 @@ public class GameLogicHelper {
     // --- Camera clamping (cinematic) ---
 
     /**
-     * Clamp camera position to map bounds at a given zoom level.
-     * Returns float[2] = {clampedX, clampedY}.
+     * Clamps camera position to map bounds at a given zoom level.
      * When the zoomed view exceeds a dimension, the camera is centered on that axis.
+     *
+     * @param rawX      unclamped camera centre X
+     * @param rawY      unclamped camera centre Y
+     * @param viewWidth  viewport width in world units
+     * @param viewHeight viewport height in world units
+     * @param zoom       current camera zoom factor
+     * @param mapMinY    bottom boundary of the map in world units
+     * @param mapMaxY    top boundary of the map in world units
+     * @param mapMaxX    right boundary of the map in world units
+     * @return {@code float[2]} containing the clamped camera centre {@code {x, y}}
      */
     public static float[] clampCameraToMapBounds(float rawX, float rawY,
                                                    float viewWidth, float viewHeight,
@@ -232,21 +241,46 @@ public class GameLogicHelper {
 
     // --- Intro cutscene helpers ---
 
-    /** Check if catOffBike has arrived near the target (within 5px). */
+    /**
+     * Returns {@code true} if the off-bike cat has arrived near the target (within 5 px).
+     *
+     * @param catX    current X of the cat's centre
+     * @param catY    current Y of the cat's centre
+     * @param targetX target X to walk toward
+     * @param targetY target Y to walk toward
+     * @return {@code true} if the cat is within 5 pixels of the target
+     */
     public static boolean isAtIntroTarget(float catX, float catY, float targetX, float targetY) {
         float dx = targetX - catX;
         float dy = targetY - catY;
         return dx * dx + dy * dy < 5f * 5f;
     }
 
-    /** Calculate camera zoom during intro mount phase. */
+    /**
+     * Calculates the camera zoom level during the intro mount phase, capped at 1.0.
+     *
+     * @param currentZoom  the current zoom factor
+     * @param zoomOutSpeed rate at which zoom increases per second
+     * @param delta        time in seconds since the last frame
+     * @return the new zoom factor, clamped to a maximum of {@code 1.0}
+     */
     public static float calculateMountZoom(float currentZoom, float zoomOutSpeed, float delta) {
         return Math.min(1.0f, currentZoom + zoomOutSpeed * delta);
     }
 
     // --- Pause menu button bounds ---
 
-    /** Check if a touch point is within a rectangular button region. */
+    /**
+     * Returns {@code true} if a touch point lies within a rectangular button region.
+     *
+     * @param touchX unprojected touch X in HUD/screen space
+     * @param touchY unprojected touch Y in HUD/screen space
+     * @param x1     left edge of the button
+     * @param y1     bottom edge of the button
+     * @param x2     right edge of the button
+     * @param y2     top edge of the button
+     * @return {@code true} if the touch point is inside the rectangle
+     */
     public static boolean isInButtonBounds(float touchX, float touchY,
                                             float x1, float y1, float x2, float y2) {
         return touchX >= x1 && touchX <= x2 && touchY >= y1 && touchY <= y2;
@@ -254,7 +288,13 @@ public class GameLogicHelper {
 
     // --- Spawn positions ---
 
-    /** Get player spawn position for a given map index as a single Vector2. */
+    /**
+     * Returns the player spawn position for a given map index.
+     *
+     * @param mapIndex   the map section index (0, 1, or 2)
+     * @param mapYOffsets world-Y origins of each map section
+     * @return the spawn position as a {@link Vector2}
+     */
     public static Vector2 getPlayerSpawnPosition(int mapIndex, float[] mapYOffsets) {
         switch (mapIndex) {
             case 1: return new Vector2(5600f, mapYOffsets[1] + 100f);
@@ -265,14 +305,29 @@ public class GameLogicHelper {
 
     // --- Respawn eligibility ---
 
-    /** Returns true if respawn would cause game over (fish after penalty &lt; 0). */
+    /**
+     * Returns {@code true} if applying the fish penalty would leave the player with fewer than
+     * zero fish, triggering a game over.
+     *
+     * @param fishCollected current fish count before the penalty
+     * @param fishPenalty   number of fish to deduct on respawn
+     * @return {@code true} if {@code fishCollected - fishPenalty < 0}
+     */
     public static boolean isRespawnGameOver(int fishCollected, int fishPenalty) {
         return fishCollected - fishPenalty < 0;
     }
 
     // --- Puddle overlap ---
 
-    /** Check if player is on a puddle (distance &lt; 67 from puddle center). */
+    /**
+     * Returns {@code true} if the entity is on a puddle (within 67 units of the puddle centre).
+     *
+     * @param puddleX world-centre X of the puddle
+     * @param puddleY world-centre Y of the puddle
+     * @param entityX world-centre X of the entity to test
+     * @param entityY world-centre Y of the entity to test
+     * @return {@code true} if the entity is within 67 units of the puddle centre
+     */
     public static boolean isOnPuddle(float puddleX, float puddleY,
                                       float entityX, float entityY) {
         float dx = puddleX - entityX;
@@ -282,7 +337,13 @@ public class GameLogicHelper {
 
     // --- Map boundary enforcement ---
 
-    /** Clamp player Y to stay within the current map if gate is not cleared. */
+    /**
+     * Clamps the player's Y coordinate so they cannot move above the current map boundary.
+     *
+     * @param playerY current player Y position
+     * @param mapTopY the maximum Y allowed (top boundary of the current map section)
+     * @return the clamped Y position (80 units below {@code mapTopY} if exceeded)
+     */
     public static float clampToMapBoundary(float playerY, float mapTopY) {
         return playerY > mapTopY ? mapTopY - 80f : playerY;
     }

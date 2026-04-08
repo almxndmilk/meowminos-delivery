@@ -9,6 +9,9 @@ import com.badlogic.gdx.Game;
  * On creation, immediately transitions to the {@link StartScreen}.
  */
 public class Main extends Game {
+    /** Creates the LibGDX application instance; called by the framework. */
+    public Main() {}
+
     /**
      * Called once by LibGDX after the OpenGL context is ready.
      * Sets {@link StartScreen} as the initial active screen.

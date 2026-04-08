@@ -180,13 +180,22 @@ public class Player {
         }
     }
 
-    /** @return the X coordinate of the player's centre in world space */
+    /**
+     * Returns the X coordinate of the player's centre in world space.
+     * @return the player's world-centre X
+     */
     public float getCenterX() { return position.x; }
 
-    /** @return the Y coordinate of the player's centre in world space */
+    /**
+     * Returns the Y coordinate of the player's centre in world space.
+     * @return the player's world-centre Y
+     */
     public float getCenterY() { return position.y; }
 
-    /** @return the X coordinate of the player's centre (alias for {@link #getCenterX()}) */
+    /**
+     * Returns the X coordinate of the player's centre (alias for {@link #getCenterX()}).
+     * @return the player's world-centre X
+     */
     public float getX() { return position.x; }
 
     /**

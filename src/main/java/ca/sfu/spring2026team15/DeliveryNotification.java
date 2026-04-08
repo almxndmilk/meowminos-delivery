@@ -51,12 +51,18 @@ public class DeliveryNotification {
         this.slotIndex = index;
     }
 
-    /** @return current horizontal slot index */
+    /**
+     * Returns the current horizontal slot index.
+     * @return slot index (0 = rightmost)
+     */
     public int getSlotIndex() {
         return slotIndex;
     }
 
-    /** @return the {@link House} this notification is tracking */
+    /**
+     * Returns the {@link House} this notification is tracking.
+     * @return the house whose order this notification represents
+     */
     public House getHouse() {
         return house;
     }

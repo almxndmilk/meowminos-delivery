@@ -24,6 +24,12 @@ public class CinematicBars implements Disposable {
     private final float screenHeight;
     private final Texture blackTexture;
 
+    /**
+     * Creates cinematic letterbox bars sized for the given screen dimensions.
+     *
+     * @param screenWidth  width of the screen in pixels (used to fill bars edge-to-edge)
+     * @param screenHeight height of the screen in pixels (used to place the top bar)
+     */
     public CinematicBars(float screenWidth, float screenHeight) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -93,7 +99,12 @@ public class CinematicBars implements Disposable {
         }
     }
 
-    /** Call with an open SpriteBatch already using the HUD projection matrix. */
+    /**
+     * Draws the top and bottom letterbox bars at their current animated height.
+     * Call with an open SpriteBatch already using the HUD projection matrix.
+     *
+     * @param batch the active HUD {@link SpriteBatch} (must be begun)
+     */
     public void render(SpriteBatch batch) {
         float height = computeHeight();
         if (height <= 0f) return;
@@ -107,6 +118,8 @@ public class CinematicBars implements Disposable {
     /**
      * Returns true only when the bars are fully extended and the animation
      * has finished (state is VISIBLE).
+     *
+     * @return {@code true} if the bars are fully visible and the animation has completed
      */
     public boolean isFullyVisible() {
         return state == State.VISIBLE;

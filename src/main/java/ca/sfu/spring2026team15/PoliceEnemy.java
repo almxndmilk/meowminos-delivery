@@ -123,13 +123,23 @@ public class PoliceEnemy {
     /** Restores both chase and wander speeds to their default constants. */
     public void resetSpeed() { this.VAR_CHASE_SPEED = CHASE_SPEED; this.VAR_WANDER_SPEED = WANDER_SPEED; }
 
-    /** @return the X coordinate of the enemy's centre in world space */
+    /**
+     * Returns the X coordinate of the enemy's centre in world space.
+     * @return the enemy's world-centre X
+     */
     public float getCenterX() { return position.x; }
 
-    /** @return the Y coordinate of the enemy's centre in world space */
+    /**
+     * Returns the Y coordinate of the enemy's centre in world space.
+     * @return the enemy's world-centre Y
+     */
     public float getCenterY() { return position.y; }
 
-    /** Teleport the enemy to a new position and reset its AI state. */
+    /**
+     * Teleports the enemy to a new position and resets its AI state.
+     * @param x new world-centre X
+     * @param y new world-centre Y
+     */
     public void setPosition(float x, float y) {
         position.set(x, y);
         alertState = AlertState.NONE;

@@ -9,6 +9,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
  * Time can also be deducted as a penalty (e.g. on player respawn).
  */
 public class Timer {
+    /** Creates a timer initialised to {@value #TOTAL_TIME} seconds, in a stopped state. */
+    public Timer() {}
+
     private static final float TOTAL_TIME = 300f; // 5 minutes
     private float timeRemaining = TOTAL_TIME;
     private float elapsedTime = 0f;
@@ -58,13 +61,22 @@ public class Timer {
         }
     }
 
-    /** @return {@code true} if the countdown has reached zero */
+    /**
+     * Returns whether the countdown has reached zero.
+     * @return {@code true} if the countdown has reached zero
+     */
     public boolean isFinished()    { return timeRemaining <= 0f; }
 
-    /** @return whole seconds remaining, truncated toward zero */
+    /**
+     * Returns the whole seconds remaining, truncated toward zero.
+     * @return whole seconds remaining
+     */
     public int getRemainingSeconds() { return (int) timeRemaining; }
 
-    /** @return whole seconds elapsed since the timer was started, truncated toward zero */
+    /**
+     * Returns the whole seconds elapsed since the timer was started, truncated toward zero.
+     * @return whole seconds elapsed
+     */
     public int getElapsedSeconds()   { return (int) elapsedTime; }
 
     /**

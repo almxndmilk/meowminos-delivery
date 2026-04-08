@@ -37,12 +37,19 @@ public class GameCamera {
         camera.setToOrtho(false, viewportWidth, viewportHeight);
     }
 
-    /** Expand the right-edge X clamp — call when entering a wider map. */
+    /**
+     * Expands the right-edge X clamp — call when entering a wider map.
+     * @param newMaxX the new right boundary of the map in world units
+     */
     public void setMaxX(float newMaxX) {
         this.maxX = newMaxX;
     }
 
-    /** Update the Y clamp with raw map edges (halfViewH offset applied internally). */
+    /**
+     * Updates the Y clamp with raw map edges (halfViewH offset applied internally).
+     * @param minY bottom boundary of the map in world units
+     * @param maxY top boundary of the map in world units
+     */
     public void setYBounds(float minY, float maxY) {
         this.minY = minY;
         this.maxY = maxY;

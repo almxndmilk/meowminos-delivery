@@ -218,13 +218,22 @@ public class CatOffBike {
         }
     }
 
-    /** @return the X coordinate of the cat's centre in world space */
+    /**
+     * Returns the X coordinate of the cat's centre in world space.
+     * @return the cat's world-centre X
+     */
     public float getCenterX() { return position.x; }
 
-    /** @return the Y coordinate of the cat's centre in world space */
+    /**
+     * Returns the Y coordinate of the cat's centre in world space.
+     * @return the cat's world-centre Y
+     */
     public float getCenterY() { return position.y; }
 
-    /** @return the X coordinate of the cat's centre (alias for {@link #getCenterX()}) */
+    /**
+     * Returns the X coordinate of the cat's centre (alias for {@link #getCenterX()}).
+     * @return the cat's world-centre X
+     */
     public float getX() { return position.x; }
 
     /**
