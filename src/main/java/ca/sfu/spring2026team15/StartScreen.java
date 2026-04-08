@@ -202,10 +202,10 @@ public class StartScreen implements Screen {
      */
     @Override public void show() {
         startTexture          = new Texture(Gdx.files.internal("StartScreen/startScreenBackground.png"));
-        buttonTexture         = new Texture(Gdx.files.internal("StartScreen/playButton.PNG"));
+        buttonTexture         = new Texture(Gdx.files.internal("StartScreen/playButton.png"));
         titleTexture          = new Texture(Gdx.files.internal("StartScreen/newTitle.png"));
-        instructionBtnTexture = new Texture(Gdx.files.internal("StartScreen/instructionButton.PNG"));
-        settingsBtnTexture    = new Texture(Gdx.files.internal("StartScreen/settingButton.PNG"));
+        instructionBtnTexture = new Texture(Gdx.files.internal("StartScreen/instructionButton.png"));
+        settingsBtnTexture    = new Texture(Gdx.files.internal("StartScreen/settingButton.png"));
 
         backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/backgroundMusic.mp3"));
         backgroundMusic.setLooping(true);
